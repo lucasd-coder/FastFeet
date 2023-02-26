@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "./pkg/pb";
+import "google/protobuf/timestamp.proto";
+
+message UserResponse {
+    string id = 1;
+    string name = 2;
+    string email = 3;
+    map<string, string> attributes = 4;
+    google.protobuf.Timestamp createdAt = 5;
+
+}

@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "./pkg/pb";
+
+import "request/user_request.proto";
+import "response/user_response.proto";
+
+service UserService {
+    rpc Save (UserRequest) returns (UserResponse);
+}
+

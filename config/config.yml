@@ -1,0 +1,9 @@
+app:
+  name: user-manger-service
+  version: 1.0.0
+
+logger:
+  log_level: ${LOG_LEVEL:info}
+
+grpc:
+  port: ${GRPC_PORT:50051}
