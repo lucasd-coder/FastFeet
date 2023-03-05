@@ -6,4 +6,13 @@ logger:
   log_level: ${LOG_LEVEL:info}
 
 grpc:
-  port: ${GRPC_PORT:50051}
+  port: 50052
+
+mongodb:
+  url: mongodb://admin:admin123@localhost:27017/user-manger-service?connect=direct&authSource=admin
+  connTimeout: 10s
+  database: user-manger-service
+  collections:
+    user:
+      collection: "users"
+

@@ -4,9 +4,10 @@ var cfg *Config
 
 type (
 	Config struct {
-		App  `yaml:"app"`
-		GRPC `yaml:"grpc"`
-		Log  `yaml:"logger"`
+		App     `yaml:"app"`
+		GRPC    `yaml:"grpc"`
+		Log     `yaml:"logger"`
+		MongoDB `yaml:"mongodb"`
 	}
 
 	App struct {
@@ -20,6 +21,20 @@ type (
 
 	GRPC struct {
 		Port string `env-required:"true" yaml:"port" env:"GRPC_PORT"`
+	}
+
+	MongoDB struct {
+		URL                string           `env-required:"true" yaml:"url"`
+		MongoDBConnTimeout string           `yaml:"connTimeout" default:"10s"`
+		MongoDatabase      string           `env-required:"true" yaml:"database"`
+		MongoCollections   MongoCollections `env-required:"true" yaml:"collections"`
+	}
+	MongoCollections struct {
+		User `env-required:"true" yaml:"user"`
+	}
+
+	User struct {
+		Collection string `env-required:"true" yaml:"collection"`
 	}
 )
 

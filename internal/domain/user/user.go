@@ -5,18 +5,19 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/lucasd-coder/user-manger-service/pkg/val"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var validate *validator.Validate
 
 type User struct {
-	ID         string
-	Name       string `validate:"required,pattern"`
-	Email      string `validate:"required,email,pattern"`
-	CPF        string `validate:"required,pattern"`
-	Attributes map[string]string
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
+	ID         primitive.ObjectID `bson:"_id,omitempty"`
+	Name       string             `bson:"name,omitempty" validate:"required,pattern"`
+	Email      string             `bson:"email,omitempty" validate:"required,email,pattern"`
+	CPF        string             `bson:"cpf,omitempty" validate:"required,pattern"`
+	Attributes map[string]string  `bson:"attributes,omitempty"`
+	CreatedAt  time.Time          `bson:"createdAt,omitempty"`
+	UpdatedAt  time.Time          `bson:"updatedAt,omitempty"`
 }
 
 func (user *User) Validate() error {
@@ -27,4 +28,8 @@ func (user *User) Validate() error {
 	}
 
 	return validate.Struct(user)
+}
+
+func (user *User) GetCreatedAt() string {
+	return user.CreatedAt.Format(time.RFC3339)
 }

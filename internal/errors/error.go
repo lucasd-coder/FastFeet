@@ -9,6 +9,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+var ErrInvalidObjectID = errors.New("invalid object id")
+
 func fieldViolation(field string, err error) *errdetails.BadRequest_FieldViolation {
 	return &errdetails.BadRequest_FieldViolation{
 		Field:       field,
@@ -24,6 +26,10 @@ func InvalidArgumentError(violations []*errdetails.BadRequest_FieldViolation) er
 
 func UnauthenticatedError(err error) error {
 	return status.Errorf(codes.Unauthenticated, "unauthorized: %s", err)
+}
+
+func AlreadyExistsError(msg string) error {
+	return status.Errorf(codes.AlreadyExists, msg)
 }
 
 func ValidationErrors(err error) error {

@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"net"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -8,6 +9,7 @@ import (
 	"github.com/lucasd-coder/user-manger-service/config"
 	"github.com/lucasd-coder/user-manger-service/internal/domain/user/service"
 	"github.com/lucasd-coder/user-manger-service/pkg/logger"
+	"github.com/lucasd-coder/user-manger-service/pkg/mongodb"
 	"github.com/lucasd-coder/user-manger-service/pkg/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
@@ -18,11 +20,22 @@ import (
 func Run(cfg *config.Config) {
 	logger := logger.NewLog(cfg)
 
+	ctx := context.Background()
+
 	log := logger.GetGRPCLogger()
+
+	mongodb.SetUpMongoDB(ctx, cfg)
+
+	defer func() {
+		if err := mongodb.CloseConnMongoDB(ctx); err != nil {
+			log.Errorf("Unable to disconnect: %v", err)
+			panic(err)
+		}
+	}()
 
 	lis, err := net.Listen("tcp", "localhost:"+cfg.Port)
 	if err != nil {
-		log.Fatalf("Could not connect: %v", err)
+		panic(err)
 	}
 
 	grpcServer := grpc.NewServer(
@@ -35,14 +48,18 @@ func Run(cfg *config.Config) {
 			logger.GetGRPCStreamServerInterceptor(),
 		),
 	)
+
+	userRepository := InitializeUserRepository()
+
+	pb.RegisterUserServiceServer(grpcServer, &service.UserService{UserRepository: userRepository})
+
 	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
-	pb.RegisterUserServiceServer(grpcServer, &service.UserService{})
 
 	reflection.Register(grpcServer)
 
 	log.Infof("Started listening... address[:%s]", cfg.Port)
 
 	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("Could not serve: %v", err)
+		panic(err)
 	}
 }

@@ -7,3 +7,11 @@ logger:
 
 grpc:
   port: ${GRPC_PORT:50051}
+
+mongodb:
+  url: mongodb://admin:admin123@host.docker.internal:27017/user-manger-service?authSource=admin
+  connTimeout: 10s
+  database: user-manger-service
+  collections:
+    user:
+      collection: "users"

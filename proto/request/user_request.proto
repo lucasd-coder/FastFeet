@@ -5,8 +5,9 @@ package pb;
 option go_package = "./pkg/pb";
 
 message UserRequest {
-    string name = 1;
-    string email = 2;
-    string cpf = 3;
-    map<string, string> attributes = 4;
+    string id = 1;
+    string name = 2;
+    string email = 3;
+    string cpf = 4;
+    map<string, string> attributes = 5;
 }

@@ -2,6 +2,7 @@ version: '3.4'
 
 services:
   user-manger-service:
+    container_name: user-manger-service
     build:
       context: .
       dockerfile: ./Dockerfile
