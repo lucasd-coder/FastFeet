@@ -100,7 +100,7 @@ func (service *UserService) FindByCpf(ctx context.Context, req *pb.UserByCpfRequ
 			return nil, pkgErrors.NotFoundError("user not found")
 		}
 
-		log.Errorf("Failed to find customer with CPF in database. Error: %+v", err)
+		log.Errorf("failed to find customer with CPF in database. Error: %+v", err)
 		return nil, err
 	}
 
@@ -126,7 +126,7 @@ func (service *UserService) FindByEmail(ctx context.Context, req *pb.UserByEmail
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, pkgErrors.NotFoundError("user not found")
 		}
-		log.Errorf("Failed to find customer with Email in database. Error: %+v", err)
+		log.Errorf("failed to find customer with Email in database. Error: %+v", err)
 		return nil, err
 	}
 
