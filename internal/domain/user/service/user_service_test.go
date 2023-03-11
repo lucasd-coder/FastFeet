@@ -70,7 +70,7 @@ func TestSave_AlreadyExistUser(t *testing.T) {
 		Id:    "6404a984f18d899ec00c2a76",
 		Name:  "maria",
 		Email: "maria@gmail.com",
-		Cpf:   "1234567",
+		Cpf:   "880.910.510-93",
 	}
 
 	objectID := objectIDFromHex(req.Id)
@@ -108,7 +108,7 @@ func TestSave_MongoErrClientDisconnected(t *testing.T) {
 		Id:    "6404a984f18d899ec00c2a76",
 		Name:  "maria",
 		Email: "maria@gmail.com",
-		Cpf:   "1234567",
+		Cpf:   "79020873008",
 	}
 
 	ctx := context.Background()
@@ -132,7 +132,7 @@ func TestSave_CreatedSuccessfully(t *testing.T) {
 		Id:    "6404a984f18d899ec00c2a76",
 		Name:  "maria",
 		Email: "maria@gmail.com",
-		Cpf:   "1234567",
+		Cpf:   "79020873008",
 	}
 
 	objectID := objectIDFromHex(req.Id)
@@ -156,6 +156,160 @@ func TestSave_CreatedSuccessfully(t *testing.T) {
 	service := service.UserService{UserRepository: userRepoMock}
 
 	resp, err := service.Save(ctx, req)
+
+	assert.Nil(t, err)
+	assert.Equal(t, user.ID.Hex(), resp.GetId())
+	assert.Equal(t, user.Email, resp.GetEmail())
+	assert.Equal(t, user.Attributes, resp.GetAttributes())
+}
+
+func TestFindByCpf_InvalidCpf(t *testing.T) {
+	req := &pb.UserByCpfRequest{
+		Cpf: "invalid cpf",
+	}
+
+	ctx := context.Background()
+
+	SetUpLog(ctx)
+
+	userRepoMock := new(mocks.UserRepository_internal_domain_user)
+
+	service := service.UserService{UserRepository: userRepoMock}
+
+	_, err := service.FindByCpf(ctx, req)
+
+	st, _ := status.FromError(err)
+
+	assert.NotNil(t, err)
+	assert.Equal(t, codes.InvalidArgument, st.Code())
+}
+
+func TestFindByCpf_UserNotFond(t *testing.T) {
+	req := &pb.UserByCpfRequest{
+		Cpf: "440.072.470-05",
+	}
+
+	ctx := context.Background()
+
+	SetUpLog(ctx)
+
+	userRepoMock := new(mocks.UserRepository_internal_domain_user)
+	userRepoMock.On("FindByCpf", ctx, req.Cpf).Return(nil, mongo.ErrNoDocuments)
+
+	service := service.UserService{UserRepository: userRepoMock}
+
+	_, err := service.FindByCpf(ctx, req)
+
+	st, _ := status.FromError(err)
+
+	msg := "user not found"
+
+	assert.NotNil(t, err)
+	assert.Equal(t, codes.NotFound, st.Code())
+	assert.Equal(t, msg, st.Message())
+}
+
+func TestFindByCpf_GetUserSuccessfully(t *testing.T) {
+	req := &pb.UserByCpfRequest{
+		Cpf: "440.072.470-05",
+	}
+
+	ctx := context.Background()
+
+	SetUpLog(ctx)
+
+	objectID := objectIDFromHex("6404a984f18d899ec00c2a76")
+
+	user := &model.User{
+		ID:    objectID,
+		Name:  "maria",
+		Email: "maria@gmail.com",
+		CPF:   req.GetCpf(),
+	}
+
+	userRepoMock := new(mocks.UserRepository_internal_domain_user)
+	userRepoMock.On("FindByCpf", ctx, req.Cpf).Return(user, nil)
+
+	service := service.UserService{UserRepository: userRepoMock}
+
+	resp, err := service.FindByCpf(ctx, req)
+
+	assert.Nil(t, err)
+	assert.Equal(t, user.ID.Hex(), resp.GetId())
+	assert.Equal(t, user.Email, resp.GetEmail())
+	assert.Equal(t, user.Attributes, resp.GetAttributes())
+}
+
+func TestFindByEmail_InvalidEmail(t *testing.T) {
+	req := &pb.UserByEmailRequest{
+		Email: "invalid email",
+	}
+
+	ctx := context.Background()
+
+	SetUpLog(ctx)
+
+	userRepoMock := new(mocks.UserRepository_internal_domain_user)
+
+	service := service.UserService{UserRepository: userRepoMock}
+
+	_, err := service.FindByEmail(ctx, req)
+
+	st, _ := status.FromError(err)
+
+	assert.NotNil(t, err)
+	assert.Equal(t, codes.InvalidArgument, st.Code())
+}
+
+func TestFindByEmail_UserNotFond(t *testing.T) {
+	req := &pb.UserByEmailRequest{
+		Email: "maria@gmail.com",
+	}
+
+	ctx := context.Background()
+
+	SetUpLog(ctx)
+
+	userRepoMock := new(mocks.UserRepository_internal_domain_user)
+	userRepoMock.On("FindByEmail", ctx, req.Email).Return(nil, mongo.ErrNoDocuments)
+
+	service := service.UserService{UserRepository: userRepoMock}
+
+	_, err := service.FindByEmail(ctx, req)
+
+	st, _ := status.FromError(err)
+
+	msg := "user not found"
+
+	assert.NotNil(t, err)
+	assert.Equal(t, codes.NotFound, st.Code())
+	assert.Equal(t, msg, st.Message())
+}
+
+func TestFindByEmail_GetUserSuccessfully(t *testing.T) {
+	req := &pb.UserByEmailRequest{
+		Email: "maria@gmail.com",
+	}
+
+	ctx := context.Background()
+
+	SetUpLog(ctx)
+
+	objectID := objectIDFromHex("6404a984f18d899ec00c2a76")
+
+	user := &model.User{
+		ID:    objectID,
+		Name:  "maria",
+		Email: req.GetEmail(),
+		CPF:   "440.072.470-05",
+	}
+
+	userRepoMock := new(mocks.UserRepository_internal_domain_user)
+	userRepoMock.On("FindByEmail", ctx, req.GetEmail()).Return(user, nil)
+
+	service := service.UserService{UserRepository: userRepoMock}
+
+	resp, err := service.FindByEmail(ctx, req)
 
 	assert.Nil(t, err)
 	assert.Equal(t, user.ID.Hex(), resp.GetId())

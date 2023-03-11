@@ -14,6 +14,32 @@ type UserRepository_internal_domain_user struct {
 	mock.Mock
 }
 
+// FindByCpf provides a mock function with given fields: ctx, cpf
+func (_m *UserRepository_internal_domain_user) FindByCpf(ctx context.Context, cpf string) (*model.User, error) {
+	ret := _m.Called(ctx, cpf)
+
+	var r0 *model.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*model.User, error)); ok {
+		return rf(ctx, cpf)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *model.User); ok {
+		r0 = rf(ctx, cpf)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.User)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, cpf)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindByEmail provides a mock function with given fields: ctx, email
 func (_m *UserRepository_internal_domain_user) FindByEmail(ctx context.Context, email string) (*model.User, error) {
 	ret := _m.Called(ctx, email)

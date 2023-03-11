@@ -19,7 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	UserService_Save_FullMethodName = "/pb.UserService/Save"
+	UserService_Save_FullMethodName        = "/pb.UserService/Save"
+	UserService_FindByEmail_FullMethodName = "/pb.UserService/FindByEmail"
+	UserService_FindByCpf_FullMethodName   = "/pb.UserService/FindByCpf"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -27,6 +29,8 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserServiceClient interface {
 	Save(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*UserResponse, error)
+	FindByEmail(ctx context.Context, in *UserByEmailRequest, opts ...grpc.CallOption) (*UserResponse, error)
+	FindByCpf(ctx context.Context, in *UserByCpfRequest, opts ...grpc.CallOption) (*UserResponse, error)
 }
 
 type userServiceClient struct {
@@ -46,11 +50,31 @@ func (c *userServiceClient) Save(ctx context.Context, in *UserRequest, opts ...g
 	return out, nil
 }
 
+func (c *userServiceClient) FindByEmail(ctx context.Context, in *UserByEmailRequest, opts ...grpc.CallOption) (*UserResponse, error) {
+	out := new(UserResponse)
+	err := c.cc.Invoke(ctx, UserService_FindByEmail_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) FindByCpf(ctx context.Context, in *UserByCpfRequest, opts ...grpc.CallOption) (*UserResponse, error) {
+	out := new(UserResponse)
+	err := c.cc.Invoke(ctx, UserService_FindByCpf_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility
 type UserServiceServer interface {
 	Save(context.Context, *UserRequest) (*UserResponse, error)
+	FindByEmail(context.Context, *UserByEmailRequest) (*UserResponse, error)
+	FindByCpf(context.Context, *UserByCpfRequest) (*UserResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -60,6 +84,12 @@ type UnimplementedUserServiceServer struct {
 
 func (UnimplementedUserServiceServer) Save(context.Context, *UserRequest) (*UserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Save not implemented")
+}
+func (UnimplementedUserServiceServer) FindByEmail(context.Context, *UserByEmailRequest) (*UserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FindByEmail not implemented")
+}
+func (UnimplementedUserServiceServer) FindByCpf(context.Context, *UserByCpfRequest) (*UserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FindByCpf not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
@@ -92,6 +122,42 @@ func _UserService_Save_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_FindByEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserByEmailRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).FindByEmail(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_FindByEmail_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).FindByEmail(ctx, req.(*UserByEmailRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_FindByCpf_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserByCpfRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).FindByCpf(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_FindByCpf_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).FindByCpf(ctx, req.(*UserByCpfRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -102,6 +168,14 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Save",
 			Handler:    _UserService_Save_Handler,
+		},
+		{
+			MethodName: "FindByEmail",
+			Handler:    _UserService_FindByEmail_Handler,
+		},
+		{
+			MethodName: "FindByCpf",
+			Handler:    _UserService_FindByCpf_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

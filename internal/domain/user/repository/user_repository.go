@@ -71,6 +71,20 @@ func (repo *UserRepository) FindByID(ctx context.Context, id string) (*model.Use
 	return decode(result)
 }
 
+func (repo *UserRepository) FindByCpf(ctx context.Context, cpf string) (*model.User, error) {
+	database := repo.Connection.Database(repo.Config.MongoDatabase)
+
+	collection := repo.Config.MongoCollections.User.Collection
+
+	filter := bson.M{
+		"cpf": cpf,
+	}
+
+	result := database.Collection(collection).FindOne(ctx, filter)
+
+	return decode(result)
+}
+
 func decode(result *mongo.SingleResult) (*model.User, error) {
 	user := new(model.User)
 	if err := result.Decode(user); err != nil {

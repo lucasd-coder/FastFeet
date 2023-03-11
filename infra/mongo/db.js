@@ -11,14 +11,3 @@ db.getCollection("users").createIndex(
 	{ cpf: 1},
 	{unique: true}
 )
-
-db = db.getSiblingDB('user-manger-service-test');
-db.createUser(
-  {user: 'test', pwd: 'test123', 
-  roles:[ { 
-      role: 'dbOwner', 
-      db:  'user-manger-service-test'
-      }
-    ]
-  }
-);

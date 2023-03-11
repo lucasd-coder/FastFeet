@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/mail"
 	"time"
 
 	model "github.com/lucasd-coder/user-manger-service/internal/domain/user"
@@ -11,6 +12,7 @@ import (
 	pkgErrors "github.com/lucasd-coder/user-manger-service/internal/errors"
 	"github.com/lucasd-coder/user-manger-service/pkg/logger"
 	pb "github.com/lucasd-coder/user-manger-service/pkg/pb"
+	"github.com/lucasd-coder/user-manger-service/pkg/val"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -76,10 +78,77 @@ func (service *UserService) Save(ctx context.Context, req *pb.UserRequest) (*pb.
 		return nil, err
 	}
 
+	return buildUserResponse(user), nil
+}
+
+func (service *UserService) FindByCpf(ctx context.Context, req *pb.UserByCpfRequest) (*pb.UserResponse, error) {
+	log := logger.FromContext(ctx)
+
+	if !val.IsCPF(req.GetCpf()) {
+		violations := []*errdetails.BadRequest_FieldViolation{
+			{
+				Field:       "cpf",
+				Description: "invalid object cpf",
+			},
+		}
+		return nil, pkgErrors.InvalidArgumentError(violations)
+	}
+
+	user, err := service.UserRepository.FindByCpf(ctx, req.GetCpf())
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, pkgErrors.NotFoundError("user not found")
+		}
+
+		log.Errorf("Failed to find customer with CPF in database. Error: %+v", err)
+		return nil, err
+	}
+
+	log.Info("request findByCpf finished....")
+	return buildUserResponse(user), nil
+}
+
+func (service *UserService) FindByEmail(ctx context.Context, req *pb.UserByEmailRequest) (*pb.UserResponse, error) {
+	log := logger.FromContext(ctx)
+
+	if !validateEmail(req.GetEmail()) {
+		violations := []*errdetails.BadRequest_FieldViolation{
+			{
+				Field:       "email",
+				Description: "invalid object email",
+			},
+		}
+		return nil, pkgErrors.InvalidArgumentError(violations)
+	}
+
+	user, err := service.UserRepository.FindByEmail(ctx, req.GetEmail())
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, pkgErrors.NotFoundError("user not found")
+		}
+		log.Errorf("Failed to find customer with Email in database. Error: %+v", err)
+		return nil, err
+	}
+
+	log.Info("request findByEmail finished....")
+	return buildUserResponse(user), nil
+}
+
+func buildUserResponse(user *model.User) *pb.UserResponse {
+	if user == nil {
+		return nil
+	}
+
 	return &pb.UserResponse{
-		Id:        user.ID.Hex(),
-		Email:     pld.Email,
-		Name:      pld.Name,
-		CreatedAt: pld.GetCreatedAt(),
-	}, nil
+		Id:         user.ID.Hex(),
+		Name:       user.Name,
+		Email:      user.Email,
+		Attributes: user.Attributes,
+		CreatedAt:  user.GetCreatedAt(),
+	}
+}
+
+func validateEmail(email string) bool {
+	_, err := mail.ParseAddress(email)
+	return err == nil
 }

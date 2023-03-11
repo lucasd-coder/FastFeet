@@ -32,6 +32,10 @@ func AlreadyExistsError(msg string) error {
 	return status.Errorf(codes.AlreadyExists, msg)
 }
 
+func NotFoundError(msg string) error {
+	return status.Error(codes.NotFound, msg)
+}
+
 func ValidationErrors(err error) error {
 	var valErrs validator.ValidationErrors
 
