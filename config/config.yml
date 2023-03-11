@@ -1,0 +1,9 @@
+app:
+  name: business-service
+  version: 1.0.0
+
+logger:
+  log_level: ${LOG_LEVEL}
+
+grpc:
+  port: ${GRPC_PORT}

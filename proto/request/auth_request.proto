@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "./pkg/pb";
+
+message AuthRequest {
+    string email = 1;
+    string password = 2;
+    bool deliveryman = 3;
+}

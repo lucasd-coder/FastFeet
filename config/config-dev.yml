@@ -1,0 +1,9 @@
+app:
+  name: business-service
+  version: 1.0.0
+
+logger:
+  log_level: info
+
+grpc:
+  port: 50052
