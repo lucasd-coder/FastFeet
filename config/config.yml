@@ -7,3 +7,8 @@ logger:
 
 grpc:
   port: ${GRPC_PORT}
+
+integration:
+  user-manager-service:
+    url: localhost:50052
+    max-retry: 3

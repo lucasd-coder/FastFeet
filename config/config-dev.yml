@@ -6,4 +6,9 @@ logger:
   log_level: info
 
 grpc:
-  port: 50052
+  port: 50053
+
+integration:
+  user-manager-service:
+    url: localhost:50052
+    max-retry: 3

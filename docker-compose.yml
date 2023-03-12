@@ -2,7 +2,7 @@ version: '3.4'
 
 services:
   business-service:
-    entrypoint: ./.docker/entrypoint.sh
+    container_name: business-service
     build:
       context: .
       dockerfile: ./Dockerfile

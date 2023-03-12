@@ -1,14 +1,15 @@
 package app
 
 import (
+	"context"
 	"net"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	"github.com/lucasd-coder/business-service/config"
-	"github.com/lucasd-coder/business-service/internal/domain/auth/service"
+	model "github.com/lucasd-coder/business-service/internal/domain/user"
+	"github.com/lucasd-coder/business-service/internal/domain/user/handler"
 	"github.com/lucasd-coder/business-service/pkg/logger"
-	pb "github.com/lucasd-coder/business-service/pkg/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
@@ -36,9 +37,23 @@ func Run(cfg *config.Config) {
 		),
 	)
 	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
-	pb.RegisterAuthServiceServer(grpcServer, &service.AuthService{})
 
 	reflection.Register(grpcServer)
+
+	userRepository := InitializeUserRepository()
+
+	userHandler := handler.NewUserHandler(userRepository)
+
+	pld := &model.User{
+		ID:    "640decf1cf68ef1c5cfc342d",
+		Name:  "Maria",
+		Email: "maria@gmail.com",
+		CPF:   "872.169.470-29",
+	}
+
+	if err := userHandler.Create(context.TODO(), pld); err != nil {
+		log.Fatal(err)
+	}
 
 	log.Infof("Started listening... address[:%s]", cfg.Port)
 

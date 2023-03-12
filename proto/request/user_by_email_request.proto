@@ -4,7 +4,6 @@ package pb;
 
 option go_package = "./pkg/pb";
 
-message AuthResponse {
+message UserByEmailRequest {
     string email = 1;
-    bool deliveryman = 2;
 }

@@ -4,9 +4,10 @@ var cfg *Config
 
 type (
 	Config struct {
-		App  `yaml:"app"`
-		GRPC `yaml:"grpc"`
-		Log  `yaml:"logger"`
+		App         `yaml:"app"`
+		GRPC        `yaml:"grpc"`
+		Log         `yaml:"logger"`
+		Integration `yaml:"integration"`
 	}
 
 	App struct {
@@ -20,6 +21,15 @@ type (
 
 	GRPC struct {
 		Port string `env-required:"true" yaml:"port" env:"GRPC_PORT"`
+	}
+
+	Integration struct {
+		UserManagerService UserManagerService `env-required:"true" yaml:"user-manager-service"`
+	}
+
+	UserManagerService struct {
+		URL      string `env-required:"true" yaml:"url"`
+		MaxRetry int    `env-required:"true" yaml:"max-retry"`
 	}
 )
 
