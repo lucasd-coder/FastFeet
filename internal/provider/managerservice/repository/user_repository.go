@@ -4,21 +4,24 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/lucasd-coder/business-service/config"
 	"github.com/lucasd-coder/business-service/internal/provider/managerservice"
 	"github.com/lucasd-coder/business-service/pkg/logger"
 	"github.com/lucasd-coder/business-service/pkg/pb"
 )
 
-type UserRepository struct{}
+type UserRepository struct {
+	cfg *config.Config
+}
 
-func NewUserRepository() *UserRepository {
-	return &UserRepository{}
+func NewUserRepository(cfg *config.Config) *UserRepository {
+	return &UserRepository{cfg}
 }
 
 func (r *UserRepository) Save(ctx context.Context, req *pb.UserRequest) (*pb.UserResponse, error) {
 	log := logger.FromContext(ctx)
 
-	conn, err := managerservice.NewClient()
+	conn, err := managerservice.NewClient(r.cfg)
 	if err != nil {
 		log.Errorf("integration user-manager-service Error: %+v", err)
 		return nil, fmt.Errorf("integration user-manager-service Error: %w", err)
@@ -36,7 +39,7 @@ func (r *UserRepository) Save(ctx context.Context, req *pb.UserRequest) (*pb.Use
 func (r *UserRepository) FindByEmail(ctx context.Context, req *pb.UserByEmailRequest) (*pb.UserResponse, error) {
 	log := logger.FromContext(ctx)
 
-	conn, err := managerservice.NewClient()
+	conn, err := managerservice.NewClient(r.cfg)
 	if err != nil {
 		log.Errorf("integration user-manager-service Error: %+v", err)
 		return nil, fmt.Errorf("integration user-manager-service Error: %w", err)
@@ -54,7 +57,7 @@ func (r *UserRepository) FindByEmail(ctx context.Context, req *pb.UserByEmailReq
 func (r *UserRepository) FindByCpf(ctx context.Context, req *pb.UserByCpfRequest) (*pb.UserResponse, error) {
 	log := logger.FromContext(ctx)
 
-	conn, err := managerservice.NewClient()
+	conn, err := managerservice.NewClient(r.cfg)
 	if err != nil {
 		log.Errorf("integration user-manager-service Error: %+v", err)
 		return nil, fmt.Errorf("integration user-manager-service Error: %w", err)

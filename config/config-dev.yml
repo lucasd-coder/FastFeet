@@ -9,6 +9,14 @@ grpc:
   port: 50053
 
 integration:
-  user-manager-service:
-    url: localhost:50052
-    max-retry: 3
+  grpc:
+    user-manager-service:
+      url: localhost:50052
+      max-retry: 3
+  rabbit-mq:
+    queue:
+      user-events:
+        url: rabbit://business-service-user-events
+        max-retry: 5
+        poll-delay-in-milliseconds: 100
+        max-concurrent-messages: 10

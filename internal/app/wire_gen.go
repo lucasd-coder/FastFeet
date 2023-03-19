@@ -7,12 +7,14 @@
 package app
 
 import (
+	"github.com/lucasd-coder/business-service/config"
 	"github.com/lucasd-coder/business-service/internal/provider/managerservice/repository"
 )
 
 // Injectors from wire.go:
 
 func InitializeUserRepository() *repository.UserRepository {
-	userRepository := repository.NewUserRepository()
+	configConfig := config.GetConfig()
+	userRepository := repository.NewUserRepository(configConfig)
 	return userRepository
 }

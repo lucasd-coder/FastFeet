@@ -8,7 +8,7 @@ import (
 var validate *validator.Validate
 
 type User struct {
-	ID         string            `json:"id,omitempty"`
+	ID         string            `json:"id,omitempty" validate:"required,pattern"`
 	Name       string            `json:"name,omitempty" validate:"required,pattern"`
 	Email      string            `json:"email,omitempty" validate:"required,email,pattern"`
 	CPF        string            `json:"cpf,omitempty" validate:"required,isCPF"`

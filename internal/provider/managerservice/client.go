@@ -1,47 +1,33 @@
 package managerservice
 
 import (
-	"context"
 	"time"
 
+	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/lucasd-coder/business-service/config"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/status"
 )
 
-func NewClient() (*grpc.ClientConn, error) {
-	cfg := config.GetConfig()
+func NewClient(cfg *config.Config) (*grpc.ClientConn, error) {
 	url := cfg.Integration.UserManagerService.URL
+	maxRetry := cfg.Integration.UserManagerService.MaxRetry
 
-	conn, err := grpc.Dial(url, grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithUnaryInterceptor(grpcRetryUnaryInterceptor),
+	opts := []grpc_retry.CallOption{
+		grpc_retry.WithBackoff(grpc_retry.BackoffExponential(100 * time.Millisecond)),
+		grpc_retry.WithMax(maxRetry),
+		grpc_retry.WithPerRetryTimeout(1 * time.Second),
+		grpc_retry.WithCodes(codes.Unavailable, codes.DeadlineExceeded),
+	}
+
+	conn, err := grpc.Dial(url,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithStreamInterceptor(grpc_retry.StreamClientInterceptor(opts...)),
+		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(opts...)),
 	)
 	if err != nil {
 		return nil, err
 	}
 	return conn, nil
-}
-
-func grpcRetryUnaryInterceptor(
-	ctx context.Context,
-	method string, req, reply interface{},
-	cc *grpc.ClientConn,
-	invoker grpc.UnaryInvoker,
-	opts ...grpc.CallOption,
-) error {
-	cfg := config.GetConfig()
-	maxRetry := cfg.Integration.UserManagerService.MaxRetry
-
-	var err error
-
-	for i := 0; i < maxRetry; i++ {
-		err = invoker(ctx, method, req, reply, cc, opts...)
-		if status.Code(err) != codes.Unavailable {
-			break
-		}
-		time.Sleep(time.Second)
-	}
-	return err
 }
