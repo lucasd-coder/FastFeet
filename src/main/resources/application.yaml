@@ -1,0 +1,43 @@
+# OIDC Configuration
+
+quarkus:
+  http:
+    port: 8081
+  oidc:
+    auth-server-url: http://localhost:8543/realms/fastfeet
+    client-id: access-auth-service
+    credentials:
+     secret: OO6s0DTZE1BN0HSLkZyk0I9utmbrgC9n
+    tls:
+      verification: none
+    token: 
+      issuer: any      
+
+  
+  # Enable Policy Enforcement
+  keycloak:
+    devservices:
+      enabled: false
+    policy-enforcer:
+      enable: true
+
+"%dev":
+  quarkus: 
+    http:
+      port: 8081
+    oidc:
+      auth-server-url: http://localhost:8080/realms/fastfeet
+      client-id: access-auth-service
+      credentials:
+        secret: OO6s0DTZE1BN0HSLkZyk0I9utmbrgC9n
+      tls:
+        verification: none
+      token: 
+        issuer: any     
+  
+  # Enable Policy Enforcement
+  keycloak:
+    devservices:
+      enabled: false
+    policy-enforcer:
+      enable: true      
