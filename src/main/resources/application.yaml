@@ -1,43 +1,42 @@
 # OIDC Configuration
 
-quarkus:
-  http:
-    port: 8081
-  oidc:
-    auth-server-url: http://localhost:8543/realms/fastfeet
-    client-id: access-auth-service
-    credentials:
-     secret: OO6s0DTZE1BN0HSLkZyk0I9utmbrgC9n
-    tls:
-      verification: none
-    token: 
-      issuer: any      
-
-  
-  # Enable Policy Enforcement
-  keycloak:
-    devservices:
-      enabled: false
-    policy-enforcer:
-      enable: true
+application:
+  realm: fastfeet
 
 "%dev":
   quarkus: 
     http:
       port: 8081
+    log:
+      level: INFO
+      category:
+        "org.keycloak":
+          level: ERROR
     oidc:
       auth-server-url: http://localhost:8080/realms/fastfeet
-      client-id: access-auth-service
+      client-id: ${CLIENT_ID:access-auth-service}
       credentials:
-        secret: OO6s0DTZE1BN0HSLkZyk0I9utmbrgC9n
+        secret: ${CLIENT_SECRET:OO6s0DTZE1BN0HSLkZyk0I9utmbrgC9n}
       tls:
         verification: none
       token: 
         issuer: any     
   
   # Enable Policy Enforcement
-  keycloak:
-    devservices:
-      enabled: false
-    policy-enforcer:
-      enable: true      
+    keycloak:
+      admin-client:
+        server-url: http://localhost:8080
+        realm: fastfeet  
+        client-id: ${ADMIN_ID:admin-cli}
+        password: ${ADMIN_PASSWORD:admin}
+        username: ${ADMIN_USERNAME:admin}
+        client-secret: ${ADMIN_SECRET:a951803a-79c7-46a6-8197-e32835286971}     
+        grant-type: PASSWORD
+      devservices:
+        enabled: false
+      policy-enforcer:
+        enable: true
+        paths:
+          1:
+            path: /api/register
+            enforcement-mode: DISABLED

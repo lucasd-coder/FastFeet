@@ -1,5 +1,5 @@
 run-application:
-	QUARKUS_KEYCLOAK_DEVSERVICES_ENABLED=false ./gradlew quarkusDev
+	./gradlew quarkusDev
 
 test:
 	./gradlew test
