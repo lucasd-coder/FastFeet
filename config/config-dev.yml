@@ -9,7 +9,7 @@ grpc:
   port: 50052
 
 mongodb:
-  url: mongodb://admin:admin123@localhost:27017/user-manger-service?connect=direct&authSource=admin
+  url: mongodb://admin:admin123@localhost:27017/fast-feet?connect=direct&authSource=admin
   connTimeout: 10s
   database: user-manger-service
   collections:

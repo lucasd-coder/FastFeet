@@ -15,7 +15,6 @@ import (
 	pb "github.com/lucasd-coder/user-manger-service/pkg/pb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -23,7 +22,7 @@ import (
 
 func TestSave_InvalidObjectID(t *testing.T) {
 	req := &pb.UserRequest{
-		Id: "id invalid",
+		UserId: "userID invalid",
 	}
 
 	ctx := context.Background()
@@ -44,9 +43,9 @@ func TestSave_InvalidObjectID(t *testing.T) {
 
 func TestSave_InvalidUserRequest(t *testing.T) {
 	req := &pb.UserRequest{
-		Id:    "6404a984f18d899ec00c2a76",
-		Name:  "maria$%%&%%$#@",
-		Email: "maria@##%%%",
+		UserId: "34dd2b26-7692-48dc-b37d-9445941ed016ee22262f-6d5f-4044-a7d9-e44a196b808c",
+		Name:   "maria$%%&%%$#@",
+		Email:  "maria@##%%%",
 	}
 
 	ctx := context.Background()
@@ -67,19 +66,17 @@ func TestSave_InvalidUserRequest(t *testing.T) {
 
 func TestSave_AlreadyExistUser(t *testing.T) {
 	req := &pb.UserRequest{
-		Id:    "6404a984f18d899ec00c2a76",
-		Name:  "maria",
-		Email: "maria@gmail.com",
-		Cpf:   "880.910.510-93",
+		UserId: "9a263868-61bc-4e57-b9f8-c6a0a15d2154",
+		Name:   "maria",
+		Email:  "maria2@gmail.com",
+		Cpf:    "880.910.510-93",
 	}
 
-	objectID := objectIDFromHex(req.Id)
-
 	user := &model.User{
-		ID:    objectID,
-		Name:  req.GetName(),
-		Email: req.GetEmail(),
-		CPF:   req.GetCpf(),
+		UserID: req.GetUserId(),
+		Name:   req.GetName(),
+		Email:  req.GetEmail(),
+		CPF:    req.GetCpf(),
 	}
 
 	ctx := context.Background()
@@ -88,7 +85,7 @@ func TestSave_AlreadyExistUser(t *testing.T) {
 
 	userRepoMock := new(mocks.UserRepository_internal_domain_user)
 
-	userRepoMock.On("FindByID", ctx, req.Id).Return(user, nil)
+	userRepoMock.On("FindByUserID", ctx, user.UserID).Return(user, nil)
 
 	service := service.UserService{UserRepository: userRepoMock}
 
@@ -96,7 +93,7 @@ func TestSave_AlreadyExistUser(t *testing.T) {
 
 	st, _ := status.FromError(err)
 
-	msg := fmt.Sprintf("already exist user with id: %s", req.Id)
+	msg := fmt.Sprintf("already exist user with userID: %s", user.UserID)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, codes.AlreadyExists, st.Code())
@@ -105,10 +102,10 @@ func TestSave_AlreadyExistUser(t *testing.T) {
 
 func TestSave_MongoErrClientDisconnected(t *testing.T) {
 	req := &pb.UserRequest{
-		Id:    "6404a984f18d899ec00c2a76",
-		Name:  "maria",
-		Email: "maria@gmail.com",
-		Cpf:   "79020873008",
+		UserId: "e06a7169-7df4-4ada-aac3-b673c9713e91",
+		Name:   "maria",
+		Email:  "maria3@gmail.com",
+		Cpf:    "79020873008",
 	}
 
 	ctx := context.Background()
@@ -117,7 +114,7 @@ func TestSave_MongoErrClientDisconnected(t *testing.T) {
 
 	userRepoMock := new(mocks.UserRepository_internal_domain_user)
 
-	userRepoMock.On("FindByID", ctx, req.Id).Return(nil, mongo.ErrClientDisconnected)
+	userRepoMock.On("FindByUserID", ctx, req.UserId).Return(nil, mongo.ErrClientDisconnected)
 
 	service := service.UserService{UserRepository: userRepoMock}
 
@@ -129,19 +126,17 @@ func TestSave_MongoErrClientDisconnected(t *testing.T) {
 
 func TestSave_CreatedSuccessfully(t *testing.T) {
 	req := &pb.UserRequest{
-		Id:    "6404a984f18d899ec00c2a76",
-		Name:  "maria",
-		Email: "maria@gmail.com",
-		Cpf:   "79020873008",
+		UserId: "07c837a1-9489-49f3-a038-51a9aff29abe",
+		Name:   "maria",
+		Email:  "maria4@gmail.com",
+		Cpf:    "79020873008",
 	}
 
-	objectID := objectIDFromHex(req.Id)
-
 	user := &model.User{
-		ID:    objectID,
-		Name:  req.GetName(),
-		Email: req.GetEmail(),
-		CPF:   req.GetCpf(),
+		UserID: req.GetUserId(),
+		Name:   req.GetName(),
+		Email:  req.GetEmail(),
+		CPF:    req.GetCpf(),
 	}
 
 	ctx := context.Background()
@@ -150,7 +145,7 @@ func TestSave_CreatedSuccessfully(t *testing.T) {
 
 	userRepoMock := new(mocks.UserRepository_internal_domain_user)
 
-	userRepoMock.On("FindByID", ctx, req.Id).Return(nil, nil)
+	userRepoMock.On("FindByUserID", ctx, req.GetUserId()).Return(nil, nil)
 	userRepoMock.On("Save", ctx, mock.Anything).Return(user, nil)
 
 	service := service.UserService{UserRepository: userRepoMock}
@@ -158,7 +153,7 @@ func TestSave_CreatedSuccessfully(t *testing.T) {
 	resp, err := service.Save(ctx, req)
 
 	assert.Nil(t, err)
-	assert.Equal(t, user.ID.Hex(), resp.GetId())
+	assert.Equal(t, user.UserID, req.GetUserId())
 	assert.Equal(t, user.Email, resp.GetEmail())
 	assert.Equal(t, user.Attributes, resp.GetAttributes())
 }
@@ -186,7 +181,7 @@ func TestFindByCpf_InvalidCpf(t *testing.T) {
 
 func TestFindByCpf_UserNotFond(t *testing.T) {
 	req := &pb.UserByCpfRequest{
-		Cpf: "440.072.470-05",
+		Cpf: "563.043.250-88",
 	}
 
 	ctx := context.Background()
@@ -218,13 +213,13 @@ func TestFindByCpf_GetUserSuccessfully(t *testing.T) {
 
 	SetUpLog(ctx)
 
-	objectID := objectIDFromHex("6404a984f18d899ec00c2a76")
+	userID := "ee22262f-6d5f-4044-a7d9-e44a196b808c"
 
 	user := &model.User{
-		ID:    objectID,
-		Name:  "maria",
-		Email: "maria@gmail.com",
-		CPF:   req.GetCpf(),
+		UserID: userID,
+		Name:   "maria",
+		Email:  "maria5@gmail.com",
+		CPF:    req.GetCpf(),
 	}
 
 	userRepoMock := new(mocks.UserRepository_internal_domain_user)
@@ -235,7 +230,7 @@ func TestFindByCpf_GetUserSuccessfully(t *testing.T) {
 	resp, err := service.FindByCpf(ctx, req)
 
 	assert.Nil(t, err)
-	assert.Equal(t, user.ID.Hex(), resp.GetId())
+	assert.Equal(t, user.UserID, resp.GetUserId())
 	assert.Equal(t, user.Email, resp.GetEmail())
 	assert.Equal(t, user.Attributes, resp.GetAttributes())
 }
@@ -295,13 +290,13 @@ func TestFindByEmail_GetUserSuccessfully(t *testing.T) {
 
 	SetUpLog(ctx)
 
-	objectID := objectIDFromHex("6404a984f18d899ec00c2a76")
+	userID := "ee22262f-6d5f-4044-a7d9-e44a196b808c"
 
 	user := &model.User{
-		ID:    objectID,
-		Name:  "maria",
-		Email: req.GetEmail(),
-		CPF:   "440.072.470-05",
+		UserID: userID,
+		Name:   "maria",
+		Email:  req.GetEmail(),
+		CPF:    "440.072.470-05",
 	}
 
 	userRepoMock := new(mocks.UserRepository_internal_domain_user)
@@ -312,7 +307,7 @@ func TestFindByEmail_GetUserSuccessfully(t *testing.T) {
 	resp, err := service.FindByEmail(ctx, req)
 
 	assert.Nil(t, err)
-	assert.Equal(t, user.ID.Hex(), resp.GetId())
+	assert.Equal(t, user.UserID, resp.GetUserId())
 	assert.Equal(t, user.Email, resp.GetEmail())
 	assert.Equal(t, user.Attributes, resp.GetAttributes())
 }
@@ -365,13 +360,4 @@ func setEnvValues() error {
 	}
 
 	return nil
-}
-
-func objectIDFromHex(id string) primitive.ObjectID {
-	objectID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		panic(err)
-	}
-
-	return objectID
 }

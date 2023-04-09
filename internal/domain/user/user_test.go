@@ -10,7 +10,7 @@ import (
 
 func TestUser_Validate(t *testing.T) {
 	type fields struct {
-		ID         primitive.ObjectID
+		UserID     string
 		Name       string
 		Email      string
 		CPF        string
@@ -32,11 +32,41 @@ func TestUser_Validate(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "should validate field email",
+			fields: fields{
+				Name:   "maria",
+				Email:  "test validate email",
+				CPF:    "901.940.000-28",
+				UserID: "b6390035-5728-4d51-8d1c-2d9e049b8b77",
+			},
+			wantErr: true,
+		},
+		{
+			name: "should validate field userID",
+			fields: fields{
+				Name:   "maria",
+				Email:  "maria2@gmail.com",
+				CPF:    "532.895.180-86",
+				UserID: "test validate userID",
+			},
+			wantErr: true,
+		},
+		{
+			name: "should validate with success",
+			fields: fields{
+				Name:   "maria",
+				Email:  "maria3@gmail.com",
+				CPF:    "901.940.000-28",
+				UserID: "b6390035-5728-4d51-8d1c-2d9e049b8b77",
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			user := &model.User{
-				ID:         tt.fields.ID,
+				UserID:     tt.fields.UserID,
 				Name:       tt.fields.Name,
 				Email:      tt.fields.Email,
 				CPF:        tt.fields.CPF,

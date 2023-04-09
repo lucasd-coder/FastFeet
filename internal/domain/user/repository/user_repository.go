@@ -52,18 +52,13 @@ func (repo *UserRepository) FindByEmail(ctx context.Context, email string) (*mod
 	return decode(result)
 }
 
-func (repo *UserRepository) FindByID(ctx context.Context, id string) (*model.User, error) {
+func (repo *UserRepository) FindByUserID(ctx context.Context, userID string) (*model.User, error) {
 	database := repo.Connection.Database(repo.Config.MongoDatabase)
 
 	collection := repo.Config.MongoCollections.User.Collection
 
-	objectID, err := objectIDFromHex(id)
-	if err != nil {
-		return nil, err
-	}
-
 	filter := bson.M{
-		"_id": objectID,
+		"userId": userID,
 	}
 
 	result := database.Collection(collection).FindOne(ctx, filter)
@@ -92,12 +87,4 @@ func decode(result *mongo.SingleResult) (*model.User, error) {
 	}
 
 	return user, nil
-}
-
-func objectIDFromHex(obj interface{}) (primitive.ObjectID, error) {
-	objectID, err := primitive.ObjectIDFromHex(fmt.Sprintf("%v", obj))
-	if err != nil {
-		return primitive.NilObjectID, fmt.Errorf("invalid object id: %w", err)
-	}
-	return objectID, nil
 }

@@ -66,17 +66,17 @@ func (_m *UserRepository_internal_domain_user) FindByEmail(ctx context.Context, 
 	return r0, r1
 }
 
-// FindByID provides a mock function with given fields: ctx, id
-func (_m *UserRepository_internal_domain_user) FindByID(ctx context.Context, id string) (*model.User, error) {
-	ret := _m.Called(ctx, id)
+// FindByUserID provides a mock function with given fields: ctx, userID
+func (_m *UserRepository_internal_domain_user) FindByUserID(ctx context.Context, userID string) (*model.User, error) {
+	ret := _m.Called(ctx, userID)
 
 	var r0 *model.User
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, string) (*model.User, error)); ok {
-		return rf(ctx, id)
+		return rf(ctx, userID)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, string) *model.User); ok {
-		r0 = rf(ctx, id)
+		r0 = rf(ctx, userID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.User)
@@ -84,7 +84,7 @@ func (_m *UserRepository_internal_domain_user) FindByID(ctx context.Context, id 
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, id)
+		r1 = rf(ctx, userID)
 	} else {
 		r1 = ret.Error(1)
 	}

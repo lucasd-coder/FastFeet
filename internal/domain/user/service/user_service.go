@@ -14,7 +14,6 @@ import (
 	pb "github.com/lucasd-coder/user-manger-service/pkg/pb"
 	"github.com/lucasd-coder/user-manger-service/pkg/val"
 	"github.com/sirupsen/logrus"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 )
@@ -37,19 +36,8 @@ func (service *UserService) Save(ctx context.Context, req *pb.UserRequest) (*pb.
 		"payload": req,
 	}).Info("received request")
 
-	objectID, err := primitive.ObjectIDFromHex(req.Id)
-	if err != nil {
-		violations := []*errdetails.BadRequest_FieldViolation{
-			{
-				Field:       "id",
-				Description: "invalid object id",
-			},
-		}
-		return nil, pkgErrors.InvalidArgumentError(violations)
-	}
-
 	pld := model.User{
-		ID:         objectID,
+		UserID:     req.GetUserId(),
 		Name:       req.GetName(),
 		Email:      req.GetEmail(),
 		CPF:        req.GetCpf(),
@@ -61,7 +49,7 @@ func (service *UserService) Save(ctx context.Context, req *pb.UserRequest) (*pb.
 		return nil, pkgErrors.ValidationErrors(err)
 	}
 
-	user, err := service.UserRepository.FindByID(ctx, req.Id)
+	user, err := service.UserRepository.FindByUserID(ctx, pld.UserID)
 	if err != nil {
 		if !errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, err
@@ -69,7 +57,7 @@ func (service *UserService) Save(ctx context.Context, req *pb.UserRequest) (*pb.
 	}
 
 	if user != nil {
-		msg := fmt.Sprintf("already exist user with id: %s", req.Id)
+		msg := fmt.Sprintf("already exist user with userID: %s", pld.UserID)
 		return nil, pkgErrors.AlreadyExistsError(msg)
 	}
 
@@ -140,7 +128,7 @@ func buildUserResponse(user *model.User) *pb.UserResponse {
 	}
 
 	return &pb.UserResponse{
-		Id:         user.ID.Hex(),
+		UserId:     user.UserID,
 		Name:       user.Name,
 		Email:      user.Email,
 		Attributes: user.Attributes,

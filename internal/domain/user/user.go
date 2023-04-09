@@ -12,6 +12,7 @@ var validate *validator.Validate
 
 type User struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
+	UserID     string             `bson:"userId,omitempty" validate:"required,pattern,uuid4"`
 	Name       string             `bson:"name,omitempty" validate:"required,pattern"`
 	Email      string             `bson:"email,omitempty" validate:"required,email,pattern"`
 	CPF        string             `bson:"cpf,omitempty" validate:"required,isCPF"`
