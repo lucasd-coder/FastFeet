@@ -11,7 +11,7 @@ grpc:
 mongodb:
   url: mongodb://admin:admin123@localhost:27017/fast-feet?connect=direct&authSource=admin
   connTimeout: 10s
-  database: user-manger-service
+  database: fast-feet
   collections:
     user:
       collection: "users"

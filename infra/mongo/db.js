@@ -11,3 +11,8 @@ db.getCollection("users").createIndex(
 	{ cpf: 1},
 	{unique: true}
 )
+
+db.getCollection("users").createIndex(
+	{ userId: 1},
+	{unique: true}
+)

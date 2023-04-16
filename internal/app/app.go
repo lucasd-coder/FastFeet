@@ -5,6 +5,7 @@ import (
 	"net"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	"github.com/lucasd-coder/user-manger-service/config"
 	"github.com/lucasd-coder/user-manger-service/internal/domain/user/service"
@@ -39,13 +40,19 @@ func Run(cfg *config.Config) {
 	}
 
 	grpcServer := grpc.NewServer(
-		grpc_middleware.WithUnaryServerChain(
-			grpc_ctxtags.UnaryServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
-			logger.GetGRPCUnaryServerInterceptor(),
+		grpc.UnaryInterceptor(
+			grpc_middleware.ChainUnaryServer(
+				grpc_ctxtags.UnaryServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
+				logger.GetGRPCUnaryServerInterceptor(),
+				grpc_recovery.UnaryServerInterceptor(),
+			),
 		),
-		grpc_middleware.WithStreamServerChain(
-			grpc_ctxtags.StreamServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
-			logger.GetGRPCStreamServerInterceptor(),
+		grpc.StreamInterceptor(
+			grpc_middleware.ChainStreamServer(
+				grpc_ctxtags.StreamServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
+				logger.GetGRPCStreamServerInterceptor(),
+				grpc_recovery.StreamServerInterceptor(),
+			),
 		),
 	)
 
