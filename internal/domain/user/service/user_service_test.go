@@ -20,7 +20,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func TestSave_InvalidObjectID(t *testing.T) {
+func TestSave_InvalidUUID(t *testing.T) {
 	req := &pb.UserRequest{
 		UserId: "userID invalid",
 	}
