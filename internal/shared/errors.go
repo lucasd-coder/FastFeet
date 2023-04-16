@@ -7,6 +7,7 @@ import (
 
 var ErrExtractResponse = errors.New("error while extracting response from API")
 var ErrUserNotFound = errors.New("user not found")
+var ErrUserAlreadyExist = errors.New("user already exist")
 
 type HTTPError struct {
 	StatusCode int

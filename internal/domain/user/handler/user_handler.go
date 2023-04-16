@@ -49,12 +49,12 @@ func (h *UserHandler) create(ctx context.Context, pld *model.Payload) error {
 	}
 
 	if err := h.validadeUserWithEmail(ctx, pld.Email); err != nil {
-		log.Error("error when validating the email")
+		log.Errorf("error when validating the email: %v", err)
 		return err
 	}
 
 	if err := h.validadeUserWithCpf(ctx, pld.CPF); err != nil {
-		log.Error("error when validating the cpf")
+		log.Errorf("error when validating the cpf: %v", err)
 		return err
 	}
 
@@ -96,9 +96,8 @@ func (h *UserHandler) validadeUserWithEmail(ctx context.Context, email string) e
 		}
 	}
 
-	if user != nil {
-		log.Errorf("already exist user with id: %s", user.Id)
-		return nil
+	if user != nil && user.Id != "" {
+		return fmt.Errorf("error validating user with email: %w", shared.ErrUserAlreadyExist)
 	}
 
 	return nil
@@ -119,9 +118,8 @@ func (h *UserHandler) validadeUserWithCpf(ctx context.Context, cpf string) error
 		}
 	}
 
-	if user != nil {
-		log.Errorf("already exist user with id: %s", user.Id)
-		return nil
+	if user != nil && user.Id != "" {
+		return fmt.Errorf("error validating user with cpf: %w", shared.ErrUserAlreadyExist)
 	}
 	return nil
 }
@@ -137,7 +135,7 @@ func (h *UserHandler) registerAndReturn(ctx context.Context, pld *model.Payload)
 		}
 	}
 
-	if user == nil {
+	if user == nil || user.ID == "" {
 		register, err := h.authRepository.Register(ctx, pld.ToRegister())
 		if err != nil {
 			log.Errorf("err while call auth-service Register: %v", err)

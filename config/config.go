@@ -28,8 +28,8 @@ type (
 
 	Integration struct {
 		GrpcClient `env-required:"true" yaml:"grpc"`
-		HTTPClint  `yaml:"http"`
-		KeyCloak   `yaml:"keycloak"`
+		HTTPClint  `env-required:"true" yaml:"http"`
+		KeyCloak   `env-required:"true" yaml:"keycloak"`
 		RabbitMQ   `env-required:"true" yaml:"rabbit-mq"`
 	}
 

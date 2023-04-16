@@ -1,1 +1,1 @@
-./internal/test=[Execute]
+./internal/domain/user=[UserRepository, AuthRepository]
