@@ -6,10 +6,16 @@ package app
 import (
 	"github.com/google/wire"
 	"github.com/lucasd-coder/business-service/config"
-	"github.com/lucasd-coder/business-service/internal/provider/managerservice/repository"
+	authservice "github.com/lucasd-coder/business-service/internal/provider/authservice/repository"
+	managerservice "github.com/lucasd-coder/business-service/internal/provider/managerservice/repository"
 )
 
-func InitializeUserRepository() *repository.UserRepository {
-	wire.Build(config.GetConfig, repository.NewUserRepository)
-	return &repository.UserRepository{}
+func InitializeUserRepository() *managerservice.UserRepository {
+	wire.Build(config.GetConfig, managerservice.NewUserRepository)
+	return &managerservice.UserRepository{}
+}
+
+func InitializeAuthRepository() *authservice.AuthRepository {
+	wire.Build(config.GetConfig, authservice.NewAuthRepository)
+	return &authservice.AuthRepository{}
 }

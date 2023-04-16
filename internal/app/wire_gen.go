@@ -8,6 +8,7 @@ package app
 
 import (
 	"github.com/lucasd-coder/business-service/config"
+	repository2 "github.com/lucasd-coder/business-service/internal/provider/authservice/repository"
 	"github.com/lucasd-coder/business-service/internal/provider/managerservice/repository"
 )
 
@@ -17,4 +18,10 @@ func InitializeUserRepository() *repository.UserRepository {
 	configConfig := config.GetConfig()
 	userRepository := repository.NewUserRepository(configConfig)
 	return userRepository
+}
+
+func InitializeAuthRepository() *repository2.AuthRepository {
+	configConfig := config.GetConfig()
+	authRepository := repository2.NewAuthRepository(configConfig)
+	return authRepository
 }

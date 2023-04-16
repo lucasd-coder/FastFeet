@@ -7,15 +7,53 @@ import (
 
 var validate *validator.Validate
 
-type User struct {
-	ID         string            `json:"id,omitempty" validate:"required,pattern"`
+type Payload struct {
 	Name       string            `json:"name,omitempty" validate:"required,pattern"`
 	Email      string            `json:"email,omitempty" validate:"required,email,pattern"`
 	CPF        string            `json:"cpf,omitempty" validate:"required,isCPF"`
 	Attributes map[string]string `json:"attributes,omitempty"`
+	Password   string            `json:"password,omitempty" validate:"required,pattern"`
+	Authority  string            `json:"authority,omitempty" validate:"required,oneof=ADMIN USER"`
 }
 
-func (user *User) Validate() error {
+type Register struct {
+	Name      string `json:"name,omitempty"`
+	Username  string `json:"username,omitempty"`
+	Password  string `json:"password,omitempty"`
+	Authority string `json:"authority,omitempty"`
+}
+
+type RegisterUserResponse struct {
+	ID string `json:"id,omitempty"`
+}
+
+type GetUserResponse struct {
+	ID       string `json:"id,omitempty"`
+	Email    string `json:"email,omitempty"`
+	Username string `json:"username,omitempty"`
+	Enabled  bool   `json:"enabled,omitempty"`
+}
+
+type GetToken struct {
+	AccessToken      string `json:"access_token,omitempty"`
+	ExpiresIn        string `json:"expires_in,omitempty"`
+	RefreshExpiresIn string `json:"refresh_expires_in,omitempty"`
+	RefreshToken     string `json:"refresh_token,omitempty"`
+	TokenType        string `json:"token_type,omitempty"`
+	NotBeforePolicy  int    `json:"not_before_policy,omitempty"`
+	SessionState     string `json:"session_state,omitempty"`
+	Scope            string `json:"scope,omitempty"`
+}
+
+type User struct {
+	UserID     string            `json:"userId,omitempty"`
+	Name       string            `json:"name,omitempty"`
+	Email      string            `json:"email,omitempty"`
+	CPF        string            `json:"cpf,omitempty"`
+	Attributes map[string]string `json:"attributes,omitempty"`
+}
+
+func (payload *Payload) Validate() error {
 	validate = validator.New()
 
 	if err := validate.RegisterValidation("pattern", val.Pattern); err != nil {
@@ -26,5 +64,24 @@ func (user *User) Validate() error {
 		return err
 	}
 
-	return validate.Struct(user)
+	return validate.Struct(payload)
+}
+
+func (payload *Payload) ToRegister() *Register {
+	return &Register{
+		Name:      payload.Name,
+		Username:  payload.Email,
+		Password:  payload.Password,
+		Authority: payload.Authority,
+	}
+}
+
+func (payload *Payload) ToUser(userID string) *User {
+	return &User{
+		UserID:     userID,
+		Name:       payload.Name,
+		Email:      payload.Email,
+		CPF:        payload.CPF,
+		Attributes: payload.Attributes,
+	}
 }

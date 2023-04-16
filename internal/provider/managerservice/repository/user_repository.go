@@ -23,8 +23,8 @@ func (r *UserRepository) Save(ctx context.Context, req *pb.UserRequest) (*pb.Use
 
 	conn, err := managerservice.NewClient(r.cfg)
 	if err != nil {
-		log.Errorf("integration user-manager-service Error: %+v", err)
-		return nil, fmt.Errorf("integration user-manager-service Error: %w", err)
+		log.Errorf("err while integration save: %+v", err)
+		return nil, fmt.Errorf("err while integration save: %w", err)
 	}
 
 	defer conn.Close()
@@ -41,8 +41,8 @@ func (r *UserRepository) FindByEmail(ctx context.Context, req *pb.UserByEmailReq
 
 	conn, err := managerservice.NewClient(r.cfg)
 	if err != nil {
-		log.Errorf("integration user-manager-service Error: %+v", err)
-		return nil, fmt.Errorf("integration user-manager-service Error: %w", err)
+		log.Errorf("err while integration findByEmail: %+v", err)
+		return nil, fmt.Errorf("err while integration findByEmail: %w", err)
 	}
 
 	defer conn.Close()
@@ -59,8 +59,8 @@ func (r *UserRepository) FindByCpf(ctx context.Context, req *pb.UserByCpfRequest
 
 	conn, err := managerservice.NewClient(r.cfg)
 	if err != nil {
-		log.Errorf("integration user-manager-service Error: %+v", err)
-		return nil, fmt.Errorf("integration user-manager-service Error: %w", err)
+		log.Errorf("err while integration findByCpf: %+v", err)
+		return nil, fmt.Errorf("err while integration findByCpf: %w", err)
 	}
 
 	defer conn.Close()

@@ -30,15 +30,19 @@ func Run(cfg *config.Config) {
 	}
 
 	grpcServer := grpc.NewServer(
-		grpc_middleware.WithUnaryServerChain(
-			grpc_ctxtags.UnaryServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
-			logger.GetGRPCUnaryServerInterceptor(),
-			grpc_recovery.UnaryServerInterceptor(),
+		grpc.UnaryInterceptor(
+			grpc_middleware.ChainUnaryServer(
+				grpc_ctxtags.UnaryServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
+				logger.GetGRPCUnaryServerInterceptor(),
+				grpc_recovery.UnaryServerInterceptor(),
+			),
 		),
-		grpc_middleware.WithStreamServerChain(
-			grpc_ctxtags.StreamServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
-			logger.GetGRPCStreamServerInterceptor(),
-			grpc_recovery.StreamServerInterceptor(),
+		grpc.StreamInterceptor(
+			grpc_middleware.ChainStreamServer(
+				grpc_ctxtags.StreamServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
+				logger.GetGRPCStreamServerInterceptor(),
+				grpc_recovery.StreamServerInterceptor(),
+			),
 		),
 	)
 	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
@@ -47,7 +51,9 @@ func Run(cfg *config.Config) {
 
 	userRepository := InitializeUserRepository()
 
-	userHandler := handler.NewUserHandler(userRepository, cfg)
+	authRepository := InitializeAuthRepository()
+
+	userHandler := handler.NewUserHandler(userRepository, authRepository, cfg)
 
 	subscribe := subscribe.New(func(ctx context.Context, m []byte) error {
 		if err := userHandler.Handler(ctx, m); err != nil {

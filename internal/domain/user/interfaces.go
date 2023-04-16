@@ -12,4 +12,9 @@ type (
 		FindByEmail(ctx context.Context, req *pb.UserByEmailRequest) (*pb.UserResponse, error)
 		FindByCpf(ctx context.Context, req *pb.UserByCpfRequest) (*pb.UserResponse, error)
 	}
+
+	AuthRepository interface {
+		Register(ctx context.Context, pld *Register) (*RegisterUserResponse, error)
+		FindByEmail(ctx context.Context, email string) (*GetUserResponse, error)
+	}
 )
