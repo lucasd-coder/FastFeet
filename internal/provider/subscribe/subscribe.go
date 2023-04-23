@@ -2,7 +2,6 @@ package subscribe
 
 import (
 	"context"
-	"math"
 	"sync"
 	"time"
 
@@ -79,11 +78,7 @@ func (s *Subscription) receive(ctx context.Context, client *pubsub.Subscription,
 	log := logger.FromContext(ctx)
 	log.Info("start receive mensagens")
 
-	retry, err := time.ParseDuration(s.cfg.MaxReceiveMessage)
-	if err != nil {
-		log.Errorf("err parse duration to max receive message: %v", err)
-	}
-
+	retry := s.cfg.MaxReceiveMessage
 	for {
 		select {
 		case <-ctx.Done():
@@ -132,7 +127,7 @@ func (s *Subscription) process(ctx context.Context, messages []byte) error {
 			break
 		}
 
-		backOffTime := time.Duration(math.Pow(s.cfg.WaitingTime, float64(i))) * time.Second
+		backOffTime := time.Duration(1+i) * s.cfg.WaitingTime
 		log.Infof("waiting %v before retrying", backOffTime)
 		time.Sleep(backOffTime)
 	}
