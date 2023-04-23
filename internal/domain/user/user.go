@@ -1,6 +1,8 @@
 package model
 
 import (
+	"time"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/lucasd-coder/business-service/pkg/val"
 )
@@ -8,6 +10,11 @@ import (
 var validate *validator.Validate
 
 type Payload struct {
+	Data      Data      `json:"data,omitempty" validate:"required,dive"`
+	EventDate time.Time `json:"eventDate,omitempty" validate:"required"`
+}
+
+type Data struct {
 	Name       string            `json:"name,omitempty" validate:"required,pattern"`
 	Email      string            `json:"email,omitempty" validate:"required,email,pattern"`
 	CPF        string            `json:"cpf,omitempty" validate:"required,isCPF"`
@@ -69,19 +76,19 @@ func (payload *Payload) Validate() error {
 
 func (payload *Payload) ToRegister() *Register {
 	return &Register{
-		Name:      payload.Name,
-		Username:  payload.Email,
-		Password:  payload.Password,
-		Authority: payload.Authority,
+		Name:      payload.Data.Name,
+		Username:  payload.Data.Email,
+		Password:  payload.Data.Password,
+		Authority: payload.Data.Authority,
 	}
 }
 
 func (payload *Payload) ToUser(userID string) *User {
 	return &User{
 		UserID:     userID,
-		Name:       payload.Name,
-		Email:      payload.Email,
-		CPF:        payload.CPF,
-		Attributes: payload.Attributes,
+		Name:       payload.Data.Name,
+		Email:      payload.Data.Email,
+		CPF:        payload.Data.CPF,
+		Attributes: payload.Data.Attributes,
 	}
 }

@@ -2,9 +2,9 @@ package handler_test
 
 import (
 	"context"
-	"encoding/json"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/lucasd-coder/business-service/config"
@@ -12,6 +12,8 @@ import (
 	"github.com/lucasd-coder/business-service/internal/domain/user/handler"
 	"github.com/lucasd-coder/business-service/internal/mocks"
 	"github.com/lucasd-coder/business-service/internal/shared"
+	"github.com/lucasd-coder/business-service/internal/shared/ciphers"
+	"github.com/lucasd-coder/business-service/internal/shared/codec"
 	"github.com/lucasd-coder/business-service/pkg/logger"
 	"github.com/lucasd-coder/business-service/pkg/pb"
 	"github.com/stretchr/testify/assert"
@@ -21,15 +23,17 @@ import (
 
 func TestHandler_InvalidPayload(t *testing.T) {
 	model := &model.Payload{
-		Name:       "",
-		Email:      "test validate email",
-		CPF:        "",
-		Password:   "",
-		Authority:  "",
-		Attributes: map[string]string{},
+		Data: model.Data{
+			Name:       "",
+			Email:      "test validate email",
+			CPF:        "",
+			Password:   "",
+			Authority:  "",
+			Attributes: map[string]string{},
+		},
 	}
 
-	pld, err := marshal(model)
+	pld, err := encode(model)
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -48,26 +52,29 @@ func TestHandler_InvalidPayload(t *testing.T) {
 
 func TestHandler_UserWithEmailAlreadyExist(t *testing.T) {
 	model := &model.Payload{
-		Name:       "maria",
-		Email:      "maria@gmail.com",
-		CPF:        "080.705.460-77",
-		Password:   "123456",
-		Authority:  "USER",
-		Attributes: map[string]string{},
+		Data: model.Data{
+			Name:       "maria",
+			Email:      "maria@gmail.com",
+			CPF:        "080.705.460-77",
+			Password:   "123456",
+			Authority:  "USER",
+			Attributes: map[string]string{},
+		},
+		EventDate: time.Now(),
 	}
 
 	userByEmailRequest := &pb.UserByEmailRequest{
-		Email: model.Email,
+		Email: model.Data.Email,
 	}
 
 	userResp := &pb.UserResponse{
 		Id:         "46c77402-ba50-4b48-9bd9-1c4f97e36565",
-		Name:       model.Name,
-		Email:      model.Email,
-		Attributes: model.Attributes,
+		Name:       model.Data.Name,
+		Email:      model.Data.Email,
+		Attributes: model.Data.Attributes,
 	}
 
-	pld, err := marshal(model)
+	pld, err := encode(model)
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -88,30 +95,33 @@ func TestHandler_UserWithEmailAlreadyExist(t *testing.T) {
 
 func TestHandler_UserWithCPFAlreadyExist(t *testing.T) {
 	model := &model.Payload{
-		Name:       "maria",
-		Email:      "maria@gmail.com",
-		CPF:        "080.705.460-77",
-		Password:   "123456",
-		Authority:  "USER",
-		Attributes: map[string]string{},
+		Data: model.Data{
+			Name:       "maria",
+			Email:      "maria@gmail.com",
+			CPF:        "080.705.460-77",
+			Password:   "123456",
+			Authority:  "USER",
+			Attributes: map[string]string{},
+		},
+		EventDate: time.Now(),
 	}
 
 	userByCpfRequest := &pb.UserByCpfRequest{
-		Cpf: model.CPF,
+		Cpf: model.Data.CPF,
 	}
 
 	userByEmailRequest := &pb.UserByEmailRequest{
-		Email: model.Email,
+		Email: model.Data.Email,
 	}
 
 	userResp := &pb.UserResponse{
 		Id:         "46c77402-ba50-4b48-9bd9-1c4f97e36565",
-		Name:       model.Name,
-		Email:      model.Email,
-		Attributes: model.Attributes,
+		Name:       model.Data.Name,
+		Email:      model.Data.Email,
+		Attributes: model.Data.Attributes,
 	}
 
-	pld, err := marshal(model)
+	pld, err := encode(model)
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -134,34 +144,37 @@ func TestHandler_UserWithCPFAlreadyExist(t *testing.T) {
 
 func TestHandler_AuthAlreadyExist(t *testing.T) {
 	payload := &model.Payload{
-		Name:       "maria",
-		Email:      "maria@gmail.com",
-		CPF:        "080.705.460-77",
-		Password:   "123456",
-		Authority:  "USER",
-		Attributes: map[string]string{},
+		Data: model.Data{
+			Name:       "maria",
+			Email:      "maria@gmail.com",
+			CPF:        "080.705.460-77",
+			Password:   "123456",
+			Authority:  "USER",
+			Attributes: map[string]string{},
+		},
+		EventDate: time.Now(),
 	}
 	userResp := &pb.UserResponse{
 		Id:         "46c77402-ba50-4b48-9bd9-1c4f97e36565",
-		Name:       payload.Name,
-		Email:      payload.Email,
-		Attributes: payload.Attributes,
+		Name:       payload.Data.Name,
+		Email:      payload.Data.Email,
+		Attributes: payload.Data.Attributes,
 	}
 	userByCpfRequest := &pb.UserByCpfRequest{
-		Cpf: payload.CPF,
+		Cpf: payload.Data.CPF,
 	}
 	userByEmailRequest := &pb.UserByEmailRequest{
-		Email: payload.Email,
+		Email: payload.Data.Email,
 	}
 
 	getUserResp := &model.GetUserResponse{
 		ID:       "46c77402-ba50-4b48-9bd9-1c4f97e36565",
-		Email:    payload.Email,
-		Username: payload.Email,
+		Email:    payload.Data.Email,
+		Username: payload.Data.Email,
 		Enabled:  true,
 	}
 
-	pld, err := marshal(payload)
+	pld, err := encode(payload)
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -176,7 +189,7 @@ func TestHandler_AuthAlreadyExist(t *testing.T) {
 
 	userRepoMock.On("FindByCpf", ctx, userByCpfRequest).Return(&pb.UserResponse{}, nil)
 
-	authRepoMock.On("FindByEmail", ctx, payload.Email).Return(getUserResp, nil)
+	authRepoMock.On("FindByEmail", ctx, payload.Data.Email).Return(getUserResp, nil)
 
 	userRepoMock.On("Save", ctx, mock.Anything).Return(userResp, nil)
 
@@ -187,30 +200,33 @@ func TestHandler_AuthAlreadyExist(t *testing.T) {
 
 func TestHandler_CreatedUserSuccessfully(t *testing.T) {
 	payload := &model.Payload{
-		Name:       "maria",
-		Email:      "maria@gmail.com",
-		CPF:        "080.705.460-77",
-		Password:   "123456",
-		Authority:  "USER",
-		Attributes: map[string]string{},
+		Data: model.Data{
+			Name:       "maria",
+			Email:      "maria@gmail.com",
+			CPF:        "080.705.460-77",
+			Password:   "123456",
+			Authority:  "USER",
+			Attributes: map[string]string{},
+		},
+		EventDate: time.Now(),
 	}
 	userResp := &pb.UserResponse{
 		Id:         "46c77402-ba50-4b48-9bd9-1c4f97e36565",
-		Name:       payload.Name,
-		Email:      payload.Email,
-		Attributes: payload.Attributes,
+		Name:       payload.Data.Name,
+		Email:      payload.Data.Email,
+		Attributes: payload.Data.Attributes,
 	}
 	userByCpfRequest := &pb.UserByCpfRequest{
-		Cpf: payload.CPF,
+		Cpf: payload.Data.CPF,
 	}
 	userByEmailRequest := &pb.UserByEmailRequest{
-		Email: payload.Email,
+		Email: payload.Data.Email,
 	}
 	register := &model.RegisterUserResponse{
 		ID: userResp.Id,
 	}
 
-	pld, err := marshal(payload)
+	pld, err := encode(payload)
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -225,7 +241,7 @@ func TestHandler_CreatedUserSuccessfully(t *testing.T) {
 
 	userRepoMock.On("FindByCpf", ctx, userByCpfRequest).Return(&pb.UserResponse{}, nil)
 
-	authRepoMock.On("FindByEmail", ctx, payload.Email).Return(&model.GetUserResponse{}, nil)
+	authRepoMock.On("FindByEmail", ctx, payload.Data.Email).Return(&model.GetUserResponse{}, nil)
 
 	authRepoMock.On("Register", ctx, payload.ToRegister()).Return(register, nil)
 
@@ -234,11 +250,18 @@ func TestHandler_CreatedUserSuccessfully(t *testing.T) {
 	handler := handler.NewUserHandler(userRepoMock, authRepoMock, cfg)
 	err = handler.Handler(ctx, pld)
 	assert.Nil(t, err)
-
 }
 
-func marshal(pld *model.Payload) ([]byte, error) {
-	result, err := json.Marshal(pld)
+func encode(pld *model.Payload) ([]byte, error) {
+	codec := codec.New[model.Payload]()
+
+	enc, err := codec.Encode(*pld)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg := SetUpConfig()
+	result, err := ciphers.Encrypt(ciphers.ExtractKey([]byte(cfg.AesKey)), enc)
 	if err != nil {
 		return nil, err
 	}

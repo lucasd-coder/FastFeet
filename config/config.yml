@@ -1,6 +1,7 @@
 app:
   name: business-service
   version: 1.0.0
+  aes-key: ${AES_KEY}
 
 logger:
   log_level: ${LOG_LEVEL}

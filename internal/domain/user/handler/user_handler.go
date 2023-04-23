@@ -2,13 +2,14 @@ package handler
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 
 	"github.com/lucasd-coder/business-service/config"
 	model "github.com/lucasd-coder/business-service/internal/domain/user"
 	"github.com/lucasd-coder/business-service/internal/shared"
+	"github.com/lucasd-coder/business-service/internal/shared/ciphers"
+	"github.com/lucasd-coder/business-service/internal/shared/codec"
 	"github.com/lucasd-coder/business-service/pkg/logger"
 	"github.com/lucasd-coder/business-service/pkg/pb"
 	"google.golang.org/grpc/codes"
@@ -33,8 +34,16 @@ func NewUserHandler(userRepo model.UserRepository,
 
 func (h *UserHandler) Handler(ctx context.Context, m []byte) error {
 	var pld model.Payload
-	if err := json.Unmarshal(m, &pld); err != nil {
-		return fmt.Errorf("err Unmarshal: %w", err)
+
+	dec, err := ciphers.Decrypt(ciphers.ExtractKey([]byte(h.cfg.AesKey)), m)
+	if err != nil {
+		return fmt.Errorf("err Decrypt: %w", err)
+	}
+
+	codec := codec.New[model.Payload]()
+
+	if err := codec.Decode(dec, &pld); err != nil {
+		return fmt.Errorf("err Decode: %w", err)
 	}
 	return h.create(ctx, &pld)
 }
@@ -42,18 +51,23 @@ func (h *UserHandler) Handler(ctx context.Context, m []byte) error {
 func (h *UserHandler) create(ctx context.Context, pld *model.Payload) error {
 	log := logger.FromContext(ctx)
 
-	log.WithField("payload", pld).Info("received payload")
+	fields := map[string]interface{}{
+		"payload": map[string]string{
+			"name": pld.Data.Name,
+		},
+	}
+	log.WithFields(fields).Info("received payload")
 
 	if err := pld.Validate(); err != nil {
 		return fmt.Errorf("validation error: %w", err)
 	}
 
-	if err := h.validadeUserWithEmail(ctx, pld.Email); err != nil {
+	if err := h.validadeUserWithEmail(ctx, pld.Data.Email); err != nil {
 		log.Errorf("error when validating the email: %v", err)
 		return err
 	}
 
-	if err := h.validadeUserWithCpf(ctx, pld.CPF); err != nil {
+	if err := h.validadeUserWithCpf(ctx, pld.Data.CPF); err != nil {
 		log.Errorf("error when validating the cpf: %v", err)
 		return err
 	}
@@ -66,10 +80,10 @@ func (h *UserHandler) create(ctx context.Context, pld *model.Payload) error {
 
 	req := &pb.UserRequest{
 		Id:         register.ID,
-		Name:       pld.Name,
-		Email:      pld.Email,
-		Cpf:        pld.CPF,
-		Attributes: pld.Attributes,
+		Name:       pld.Data.Name,
+		Email:      pld.Data.Email,
+		Cpf:        pld.Data.CPF,
+		Attributes: pld.Data.Attributes,
 	}
 
 	user, err := h.userRepository.Save(ctx, req)
@@ -127,7 +141,7 @@ func (h *UserHandler) validadeUserWithCpf(ctx context.Context, cpf string) error
 func (h *UserHandler) registerAndReturn(ctx context.Context, pld *model.Payload) (*model.RegisterUserResponse, error) {
 	log := logger.FromContext(ctx)
 
-	user, err := h.authRepository.FindByEmail(ctx, pld.Email)
+	user, err := h.authRepository.FindByEmail(ctx, pld.Data.Email)
 	if err != nil {
 		if !errors.Is(err, shared.ErrUserNotFound) {
 			log.Errorf("err while call auth-service FindByEmail: %v", err)

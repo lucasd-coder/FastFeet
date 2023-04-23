@@ -3,6 +3,7 @@ package model_test
 import (
 	"reflect"
 	"testing"
+	"time"
 
 	model "github.com/lucasd-coder/business-service/internal/domain/user"
 )
@@ -55,12 +56,15 @@ func TestPayloadValidate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			payload := &model.Payload{
-				Name:       tt.fields.Name,
-				Email:      tt.fields.Email,
-				CPF:        tt.fields.CPF,
-				Attributes: tt.fields.Attributes,
-				Password:   tt.fields.Password,
-				Authority:  tt.fields.Authority,
+				Data: model.Data{
+					Name:       tt.fields.Name,
+					Email:      tt.fields.Email,
+					CPF:        tt.fields.CPF,
+					Attributes: tt.fields.Attributes,
+					Password:   tt.fields.Password,
+					Authority:  tt.fields.Authority,
+				},
+				EventDate: time.Now(),
 			}
 			if err := payload.Validate(); (err != nil) != tt.wantErr {
 				t.Errorf("Payload.Validate() error = %v, wantErr %v", err, tt.wantErr)
@@ -104,12 +108,15 @@ func TestPayloadToRegister(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			payload := &model.Payload{
-				Name:       tt.fields.Name,
-				Email:      tt.fields.Email,
-				CPF:        tt.fields.CPF,
-				Attributes: tt.fields.Attributes,
-				Password:   tt.fields.Password,
-				Authority:  tt.fields.Authority,
+				Data: model.Data{
+					Name:       tt.fields.Name,
+					Email:      tt.fields.Email,
+					CPF:        tt.fields.CPF,
+					Attributes: tt.fields.Attributes,
+					Password:   tt.fields.Password,
+					Authority:  tt.fields.Authority,
+				},
+				EventDate: time.Now(),
 			}
 			if got := payload.ToRegister(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Payload.ToRegister() = %v, want %v", got, tt.want)
@@ -161,12 +168,15 @@ func TestPayloadToUser(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			payload := &model.Payload{
-				Name:       tt.fields.Name,
-				Email:      tt.fields.Email,
-				CPF:        tt.fields.CPF,
-				Attributes: tt.fields.Attributes,
-				Password:   tt.fields.Password,
-				Authority:  tt.fields.Authority,
+				Data: model.Data{
+					Name:       tt.fields.Name,
+					Email:      tt.fields.Email,
+					CPF:        tt.fields.CPF,
+					Attributes: tt.fields.Attributes,
+					Password:   tt.fields.Password,
+					Authority:  tt.fields.Authority,
+				},
+				EventDate: time.Now(),
 			}
 			if got := payload.ToUser(tt.args.userID); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Payload.ToUser() = %v, want %v", got, tt.want)

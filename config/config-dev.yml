@@ -1,6 +1,7 @@
 app:
   name: business-service
   version: 1.0.0
+  aes-key: 46cf5df2-d530-4532-92c4-fc3bd562dbee
 
 logger:
   log-level: info
