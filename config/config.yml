@@ -1,0 +1,11 @@
+app:
+  name: router-service
+  version: 1.0.0
+
+logger:
+  log_level: ${LOG_LEVEL:info}
+
+server:
+  port: ${SERVER_PORT:8085}
+  readTimeout: 10s
+  writeTimeout: 10s
