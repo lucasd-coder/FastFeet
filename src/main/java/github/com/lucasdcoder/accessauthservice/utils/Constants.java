@@ -5,5 +5,5 @@ public class Constants {
 	private Constants() {
 	}
 
-	public static final String REGEX_DEFAULT = "^[\\w_áàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ:\\/ @#,\\.\\-\\+]*$";
+	public static final String REGEX_DEFAULT = "^[\\w_áàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ:\\/ @#?!,\\.\\-\\+]*$";
 }
