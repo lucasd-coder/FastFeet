@@ -7,8 +7,10 @@
 package app
 
 import (
+	"github.com/lucasd-coder/router-service/config"
 	"github.com/lucasd-coder/router-service/internal/controller"
 	"github.com/lucasd-coder/router-service/internal/domain/user/service"
+	"github.com/lucasd-coder/router-service/internal/provider/publish"
 	"github.com/lucasd-coder/router-service/internal/provider/validator"
 )
 
@@ -19,9 +21,17 @@ func InitializeValidator() *validator.Validation {
 	return validation
 }
 
+func InitializePublish() *publish.Published {
+	configConfig := config.GetConfig()
+	published := publish.NewPublished(configConfig)
+	return published
+}
+
 func InitializeUserService() *service.UserService {
 	validation := InitializeValidator()
-	userService := service.NewUserService(validation)
+	published := InitializePublish()
+	configConfig := config.GetConfig()
+	userService := service.NewUserService(validation, published, configConfig)
 	return userService
 }
 

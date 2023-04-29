@@ -1,6 +1,8 @@
 app:
   name: router-service
   version: 1.0.0
+  aes-key: 46cf5df2-d530-4532-92c4-fc3bd562dbee
+
 
 logger:
   log_level: info
@@ -9,3 +11,10 @@ server:
   port: 8085
   readTimeout: 10s
   writeTimeout: 10s
+
+integration:
+  rabbit-mq:
+    queue:
+      user-events:
+        url: rabbit://router-service-user-events
+        max-retry: 3

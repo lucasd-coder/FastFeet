@@ -6,8 +6,10 @@ package app
 import (
 	"github.com/google/wire"
 
+	"github.com/lucasd-coder/router-service/config"
 	"github.com/lucasd-coder/router-service/internal/controller"
 	"github.com/lucasd-coder/router-service/internal/domain/user/service"
+	"github.com/lucasd-coder/router-service/internal/provider/publish"
 	val "github.com/lucasd-coder/router-service/internal/provider/validator"
 )
 
@@ -16,8 +18,13 @@ func InitializeValidator() *val.Validation {
 	return &val.Validation{}
 }
 
+func InitializePublish() *publish.Published {
+	wire.Build(config.GetConfig, publish.NewPublished)
+	return &publish.Published{}
+}
+
 func InitializeUserService() *service.UserService {
-	wire.Build(InitializeValidator, service.NewUserService)
+	wire.Build(InitializeValidator, InitializePublish, config.GetConfig, service.NewUserService)
 	return &service.UserService{}
 }
 

@@ -1,7 +1,17 @@
 package model
 
-import "github.com/lucasd-coder/router-service/internal/shared"
+import (
+	"github.com/lucasd-coder/router-service/internal/shared"
+)
 
+type CreateEvent struct {
+	Message string `json:"message,omitempty"`
+}
+
+type Payload struct {
+	Data      User   `json:"data,omitempty"`
+	EventDate string `json:"eventDate,omitempty"`
+}
 type User struct {
 	Name      string `json:"name,omitempty" validate:"required,pattern"`
 	Email     string `json:"email,omitempty" validate:"required,email"`

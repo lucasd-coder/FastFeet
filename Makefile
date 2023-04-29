@@ -18,7 +18,7 @@ wire-gen:
 	cd internal/app && wire
 
 run-application:
-	GO_PROFILE=dev GO111MODULE=on go run ./cmd/app/main.go
+	RABBIT_SERVER_URL=amqp://admin:admin123@localhost:5672/fastfeet GO_PROFILE=dev GO111MODULE=on go run ./cmd/app/main.go
 
 test:
 	GO111MODULE=on go test -coverprofile coverage.out ./...

@@ -10,6 +10,8 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+var ErrCipherText = errors.New("cipher text too short")
+
 type fieldError struct {
 	err validator.FieldError
 }

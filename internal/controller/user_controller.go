@@ -40,5 +40,9 @@ func (h *UserController) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Response(ctx, w, nil, http.StatusOK)
+	resp := model.CreateEvent{
+		Message: "Please wait while we process your request.",
+	}
+
+	h.Response(ctx, w, resp, http.StatusOK)
 }
