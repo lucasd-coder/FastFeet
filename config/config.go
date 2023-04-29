@@ -56,12 +56,13 @@ type (
 	}
 
 	QueueUserEvents struct {
-		URL                     string        `env-required:"true" yaml:"url"`
-		MaxReceiveMessage       time.Duration `yaml:"max-receive-message" env-default:"30s"`
-		MaxRetries              int           `yaml:"max-retries" env-default:"5"`
-		MaxConcurrentMessages   int           `yaml:"max-concurrent-messages" env-default:"10"`
-		PollDelayInMilliseconds int           `yaml:"poll-delay-in-milliseconds" env-default:"100"`
-		WaitingTime             time.Duration `yaml:"waiting-time" env-default:"2s"`
+		URL                      string        `env-required:"true" yaml:"url"`
+		MaxReceiveMessage        time.Duration `yaml:"max-receive-message" env-default:"30s"`
+		MaxRetries               int           `yaml:"max-retries" env-default:"5"`
+		MaxConcurrentMessages    int           `yaml:"max-concurrent-messages" env-default:"10"`
+		NumberOfMessageReceivers int           `yaml:"number-of-message-receivers" env-default:"2"`
+		PollDelay                time.Duration `yaml:"poll-delay-in-milliseconds" env-default:"100ms"`
+		WaitingTime              time.Duration `yaml:"waiting-time" env-default:"2s"`
 	}
 
 	AccessAuthService struct {

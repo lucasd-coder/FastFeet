@@ -38,30 +38,36 @@ func (s *Subscription) Start(ctx context.Context) {
 		}
 	}()
 
+	var wg sync.WaitGroup
+
+	s.start(ctx, client, &wg)
+
+	wg.Wait()
+}
+
+func (s *Subscription) start(ctx context.Context, client *pubsub.Subscription, wg *sync.WaitGroup) {
+	log := logger.FromContext(ctx)
+
 	msgChan := make(chan *pubsub.Message)
 
 	sem := make(chan struct{}, s.cfg.MaxConcurrentMessages)
 
-	var wg sync.WaitGroup
-
-	go s.receive(ctx, client, msgChan)
+	s.startReceivers(ctx, client, msgChan)
 
 	for {
 		select {
 		case <-ctx.Done():
 			log.Infof("context cancelled, stopping Subscription...")
-			wg.Wait()
 			return
 		case msg := <-msgChan:
-			currentMsg := msg
 			sem <- struct{}{}
 			wg.Add(1)
-			go func(ctx context.Context) {
+			go func(ctx context.Context, currentMsg *pubsub.Message) {
 				defer func() {
 					<-sem
 					wg.Done()
 				}()
-				if err := s.process(ctx, currentMsg.Body); err != nil {
+				if err := s.processMessage(ctx, currentMsg.Body); err != nil {
 					log.Errorf("error processing message: %v", err)
 					if currentMsg.Nackable() {
 						defer currentMsg.Nack()
@@ -69,41 +75,12 @@ func (s *Subscription) Start(ctx context.Context) {
 					return
 				}
 				defer currentMsg.Ack()
-			}(ctx)
+			}(ctx, msg)
 		}
 	}
 }
 
-func (s *Subscription) receive(ctx context.Context, client *pubsub.Subscription, m chan *pubsub.Message) {
-	log := logger.FromContext(ctx)
-	log.Info("start receive mensagens")
-
-	retry := s.cfg.MaxReceiveMessage
-	for {
-		select {
-		case <-ctx.Done():
-			log.Infof("context cancelled, stopping receive...")
-			return
-		default:
-			childCtx, cancel := context.WithCancel(ctx)
-			defer cancel()
-			msg, err := client.Receive(childCtx)
-			if err != nil {
-				log.Errorf("error receiving message: %v", err)
-				time.Sleep(retry)
-				continue
-			}
-
-			if len(msg.Body) > 0 {
-				m <- msg
-			}
-
-			s.applyBackPressure()
-		}
-	}
-}
-
-func (s *Subscription) process(ctx context.Context, messages []byte) error {
+func (s *Subscription) processMessage(ctx context.Context, messages []byte) error {
 	log := logger.FromContext(ctx)
 	log.Info("start process mensagens")
 
@@ -134,6 +111,41 @@ func (s *Subscription) process(ctx context.Context, messages []byte) error {
 	return err
 }
 
+func (s *Subscription) startReceivers(ctx context.Context, client *pubsub.Subscription, m chan *pubsub.Message) {
+	for i := 0; i < s.cfg.NumberOfMessageReceivers; i++ {
+		go s.receiveMessage(ctx, client, m)
+	}
+}
+
+func (s *Subscription) receiveMessage(ctx context.Context, client *pubsub.Subscription, m chan *pubsub.Message) {
+	log := logger.FromContext(ctx)
+	log.Info("start receive mensagens")
+
+	retry := s.cfg.MaxReceiveMessage
+	for {
+		select {
+		case <-ctx.Done():
+			log.Infof("context cancelled, stopping receive...")
+			return
+		default:
+			childCtx, cancel := context.WithCancel(ctx)
+			defer cancel()
+			msg, err := client.Receive(childCtx)
+			if err != nil {
+				log.Errorf("error receiving message: %v", err)
+				time.Sleep(retry)
+				continue
+			}
+
+			if len(msg.Body) > 0 {
+				m <- msg
+			}
+
+			s.applyBackPressure()
+		}
+	}
+}
+
 func (s *Subscription) applyBackPressure() {
-	time.Sleep(time.Millisecond * time.Duration(s.cfg.PollDelayInMilliseconds))
+	time.Sleep(s.cfg.PollDelay)
 }

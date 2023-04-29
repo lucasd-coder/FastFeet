@@ -1,8 +1,6 @@
 package model
 
 import (
-	"time"
-
 	"github.com/go-playground/validator/v10"
 	"github.com/lucasd-coder/business-service/pkg/val"
 )
@@ -10,8 +8,8 @@ import (
 var validate *validator.Validate
 
 type Payload struct {
-	Data      Data      `json:"data,omitempty" validate:"required,dive"`
-	EventDate time.Time `json:"eventDate,omitempty" validate:"required"`
+	Data      Data   `json:"data,omitempty" validate:"required,dive"`
+	EventDate string `json:"eventDate,omitempty" validate:"required"`
 }
 
 type Data struct {

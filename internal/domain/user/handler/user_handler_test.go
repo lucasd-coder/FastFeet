@@ -60,7 +60,7 @@ func TestHandler_UserWithEmailAlreadyExist(t *testing.T) {
 			Authority:  "USER",
 			Attributes: map[string]string{},
 		},
-		EventDate: time.Now(),
+		EventDate: time.Now().Format(time.RFC3339),
 	}
 
 	userByEmailRequest := &pb.UserByEmailRequest{
@@ -103,7 +103,7 @@ func TestHandler_UserWithCPFAlreadyExist(t *testing.T) {
 			Authority:  "USER",
 			Attributes: map[string]string{},
 		},
-		EventDate: time.Now(),
+		EventDate: time.Now().Format(time.RFC3339),
 	}
 
 	userByCpfRequest := &pb.UserByCpfRequest{
@@ -152,7 +152,7 @@ func TestHandler_AuthAlreadyExist(t *testing.T) {
 			Authority:  "USER",
 			Attributes: map[string]string{},
 		},
-		EventDate: time.Now(),
+		EventDate: time.Now().Format(time.RFC3339),
 	}
 	userResp := &pb.UserResponse{
 		Id:         "46c77402-ba50-4b48-9bd9-1c4f97e36565",
@@ -208,7 +208,7 @@ func TestHandler_CreatedUserSuccessfully(t *testing.T) {
 			Authority:  "USER",
 			Attributes: map[string]string{},
 		},
-		EventDate: time.Now(),
+		EventDate: time.Now().Format(time.RFC3339),
 	}
 	userResp := &pb.UserResponse{
 		Id:         "46c77402-ba50-4b48-9bd9-1c4f97e36565",

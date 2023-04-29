@@ -64,7 +64,7 @@ func TestPayloadValidate(t *testing.T) {
 					Password:   tt.fields.Password,
 					Authority:  tt.fields.Authority,
 				},
-				EventDate: time.Now(),
+				EventDate: time.Now().Format(time.RFC3339),
 			}
 			if err := payload.Validate(); (err != nil) != tt.wantErr {
 				t.Errorf("Payload.Validate() error = %v, wantErr %v", err, tt.wantErr)
@@ -116,7 +116,7 @@ func TestPayloadToRegister(t *testing.T) {
 					Password:   tt.fields.Password,
 					Authority:  tt.fields.Authority,
 				},
-				EventDate: time.Now(),
+				EventDate: time.Now().Format(time.RFC3339),
 			}
 			if got := payload.ToRegister(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Payload.ToRegister() = %v, want %v", got, tt.want)
@@ -176,7 +176,7 @@ func TestPayloadToUser(t *testing.T) {
 					Password:   tt.fields.Password,
 					Authority:  tt.fields.Authority,
 				},
-				EventDate: time.Now(),
+				EventDate: time.Now().Format(time.RFC3339),
 			}
 			if got := payload.ToUser(tt.args.userID); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Payload.ToUser() = %v, want %v", got, tt.want)
