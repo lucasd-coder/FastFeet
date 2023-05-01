@@ -3,3 +3,6 @@ run-application:
 
 test:
 	./gradlew test
+
+build:
+	./gradlew build -Dquarkus.package.type=native
