@@ -1,13 +1,13 @@
 version: '3.4'
 
 services:
-  accessauthservice:
-    entrypoint: ./.docker/entrypoint.sh
+  router-service:
+    container_name: router-service
     build:
       context: .
       dockerfile: ./Dockerfile
     ports:
-      - ${GRPC_PORT}:${GRPC_PORT}
+      - ${SERVER_PORT}:${SERVER_PORT}
     volumes:
       - .:/go/src
     env_file:

@@ -14,6 +14,6 @@ RUN apk update && apk add protobuf && apk add protobuf-dev & \
 
 WORKDIR /go/src
 
-EXPOSE ${GRPC_PORT}
+EXPOSE ${SERVER_PORT}
 
 CMD [ "tail", "-f", "/dev/null" ]
