@@ -32,7 +32,7 @@ integration:
       username: business-service
       password: "&&u1PG9OE*c8"     
       client-id: business-service
-      client-secret: lM3euOgR3HIYyCuLmpd0XWza1y6tnnqu
+      client-secret: oX1fKrwL8e7av3qwvZWC1xtf3waEbPtq
       request-timeout: 60s     
   rabbit-mq:
     queue:
