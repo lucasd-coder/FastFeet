@@ -4,10 +4,16 @@ application:
   realm: fastfeet
 
 "%dev":
-  quarkus: 
+  quarkus:
+    application:
+      name: access-auth-service
     http:
       port: 8081
+      access-log:
+        pattern: "...traceId=%{X,traceId} spanId=%{X,spanId}"
     log:
+      console:
+        format: "%d{HH:mm:ss} %-5p traceId=%X{traceId}, parentId=%X{parentId}, spanId=%X{spanId}, sampled=%X{sampled} [%c{2.}] (%t) %s%e%n"
       level: INFO
       category:
         "org.keycloak":
@@ -40,3 +46,9 @@ application:
           1:
             path: /api/register
             enforcement-mode: DISABLED
+    
+    otel:
+      exporter:
+        otlp:
+          traces:
+            endpoint: http://localhost:14278
