@@ -3,7 +3,7 @@ app:
   version: 1.0.0
 
 logger:
-  log_level: info
+  log_level: ${LOG_LEVEL:info}
 
 grpc:
-  port: 50054
+  port: ${GRPC_PORT:50051}

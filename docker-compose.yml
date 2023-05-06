@@ -1,8 +1,7 @@
 version: '3.4'
 
 services:
-  accessauthservice:
-    entrypoint: ./.docker/entrypoint.sh
+  order-data-service:
     build:
       context: .
       dockerfile: ./Dockerfile
