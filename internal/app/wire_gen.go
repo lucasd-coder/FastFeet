@@ -9,6 +9,7 @@ package app
 import (
 	"github.com/lucasd-coder/user-manger-service/config"
 	"github.com/lucasd-coder/user-manger-service/internal/domain/user/repository"
+	"github.com/lucasd-coder/user-manger-service/internal/domain/user/service"
 	"github.com/lucasd-coder/user-manger-service/pkg/mongodb"
 )
 
@@ -19,4 +20,10 @@ func InitializeUserRepository() *repository.UserRepository {
 	client := mongodb.GetClientMongoDB()
 	userRepository := repository.NewUserRepository(configConfig, client)
 	return userRepository
+}
+
+func InitializeUserService() *service.UserService {
+	userRepository := InitializeUserRepository()
+	userService := service.NewUserService(userRepository)
+	return userService
 }

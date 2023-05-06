@@ -8,7 +8,6 @@ import (
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	"github.com/lucasd-coder/user-manger-service/config"
-	"github.com/lucasd-coder/user-manger-service/internal/domain/user/service"
 	"github.com/lucasd-coder/user-manger-service/pkg/logger"
 	"github.com/lucasd-coder/user-manger-service/pkg/mongodb"
 	"github.com/lucasd-coder/user-manger-service/pkg/pb"
@@ -56,9 +55,9 @@ func Run(cfg *config.Config) {
 		),
 	)
 
-	userRepository := InitializeUserRepository()
+	userService := InitializeUserService()
 
-	pb.RegisterUserServiceServer(grpcServer, &service.UserService{UserRepository: userRepository})
+	pb.RegisterUserServiceServer(grpcServer, userService)
 
 	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
 
