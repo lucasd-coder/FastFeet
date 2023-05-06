@@ -18,6 +18,8 @@ func main() {
 	switch profile {
 	case "dev":
 		path = "./config/config-dev.yml"
+	default:
+		path = "./config/config.yml"
 	}
 
 	err := cleanenv.ReadConfig(path, &cfg)
