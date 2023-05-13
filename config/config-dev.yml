@@ -7,3 +7,12 @@ logger:
 
 grpc:
   port: 50054
+
+mongodb:
+  url: mongodb://admin:admin123@localhost:27017/fast-feet?connect=direct&authSource=admin
+  connTimeout: 10s
+  database: fast-feet
+  collections:
+    order:
+      collection: "orders"
+      max-time: "2s"

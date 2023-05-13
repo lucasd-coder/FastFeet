@@ -27,7 +27,10 @@ func (v *Validation) ValidateStruct(s interface{}) error {
 
 	if err := v.validate.RegisterValidation("pattern", val.Pattern); err != nil {
 		log.Fatal(err)
-		return err
+	}
+
+	if err := v.validate.RegisterValidation("rfc3339", val.DateTime); err != nil {
+		log.Fatal(err)
 	}
 
 	return v.validate.Struct(s)

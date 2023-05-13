@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"net"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -8,6 +9,7 @@ import (
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	"github.com/lucasd-coder/order-data-service/config"
 	"github.com/lucasd-coder/order-data-service/pkg/logger"
+	"github.com/lucasd-coder/order-data-service/pkg/mongodb"
 	"github.com/lucasd-coder/order-data-service/pkg/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
@@ -20,10 +22,20 @@ func Run(cfg *config.Config) {
 
 	log := logger.GetGRPCLogger()
 
+	ctx := context.Background()
+
 	lis, err := net.Listen("tcp", "localhost:"+cfg.Port)
 	if err != nil {
 		log.Fatalf("Could not connect: %v", err)
 	}
+
+	mongodb.SetUpMongoDB(ctx, cfg)
+
+	defer func() {
+		if err := mongodb.CloseConnMongoDB(ctx); err != nil {
+			log.Panicf("Unable to disconnect: %v", err)
+		}
+	}()
 
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(
@@ -41,9 +53,9 @@ func Run(cfg *config.Config) {
 			),
 		))
 
-	deliveryService := InitializeDeliveryService()
+	orderService := InitializeOrderService()
 
-	pb.RegisterDeliveryServiceServer(grpcServer, deliveryService)
+	pb.RegisterOrderServiceServer(grpcServer, orderService)
 
 	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
 
@@ -52,6 +64,6 @@ func Run(cfg *config.Config) {
 	log.Infof("Started listening... address[:%s]", cfg.Port)
 
 	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("Could not serve: %v", err)
+		log.Panicf("Could not serve: %v", err)
 	}
 }

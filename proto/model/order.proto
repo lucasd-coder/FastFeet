@@ -10,7 +10,7 @@ message Product {
 
 message Address {
   string address = 1;
-  string postal_code = 2;
+  string postalCode = 2;
   string neighborhood = 3;
   string city = 4;
   string state = 5;

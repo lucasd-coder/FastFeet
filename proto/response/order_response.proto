@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "./pkg/pb";
+
+message OrderResponse {
+    string id = 1;
+    string createdAt = 2;
+}

@@ -7,3 +7,12 @@ logger:
 
 grpc:
   port: ${GRPC_PORT:50051}
+
+mongodb:
+  url: ${MONGODB_URL}
+  connTimeout: 10s
+  database: fast-feet
+  collections:
+    order:
+      collection: "orders"
+      max-time: "2s"

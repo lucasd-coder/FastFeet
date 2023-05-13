@@ -7,8 +7,11 @@
 package app
 
 import (
-	"github.com/lucasd-coder/order-data-service/internal/domain/delivery/service"
+	"github.com/lucasd-coder/order-data-service/config"
+	"github.com/lucasd-coder/order-data-service/internal/domain/order/repository"
+	"github.com/lucasd-coder/order-data-service/internal/domain/order/service"
 	"github.com/lucasd-coder/order-data-service/internal/provider/validator"
+	"github.com/lucasd-coder/order-data-service/pkg/mongodb"
 )
 
 // Injectors from wire.go:
@@ -18,8 +21,16 @@ func InitializeValidator() *validator.Validation {
 	return validation
 }
 
-func InitializeDeliveryService() *service.DeliveryService {
+func InitializeOrderRepository() *repository.OrderRepository {
+	configConfig := config.GetConfig()
+	client := mongodb.GetClientMongoDB()
+	orderRepository := repository.NewOrderRepository(configConfig, client)
+	return orderRepository
+}
+
+func InitializeOrderService() *service.OrderService {
 	validation := InitializeValidator()
-	deliveryService := service.NewDeliveryService(validation)
-	return deliveryService
+	orderRepository := InitializeOrderRepository()
+	orderService := service.NewOrderService(validation, orderRepository)
+	return orderService
 }
