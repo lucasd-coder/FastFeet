@@ -22,6 +22,7 @@ import github.com.lucasdcoder.accessauthservice.domain.Roles;
 import github.com.lucasdcoder.accessauthservice.domain.User;
 import github.com.lucasdcoder.accessauthservice.resources.response.GetRolesResponse;
 import github.com.lucasdcoder.accessauthservice.resources.response.GetUserResponse;
+import github.com.lucasdcoder.accessauthservice.resources.response.IsActiveUserResponse;
 import github.com.lucasdcoder.accessauthservice.services.exceptions.ResourceNotFoundException;
 
 @ApplicationScoped
@@ -84,6 +85,15 @@ public class UserService {
         RealmResource realmResource = keycloak.realm(realm);
 
         return realmResource.users().get(id);
+    }
+
+    public Response isActiveUser(String id) {
+        UserResource userResource = findById(id);
+
+        UserRepresentation userRepresentation = userResource.toRepresentation();
+
+        IsActiveUserResponse resp = IsActiveUserResponse.builder().active(userRepresentation.isEnabled()).build();
+        return Response.ok(resp).build();
     }
 
     public Response getRoles(String id) {

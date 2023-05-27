@@ -46,4 +46,13 @@ public class UsersResource {
         Log.infof("Received request GET on with id: %s", id);
         return userService.getRoles(id);
     }
+
+    @GET
+    @RolesAllowed("admin")
+    @Path("is-active/{id}")
+    @NoCache
+    public Response isActiveUser(@PathParam("id") @Pattern(regexp = UUID_REGEX) String id) {
+        Log.infof("Received request GET on with id: %s", id);
+        return userService.isActiveUser(id);
+    }
 }
