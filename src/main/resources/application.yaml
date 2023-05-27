@@ -9,15 +9,20 @@ application:
       name: access-auth-service
     http:
       port: 8081
+      root-path: access-auth-service
       access-log:
         pattern: "...traceId=%{X,traceId} spanId=%{X,spanId}"
     log:
       console:
         format: "%d{HH:mm:ss} %-5p traceId=%X{traceId}, parentId=%X{parentId}, spanId=%X{spanId}, sampled=%X{sampled} [%c{2.}] (%t) %s%e%n"
+        level: DEBUG
       level: INFO
+      min-level: DEBUG
       category:
         "org.keycloak":
           level: ERROR
+        "io.quarkus":
+          level: INFO
     oidc:
       auth-server-url: http://localhost:8080/realms/fastfeet
       client-id: ${CLIENT_ID:access-auth-service}

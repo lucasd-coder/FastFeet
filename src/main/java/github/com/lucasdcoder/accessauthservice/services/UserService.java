@@ -13,12 +13,14 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.RealmResource;
+import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 
 import github.com.lucasdcoder.accessauthservice.domain.Roles;
 import github.com.lucasdcoder.accessauthservice.domain.User;
+import github.com.lucasdcoder.accessauthservice.resources.response.GetRolesResponse;
 import github.com.lucasdcoder.accessauthservice.resources.response.GetUserResponse;
 import github.com.lucasdcoder.accessauthservice.services.exceptions.ResourceNotFoundException;
 
@@ -76,6 +78,26 @@ public class UserService {
 
         return toGetUserResponse(users);
 
+    }
+
+    public UserResource findById(String id) {
+        RealmResource realmResource = keycloak.realm(realm);
+
+        return realmResource.users().get(id);
+    }
+
+    public Response getRoles(String id) {
+        UserResource userResource = findById(id);
+
+        List<RoleRepresentation> roleRepresentations = userResource.roles().realmLevel().listEffective();
+
+        List<String> roles = roleRepresentations.stream()
+                .map(RoleRepresentation::getName)
+                .toList();
+
+        GetRolesResponse resp = GetRolesResponse.builder().roles(roles).build();
+
+        return Response.ok(resp).build();
     }
 
     private List<String> rolesIdentity(Roles roles) {
