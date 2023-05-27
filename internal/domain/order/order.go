@@ -50,8 +50,8 @@ type GetAllOrderRequest struct {
 	CanceledAt    string     `bson:"canceledAt,omitempty" validate:"rfc3339"`
 	Limit         int64      `bson:"limit,omitempty" validate:"numeric=integer"`
 	Offset        int64      `bson:"offset,omitempty" validate:"numeric=integer"`
-	Product       GetProduct `bson:"product,omitempty" validate:"dive"`
-	Address       GetAddress `bson:"addresses,omitempty" validate:"dive"`
+	Product       GetProduct `bson:"product,omitempty" validate:"required,dive"`
+	Address       GetAddress `bson:"addresses,omitempty" validate:"required,dive"`
 }
 
 type GetProduct struct {
