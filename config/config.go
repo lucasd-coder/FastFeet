@@ -27,11 +27,12 @@ type (
 	}
 
 	RabbitMQ struct {
-		Queue `env-required:"true" yaml:"queue"`
+		Topic `env-required:"true" yaml:"topic"`
 	}
 
-	Queue struct {
-		QueueUserEvents `env-required:"true" yaml:"user-events"`
+	Topic struct {
+		TopicUserEvents  `env-required:"true" yaml:"user-events"`
+		TopicOrderEvents `env-required:"true" yaml:"order-events"`
 	}
 
 	Server struct {
@@ -40,7 +41,13 @@ type (
 		WriteTimeout time.Duration `yaml:"writeTimeout" default:"10s"`
 	}
 
-	QueueUserEvents struct {
+	TopicUserEvents struct {
+		URL         string        `env-required:"true" yaml:"url"`
+		MaxRetries  int           `yaml:"max-retries" env-default:"3"`
+		WaitingTime time.Duration `yaml:"waiting-time" env-default:"2s"`
+	}
+
+	TopicOrderEvents struct {
 		URL         string        `env-required:"true" yaml:"url"`
 		MaxRetries  int           `yaml:"max-retries" env-default:"3"`
 		WaitingTime time.Duration `yaml:"waiting-time" env-default:"2s"`

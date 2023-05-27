@@ -14,7 +14,10 @@ server:
 
 integration:
   rabbit-mq:
-    queue:
+    topic:
       user-events:
         url: rabbit://router-service-user-events
+        max-retry: 3
+      order-events:
+        url: rabbit://router-service-order-events
         max-retry: 3

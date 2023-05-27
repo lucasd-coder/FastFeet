@@ -13,11 +13,19 @@ import (
 
 type controller struct{}
 
-func NewRouter(user *UserController) *chi.Mux {
+func NewRouter(
+	user *UserController,
+	order *OrderController) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Group(func(r chi.Router) {
 		r.Post("/users", user.Save)
+	})
+
+	r.Group(func(r chi.Router) {
+		r.Route("/orders", func(r chi.Router) {
+			r.Post("/{userId}", order.Save)
+		})
 	})
 
 	return r

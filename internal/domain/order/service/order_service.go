@@ -2,36 +2,35 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/lucasd-coder/router-service/config"
-	model "github.com/lucasd-coder/router-service/internal/domain/user"
+	model "github.com/lucasd-coder/router-service/internal/domain/order"
 	"github.com/lucasd-coder/router-service/internal/provider/publish"
 	"github.com/lucasd-coder/router-service/internal/provider/validator"
 	"github.com/lucasd-coder/router-service/internal/shared"
-	"github.com/lucasd-coder/router-service/internal/shared/ciphers"
-	"github.com/lucasd-coder/router-service/internal/shared/codec"
 	"github.com/lucasd-coder/router-service/pkg/logger"
 )
 
-type UserService struct {
+type OrderService struct {
 	validate shared.Validator
 	publish  shared.Publish
 	cfg      *config.Config
 }
 
-func NewUserService(
+func NewOrderService(
 	validate *validator.Validation,
 	publish *publish.Published,
-	cfg *config.Config) *UserService {
-	return &UserService{validate: validate, publish: publish, cfg: cfg}
+	cfg *config.Config) *OrderService {
+	return &OrderService{validate: validate, publish: publish, cfg: cfg}
 }
 
-func (s *UserService) Save(ctx context.Context, user *model.User) error {
+func (s *OrderService) Save(ctx context.Context, order *model.Order) error {
 	log := logger.FromContext(ctx)
 
-	if err := user.Validate(s.validate); err != nil {
+	if err := order.Validate(s.validate); err != nil {
 		msg := fmt.Errorf("err validating payload: %w", err)
 		log.Error(msg)
 		return msg
@@ -40,28 +39,17 @@ func (s *UserService) Save(ctx context.Context, user *model.User) error {
 	eventDate := s.GetEventDate()
 
 	pld := model.Payload{
-		Data:      *user,
+		Data:      *order,
 		EventDate: eventDate,
 	}
 
-	codec := codec.New[model.Payload]()
-
-	enc, err := codec.Encode(pld)
+	enc, err := json.Marshal(pld)
 	if err != nil {
-		msg := fmt.Errorf("err encoding payload: %w", err)
-		log.Error(msg)
-		return msg
-	}
-
-	encrypt, err := ciphers.Encrypt(ciphers.ExtractKey([]byte(s.cfg.AesKey)), enc)
-	if err != nil {
-		msg := fmt.Errorf("err encrypting payload: %w", err)
-		log.Error(msg)
-		return msg
+		return fmt.Errorf("fail json.Marshal err: %w", err)
 	}
 
 	msg := shared.Message{
-		Body: encrypt,
+		Body: enc,
 		Metadata: map[string]string{
 			"language":   "en",
 			"importance": "high",
@@ -75,10 +63,7 @@ func (s *UserService) Save(ctx context.Context, user *model.User) error {
 	}
 
 	fields := map[string]interface{}{
-		"payload": map[string]string{
-			"name":      pld.Data.Name,
-			"eventDate": eventDate,
-		},
+		"payload": pld,
 	}
 
 	log.WithFields(fields).Info("payload successfully processed")
@@ -86,6 +71,6 @@ func (s *UserService) Save(ctx context.Context, user *model.User) error {
 	return nil
 }
 
-func (s *UserService) GetEventDate() string {
+func (s *OrderService) GetEventDate() string {
 	return time.Now().Format(time.RFC3339)
 }

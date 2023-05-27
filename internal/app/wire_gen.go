@@ -9,9 +9,11 @@ package app
 import (
 	"github.com/lucasd-coder/router-service/config"
 	"github.com/lucasd-coder/router-service/internal/controller"
+	service2 "github.com/lucasd-coder/router-service/internal/domain/order/service"
 	"github.com/lucasd-coder/router-service/internal/domain/user/service"
 	"github.com/lucasd-coder/router-service/internal/provider/publish"
 	"github.com/lucasd-coder/router-service/internal/provider/validator"
+	"github.com/lucasd-coder/router-service/internal/shared"
 )
 
 // Injectors from wire.go:
@@ -21,15 +23,21 @@ func InitializeValidator() *validator.Validation {
 	return validation
 }
 
-func InitializePublish() *publish.Published {
-	configConfig := config.GetConfig()
-	published := publish.NewPublished(configConfig)
+func InitializeOrderEventsPublish() *publish.Published {
+	options := extractOptionOrderEvents()
+	published := publish.NewPublished(options)
+	return published
+}
+
+func InitializeUserEventsPublish() *publish.Published {
+	options := extractOptionUserEvents()
+	published := publish.NewPublished(options)
 	return published
 }
 
 func InitializeUserService() *service.UserService {
 	validation := InitializeValidator()
-	published := InitializePublish()
+	published := InitializeUserEventsPublish()
 	configConfig := config.GetConfig()
 	userService := service.NewUserService(validation, published, configConfig)
 	return userService
@@ -39,4 +47,38 @@ func InitializeUserController() *controller.UserController {
 	userService := InitializeUserService()
 	userController := controller.NewUserController(userService)
 	return userController
+}
+
+func InitializeOrderService() *service2.OrderService {
+	validation := InitializeValidator()
+	published := InitializeOrderEventsPublish()
+	configConfig := config.GetConfig()
+	orderService := service2.NewOrderService(validation, published, configConfig)
+	return orderService
+}
+
+func InitializeOrderController() *controller.OrderController {
+	orderService := InitializeOrderService()
+	orderController := controller.NewOrderController(orderService)
+	return orderController
+}
+
+// wire.go:
+
+func extractOptionOrderEvents() *shared.Options {
+	cfg := config.GetConfig()
+	return &shared.Options{
+		TopicURL:    cfg.TopicOrderEvents.URL,
+		MaxRetries:  cfg.TopicOrderEvents.MaxRetries,
+		WaitingTime: cfg.TopicOrderEvents.WaitingTime,
+	}
+}
+
+func extractOptionUserEvents() *shared.Options {
+	cfg := config.GetConfig()
+	return &shared.Options{
+		TopicURL:    cfg.TopicUserEvents.URL,
+		MaxRetries:  cfg.TopicUserEvents.MaxRetries,
+		WaitingTime: cfg.TopicUserEvents.WaitingTime,
+	}
 }

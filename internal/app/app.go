@@ -28,7 +28,9 @@ func Run(cfg *config.Config) {
 
 	userController := InitializeUserController()
 
-	controller := controller.NewRouter(userController)
+	orderController := InitializeOrderController()
+
+	controller := controller.NewRouter(userController, orderController)
 
 	r.Mount("/"+cfg.Name, controller)
 

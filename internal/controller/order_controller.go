@@ -5,29 +5,30 @@ import (
 	"fmt"
 	"net/http"
 
-	model "github.com/lucasd-coder/router-service/internal/domain/user"
-	"github.com/lucasd-coder/router-service/internal/domain/user/service"
+	"github.com/go-chi/chi/v5"
+	model "github.com/lucasd-coder/router-service/internal/domain/order"
+	"github.com/lucasd-coder/router-service/internal/domain/order/service"
 	"github.com/lucasd-coder/router-service/internal/shared"
 	"github.com/lucasd-coder/router-service/pkg/logger"
 )
 
-type UserController struct {
+type OrderController struct {
 	controller
-	userService model.UserService
+	orderService model.OrderService
 }
 
-func NewUserController(userService *service.UserService) *UserController {
-	return &UserController{
-		userService: userService,
+func NewOrderController(orderService *service.OrderService) *OrderController {
+	return &OrderController{
+		orderService: orderService,
 	}
 }
 
-func (h *UserController) Save(w http.ResponseWriter, r *http.Request) {
+func (h *OrderController) Save(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	log := logger.FromContext(ctx)
 
-	pld := &model.User{}
+	pld := &model.CreateOrder{}
 
 	if err := json.NewDecoder(r.Body).Decode(pld); err != nil {
 		msg := fmt.Errorf("error when doing decoder payload: %w", err)
@@ -36,7 +37,11 @@ func (h *UserController) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.userService.Save(ctx, pld); err != nil {
+	userID := chi.URLParam(r, "userId")
+
+	order := pld.NewOrder(userID)
+
+	if err := h.orderService.Save(ctx, order); err != nil {
 		h.SendError(ctx, w, err)
 		return
 	}

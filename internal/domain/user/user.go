@@ -4,10 +4,6 @@ import (
 	"github.com/lucasd-coder/router-service/internal/shared"
 )
 
-type CreateEvent struct {
-	Message string `json:"message,omitempty"`
-}
-
 type Payload struct {
 	Data      User   `json:"data,omitempty"`
 	EventDate string `json:"eventDate,omitempty"`

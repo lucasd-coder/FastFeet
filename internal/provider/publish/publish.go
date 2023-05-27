@@ -4,26 +4,25 @@ import (
 	"context"
 	"time"
 
-	"github.com/lucasd-coder/router-service/config"
 	"github.com/lucasd-coder/router-service/internal/shared"
 	"github.com/lucasd-coder/router-service/pkg/logger"
 	"gocloud.dev/pubsub"
 )
 
 type Published struct {
-	cfg *config.Config
+	opt *shared.Options
 }
 
-func NewPublished(cfg *config.Config) *Published {
+func NewPublished(opt *shared.Options) *Published {
 	return &Published{
-		cfg: cfg,
+		opt: opt,
 	}
 }
 
 func (p *Published) Send(ctx context.Context, msg *shared.Message) error {
 	log := logger.FromContext(ctx)
 
-	client, err := NewClient(ctx, p.cfg)
+	client, err := NewClient(ctx, p.opt.TopicURL)
 	if err != nil {
 		log.Errorf("error creating Publish client: %v", err)
 	}
@@ -40,18 +39,18 @@ func (p *Published) Send(ctx context.Context, msg *shared.Message) error {
 	}
 
 	var er error
-	for i := 0; i < p.cfg.MaxRetries; i++ {
+	for i := 0; i < p.opt.MaxRetries; i++ {
 		er = client.Send(ctx, m)
 		if er == nil {
 			break
 		}
 		log.Errorf("error when trying to publish to queue with err: %v", er)
 
-		if i == p.cfg.MaxRetries-1 {
+		if i == p.opt.MaxRetries-1 {
 			log.Errorf("max retries exceeded, not publishing message anymore: %v", er)
 			break
 		}
-		backOffTime := time.Duration(1+i) * p.cfg.WaitingTime
+		backOffTime := time.Duration(1+i) * p.opt.WaitingTime
 		log.Infof("waiting %v before retrying", backOffTime)
 		time.Sleep(backOffTime)
 	}
