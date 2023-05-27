@@ -27,7 +27,7 @@ func NewClient(cfg *config.Config) *resty.Client {
 
 	client.EnableTrace().
 		SetBaseURL(opt.url).
-		SetRetryCount(cfg.MaxRetries).
+		SetRetryCount(cfg.AuthServiceMaxRetries).
 		SetTransport(opt.transport).
 		SetDebug(opt.debug).
 		SetTimeout(opt.requestTimeout).

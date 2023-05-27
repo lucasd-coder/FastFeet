@@ -18,17 +18,22 @@ import (
 
 type UserHandler struct {
 	userRepository model.UserRepository
-	authRepository model.AuthRepository
+	authRepository shared.AuthRepository
 	cfg            *config.Config
+	validate       shared.Validator
 }
 
-func NewUserHandler(userRepo model.UserRepository,
-	authRepo model.AuthRepository, cfg *config.Config,
+func NewUserHandler(
+	userRepo model.UserRepository,
+	authRepo shared.AuthRepository,
+	cfg *config.Config,
+	validate shared.Validator,
 ) *UserHandler {
 	return &UserHandler{
 		userRepository: userRepo,
 		authRepository: authRepo,
 		cfg:            cfg,
+		validate:       validate,
 	}
 }
 
@@ -45,10 +50,10 @@ func (h *UserHandler) Handler(ctx context.Context, m []byte) error {
 	if err := codec.Decode(dec, &pld); err != nil {
 		return fmt.Errorf("err Decode: %w", err)
 	}
-	return h.create(ctx, &pld)
+	return h.handler(ctx, &pld)
 }
 
-func (h *UserHandler) create(ctx context.Context, pld *model.Payload) error {
+func (h *UserHandler) handler(ctx context.Context, pld *model.Payload) error {
 	log := logger.FromContext(ctx)
 
 	fields := map[string]interface{}{
@@ -58,7 +63,7 @@ func (h *UserHandler) create(ctx context.Context, pld *model.Payload) error {
 	}
 	log.WithFields(fields).Info("received payload")
 
-	if err := pld.Validate(); err != nil {
+	if err := pld.Validate(h.validate); err != nil {
 		return fmt.Errorf("validation error: %w", err)
 	}
 
@@ -74,7 +79,7 @@ func (h *UserHandler) create(ctx context.Context, pld *model.Payload) error {
 
 	register, err := h.registerAndReturn(ctx, pld)
 	if err != nil {
-		log.Errorf("err while call auth-service: %v", err)
+		log.Errorf("error while call auth-service err: %v", err)
 		return err
 	}
 
@@ -138,7 +143,7 @@ func (h *UserHandler) validadeUserWithCpf(ctx context.Context, cpf string) error
 	return nil
 }
 
-func (h *UserHandler) registerAndReturn(ctx context.Context, pld *model.Payload) (*model.RegisterUserResponse, error) {
+func (h *UserHandler) registerAndReturn(ctx context.Context, pld *model.Payload) (*shared.RegisterUserResponse, error) {
 	log := logger.FromContext(ctx)
 
 	user, err := h.authRepository.FindByEmail(ctx, pld.Data.Email)
@@ -158,7 +163,7 @@ func (h *UserHandler) registerAndReturn(ctx context.Context, pld *model.Payload)
 		return register, nil
 	}
 
-	return &model.RegisterUserResponse{
+	return &shared.RegisterUserResponse{
 		ID: user.ID,
 	}, nil
 }

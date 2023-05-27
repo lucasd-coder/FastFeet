@@ -5,36 +5,38 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lucasd-coder/business-service/config"
+	"github.com/lucasd-coder/business-service/internal/shared/queueoptions"
 	"github.com/lucasd-coder/business-service/pkg/logger"
 	"gocloud.dev/pubsub"
 )
 
 type Subscription struct {
-	handler func(ctx context.Context, m []byte) error
-	cfg     *config.Config
+	queueURL string
+	handler  func(ctx context.Context, m []byte) error
+	opt      *queueoptions.Options
 }
 
-func New(handler func(ctx context.Context, m []byte) error, cfg *config.Config) *Subscription {
+func New(queueURL string, handler func(ctx context.Context, m []byte) error, opt *queueoptions.Options) *Subscription {
 	return &Subscription{
+		queueURL,
 		handler,
-		cfg,
+		opt,
 	}
 }
 
 func (s *Subscription) Start(ctx context.Context) {
 	log := logger.FromContext(ctx)
 
-	log.Info("Subscription has been started...")
+	log.Infof("Subscription has been started.... for queueURL: %s", s.queueURL)
 
-	client, err := NewClient(ctx, s.cfg)
+	client, err := NewClient(ctx, s.queueURL)
 	if err != nil {
-		log.Errorf("error creating Subscription client: %v", err)
+		log.Errorf("error creating subscription client: %v, for queueURL", err, s.queueURL)
 	}
 
 	defer func() {
 		if err := client.Shutdown(ctx); err != nil {
-			log.Fatalf("error client shutdown: %v", err)
+			log.Fatalf("error client for queueURL: %s, shutdown: %v", s.queueURL, err)
 		}
 	}()
 
@@ -50,14 +52,14 @@ func (s *Subscription) start(ctx context.Context, client *pubsub.Subscription, w
 
 	msgChan := make(chan *pubsub.Message)
 
-	sem := make(chan struct{}, s.cfg.MaxConcurrentMessages)
+	sem := make(chan struct{}, s.opt.MaxConcurrentMessages)
 
 	s.startReceivers(ctx, client, msgChan)
 
 	for {
 		select {
 		case <-ctx.Done():
-			log.Infof("context cancelled, stopping Subscription...")
+			log.Infof("context cancelled, stopping Subscription... for queueURL: %s", s.queueURL)
 			return
 		case msg := <-msgChan:
 			sem <- struct{}{}
@@ -68,7 +70,7 @@ func (s *Subscription) start(ctx context.Context, client *pubsub.Subscription, w
 					wg.Done()
 				}()
 				if err := s.processMessage(ctx, currentMsg.Body); err != nil {
-					log.Errorf("error processing message: %v", err)
+					log.Errorf("error processing message for queueURL: %s, err: %v", s.queueURL, err)
 					if currentMsg.Nackable() {
 						defer currentMsg.Nack()
 					}
@@ -82,7 +84,7 @@ func (s *Subscription) start(ctx context.Context, client *pubsub.Subscription, w
 
 func (s *Subscription) processMessage(ctx context.Context, messages []byte) error {
 	log := logger.FromContext(ctx)
-	log.Info("start process mensagens")
+	log.Infof("start process mensagens for queueURL: %s", s.queueURL)
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -91,20 +93,20 @@ func (s *Subscription) processMessage(ctx context.Context, messages []byte) erro
 	}()
 
 	var err error
-	for i := 0; i < s.cfg.MaxRetries; i++ {
+	for i := 0; i < s.opt.MaxRetries; i++ {
 		err = s.handler(ctx, messages)
 		if err == nil {
 			break
 		}
 		log.Errorf("error while handling message: %v", err)
 
-		if i == s.cfg.MaxRetries-1 {
+		if i == s.opt.MaxRetries-1 {
 			log.Errorf("max retries exceeded, not processing message anymore: %v", err)
 			err = nil
 			break
 		}
 
-		backOffTime := time.Duration(1+i) * s.cfg.WaitingTime
+		backOffTime := time.Duration(1+i) * s.opt.WaitingTime
 		log.Infof("waiting %v before retrying", backOffTime)
 		time.Sleep(backOffTime)
 	}
@@ -112,27 +114,27 @@ func (s *Subscription) processMessage(ctx context.Context, messages []byte) erro
 }
 
 func (s *Subscription) startReceivers(ctx context.Context, client *pubsub.Subscription, m chan *pubsub.Message) {
-	for i := 0; i < s.cfg.NumberOfMessageReceivers; i++ {
+	for i := 0; i < s.opt.NumberOfMessageReceivers; i++ {
 		go s.receiveMessage(ctx, client, m)
 	}
 }
 
 func (s *Subscription) receiveMessage(ctx context.Context, client *pubsub.Subscription, m chan *pubsub.Message) {
 	log := logger.FromContext(ctx)
-	log.Info("start receive mensagens")
+	log.Infof("start receive mensagens for queueURL: %s", s.queueURL)
 
-	retry := s.cfg.MaxReceiveMessage
+	retry := s.opt.MaxReceiveMessage
 	for {
 		select {
 		case <-ctx.Done():
-			log.Infof("context cancelled, stopping receive...")
+			log.Infof("context cancelled, stopping receive... for queueURL: %s", s.queueURL)
 			return
 		default:
 			childCtx, cancel := context.WithCancel(ctx)
 			defer cancel()
 			msg, err := client.Receive(childCtx)
 			if err != nil {
-				log.Errorf("error receiving message: %v", err)
+				log.Errorf("error receiving message for queueURL: %s, err: %v", s.queueURL, err)
 				time.Sleep(retry)
 				continue
 			}
@@ -147,5 +149,5 @@ func (s *Subscription) receiveMessage(ctx context.Context, client *pubsub.Subscr
 }
 
 func (s *Subscription) applyBackPressure() {
-	time.Sleep(s.cfg.PollDelay)
+	time.Sleep(s.opt.PollDelay)
 }

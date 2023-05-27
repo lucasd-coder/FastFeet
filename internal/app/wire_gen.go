@@ -7,21 +7,61 @@
 package app
 
 import (
+	"github.com/google/wire"
 	"github.com/lucasd-coder/business-service/config"
+	model2 "github.com/lucasd-coder/business-service/internal/domain/order"
+	handler2 "github.com/lucasd-coder/business-service/internal/domain/order/handler"
+	"github.com/lucasd-coder/business-service/internal/domain/order/service"
+	"github.com/lucasd-coder/business-service/internal/domain/user"
+	"github.com/lucasd-coder/business-service/internal/domain/user/handler"
 	repository2 "github.com/lucasd-coder/business-service/internal/provider/authservice/repository"
 	"github.com/lucasd-coder/business-service/internal/provider/managerservice/repository"
+	repository4 "github.com/lucasd-coder/business-service/internal/provider/orderdataservice/repository"
+	"github.com/lucasd-coder/business-service/internal/provider/validator"
+	repository3 "github.com/lucasd-coder/business-service/internal/provider/viacepservice/repository"
+	"github.com/lucasd-coder/business-service/internal/shared"
+	"github.com/lucasd-coder/business-service/pkg/cache"
 )
 
 // Injectors from wire.go:
 
-func InitializeUserRepository() *repository.UserRepository {
+func InitializeUserHandler() *handler.UserHandler {
 	configConfig := config.GetConfig()
 	userRepository := repository.NewUserRepository(configConfig)
-	return userRepository
+	authRepository := repository2.NewAuthRepository(configConfig)
+	validation := &validator.Validation{}
+	userHandler := handler.NewUserHandler(userRepository, authRepository, configConfig, validation)
+	return userHandler
 }
 
-func InitializeAuthRepository() *repository2.AuthRepository {
+func InitializeOrderHandler() *handler2.OrderHandler {
 	configConfig := config.GetConfig()
 	authRepository := repository2.NewAuthRepository(configConfig)
-	return authRepository
+	client := cache.GetClient()
+	viaCepRepository := repository3.NewViaCepRepository(configConfig, client)
+	orderDataRepository := repository4.NewOrderDataRepository(configConfig)
+	validation := &validator.Validation{}
+	orderHandler := handler2.NewOrderHandler(authRepository, viaCepRepository, orderDataRepository, configConfig, validation)
+	return orderHandler
 }
+
+func InitializeOrderDataService() *service.OrderDataService {
+	validation := &validator.Validation{}
+	configConfig := config.GetConfig()
+	orderDataRepository := repository4.NewOrderDataRepository(configConfig)
+	authRepository := repository2.NewAuthRepository(configConfig)
+	orderDataService := service.NewOrderDataService(validation, orderDataRepository, authRepository)
+	return orderDataService
+}
+
+// wire.go:
+
+var initializeValidator = wire.NewSet(wire.Struct(new(validator.Validation)), wire.Bind(new(shared.Validator), new(*validator.Validation)))
+
+var initializeUserRepository = wire.NewSet(wire.Bind(new(model.UserRepository), new(*repository.UserRepository)), repository.NewUserRepository)
+
+var initializeAuthRepository = wire.NewSet(wire.Bind(new(shared.AuthRepository), new(*repository2.AuthRepository)), repository2.NewAuthRepository)
+
+var initializeViaCepRepository = wire.NewSet(wire.Bind(new(model2.ViaCepRepository), new(*repository3.ViaCepRepository)), cache.GetClient, repository3.NewViaCepRepository)
+
+var initializeOrderDataRepository = wire.NewSet(wire.Bind(new(model2.OrderDataRepository), new(*repository4.OrderDataRepository)), repository4.NewOrderDataRepository)

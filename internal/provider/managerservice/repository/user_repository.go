@@ -31,9 +31,7 @@ func (r *UserRepository) Save(ctx context.Context, req *pb.UserRequest) (*pb.Use
 
 	client := pb.NewUserServiceClient(conn)
 
-	resp, err := client.Save(ctx, req)
-
-	return resp, err
+	return client.Save(ctx, req)
 }
 
 func (r *UserRepository) FindByEmail(ctx context.Context, req *pb.UserByEmailRequest) (*pb.UserResponse, error) {

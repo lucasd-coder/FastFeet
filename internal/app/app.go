@@ -8,9 +8,11 @@ import (
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	"github.com/lucasd-coder/business-service/config"
-	"github.com/lucasd-coder/business-service/internal/domain/user/handler"
 	"github.com/lucasd-coder/business-service/internal/provider/subscribe"
+	"github.com/lucasd-coder/business-service/internal/shared/queueoptions"
+	"github.com/lucasd-coder/business-service/pkg/cache"
 	"github.com/lucasd-coder/business-service/pkg/logger"
+	"github.com/lucasd-coder/business-service/pkg/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
@@ -19,6 +21,8 @@ import (
 
 func Run(cfg *config.Config) {
 	ctx := context.Background()
+
+	cache.SetUpRedis(ctx, cfg)
 
 	logger := logger.NewLog(cfg)
 
@@ -29,7 +33,53 @@ func Run(cfg *config.Config) {
 		log.Fatalf("Could not connect: %v", err)
 	}
 
-	grpcServer := grpc.NewServer(
+	userHandler := InitializeUserHandler()
+
+	orderHandler := InitializeOrderHandler()
+
+	orderDataService := InitializeOrderDataService()
+
+	grpcServer := newGrpcServer(logger)
+
+	pb.RegisterGetAllOrderServiceServer(grpcServer, orderDataService)
+
+	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
+
+	reflection.Register(grpcServer)
+
+	optsQueueUserEvents := queueoptions.NewOptionQueueUserEvents(cfg)
+
+	optsQueueOrderEvents := queueoptions.NewOptionOrderEvents(cfg)
+
+	subscribeUserEvents := subscribe.New(cfg.QueueUserEvents.URL, func(ctx context.Context, m []byte) error {
+		if err := userHandler.Handler(ctx, m); err != nil {
+			return err
+		}
+		return nil
+	}, optsQueueUserEvents)
+
+	subscribeOrderEvents := subscribe.New(cfg.QueueOrderEvents.URL, func(ctx context.Context, m []byte) error {
+		if err := orderHandler.Handler(ctx, m); err != nil {
+			return err
+		}
+		return nil
+	}, optsQueueOrderEvents)
+
+	log.Infof("Started listening... address[:%s]", cfg.Port)
+
+	go func() {
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatalf("Could not serve: %v", err)
+		}
+	}()
+
+	go subscribeUserEvents.Start(ctx)
+
+	subscribeOrderEvents.Start(ctx)
+}
+
+func newGrpcServer(logger *logger.Log) *grpc.Server {
+	return grpc.NewServer(
 		grpc.UnaryInterceptor(
 			grpc_middleware.ChainUnaryServer(
 				grpc_ctxtags.UnaryServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
@@ -45,30 +95,4 @@ func Run(cfg *config.Config) {
 			),
 		),
 	)
-	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
-
-	reflection.Register(grpcServer)
-
-	userRepository := InitializeUserRepository()
-
-	authRepository := InitializeAuthRepository()
-
-	userHandler := handler.NewUserHandler(userRepository, authRepository, cfg)
-
-	subscribe := subscribe.New(func(ctx context.Context, m []byte) error {
-		if err := userHandler.Handler(ctx, m); err != nil {
-			return err
-		}
-		return nil
-	}, cfg)
-
-	log.Infof("Started listening... address[:%s]", cfg.Port)
-
-	go func() {
-		if err := grpcServer.Serve(lis); err != nil {
-			log.Fatalf("Could not serve: %v", err)
-		}
-	}()
-
-	subscribe.Start(ctx)
 }

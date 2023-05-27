@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/lucasd-coder/business-service/config"
-	model "github.com/lucasd-coder/business-service/internal/domain/user"
 	"github.com/lucasd-coder/business-service/internal/provider/authservice"
 	"github.com/lucasd-coder/business-service/internal/shared"
 	"github.com/lucasd-coder/business-service/pkg/logger"
@@ -23,7 +23,7 @@ func NewAuthRepository(cfg *config.Config) *AuthRepository {
 	return &AuthRepository{cfg}
 }
 
-func (r *AuthRepository) Register(ctx context.Context, pld *model.Register) (*model.RegisterUserResponse, error) {
+func (r *AuthRepository) Register(ctx context.Context, pld *shared.Register) (*shared.RegisterUserResponse, error) {
 	log := logger.FromContext(ctx)
 
 	client := authservice.NewClient(r.cfg)
@@ -59,7 +59,7 @@ func (r *AuthRepository) Register(ctx context.Context, pld *model.Register) (*mo
 	return res, err
 }
 
-func (r *AuthRepository) FindByEmail(ctx context.Context, email string) (*model.GetUserResponse, error) {
+func (r *AuthRepository) FindByEmail(ctx context.Context, email string) (*shared.GetUserResponse, error) {
 	log := logger.FromContext(ctx)
 
 	client, err := authservice.NewClientWithAuth(ctx, r.cfg)
@@ -71,7 +71,7 @@ func (r *AuthRepository) FindByEmail(ctx context.Context, email string) (*model.
 
 	response, err := request.
 		SetPathParam("email", email).
-		SetResult(&model.GetUserResponse{}).
+		SetResult(&shared.GetUserResponse{}).
 		SetError(&shared.HTTPError{}).
 		Get("/api/users/{email}")
 	if err != nil {
@@ -90,22 +90,97 @@ func (r *AuthRepository) FindByEmail(ctx context.Context, email string) (*model.
 		}
 
 		return nil, fmt.Errorf(
-			"err while execute request auth-service with statusCode: %s. Endpoint: /api/users, Method: GET", response.Status())
+			"err while execute request auth-service with statusCode: %s. Endpoint: /api/users/{email}, Method: GET", response.Status())
 	}
 
-	res, ok := response.Result().(*model.GetUserResponse)
+	res, ok := response.Result().(*shared.GetUserResponse)
 
 	if !ok {
 		return nil, fmt.Errorf("%w. Endpoint: /api/users", shared.ErrExtractResponse)
 	}
 
-	log.Debugf("auth-service call successful. Endpoint: /api/register, Method: POST, Response time: %s",
+	log.Debugf("auth-service call successful. Endpoint: /api/users, Method: GET, Response time: %s",
 		response.ReceivedAt().String())
 
 	return res, nil
 }
 
-func (r *AuthRepository) extractUserID(response *resty.Response) (*model.RegisterUserResponse, error) {
+func (r *AuthRepository) FindRolesByID(ctx context.Context, ID string) (*shared.GetRolesResponse, error) {
+	log := logger.FromContext(ctx)
+
+	client, err := authservice.NewClientWithAuth(ctx, r.cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	request := client.R()
+
+	response, err := request.
+		SetPathParam("id", ID).
+		SetResult(&shared.GetRolesResponse{}).
+		SetError(&shared.HTTPError{}).
+		Get("/api/users/roles/{id}")
+	if err != nil {
+		return nil, err
+	}
+
+	if response.IsError() {
+		return nil, fmt.Errorf(
+			"err while execute request auth-service with statusCode: %s. Endpoint: /api/users/roles/{id}, Method: GET", response.Status())
+	}
+
+	res, ok := response.Result().(*shared.GetRolesResponse)
+
+	if !ok {
+		return nil, fmt.Errorf("%w. Endpoint: /api/users/roles/{id}", shared.ErrExtractResponse)
+	}
+
+	log.Debugf("auth-service call successful. Endpoint: /api/users/roles/{id}, Method: GET, Response time: %s",
+		response.ReceivedAt().String())
+
+	return res, nil
+}
+
+func (r *AuthRepository) IsActiveUser(ctx context.Context, ID string) (*shared.IsActiveUser, error) {
+	log := logger.FromContext(ctx)
+
+	client, err := authservice.NewClientWithAuth(ctx, r.cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	request := client.R()
+
+	response, err := request.
+		SetPathParam("id", ID).
+		SetResult(&shared.IsActiveUser{}).
+		SetError(&shared.HTTPError{}).
+		Get("/api/users/is-active/{id}")
+	if err != nil {
+		return nil, err
+	}
+
+	if response.IsError() {
+		if response.StatusCode() == http.StatusNotFound {
+			return nil, shared.ErrUserNotFound
+		}
+		return nil, fmt.Errorf(
+			"err while execute request auth-service with statusCode: %s. Endpoint: /api/users/roles/{id}, Method: GET", response.Status())
+	}
+
+	res, ok := response.Result().(*shared.IsActiveUser)
+
+	if !ok {
+		return nil, fmt.Errorf("%w. Endpoint: /api/users/roles/{id}", shared.ErrExtractResponse)
+	}
+
+	log.Debugf("auth-service call successful. Endpoint: /api/users/is-active/{id}, Method: GET, Response time: %s",
+		response.ReceivedAt().String())
+
+	return res, nil
+}
+
+func (r *AuthRepository) extractUserID(response *resty.Response) (*shared.RegisterUserResponse, error) {
 	if response == nil {
 		return nil, nil
 	}
@@ -120,7 +195,7 @@ func (r *AuthRepository) extractUserID(response *resty.Response) (*model.Registe
 	path := strings.Split(u.Path, "/")
 	userID := path[len(path)-1]
 
-	return &model.RegisterUserResponse{
+	return &shared.RegisterUserResponse{
 		ID: userID,
 	}, nil
 }

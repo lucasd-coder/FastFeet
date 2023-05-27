@@ -6,9 +6,13 @@ import (
 	"time"
 
 	model "github.com/lucasd-coder/business-service/internal/domain/user"
+	val "github.com/lucasd-coder/business-service/internal/provider/validator"
+	"github.com/lucasd-coder/business-service/internal/shared"
 )
 
 func TestPayloadValidate(t *testing.T) {
+	validation := val.NewValidation()
+
 	type fields struct {
 		Name       string
 		Email      string
@@ -66,7 +70,7 @@ func TestPayloadValidate(t *testing.T) {
 				},
 				EventDate: time.Now().Format(time.RFC3339),
 			}
-			if err := payload.Validate(); (err != nil) != tt.wantErr {
+			if err := payload.Validate(validation); (err != nil) != tt.wantErr {
 				t.Errorf("Payload.Validate() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -85,7 +89,7 @@ func TestPayloadToRegister(t *testing.T) {
 	tests := []struct {
 		name   string
 		fields fields
-		want   *model.Register
+		want   *shared.Register
 	}{
 		{
 			name: "should model register",
@@ -97,7 +101,7 @@ func TestPayloadToRegister(t *testing.T) {
 				Authority:  "USER",
 				Attributes: map[string]string{},
 			},
-			want: &model.Register{
+			want: &shared.Register{
 				Name:      "maria",
 				Username:  "manoel@gmail.com",
 				Password:  "1234567",

@@ -43,9 +43,10 @@ func TestHandler_InvalidPayload(t *testing.T) {
 	cfg := SetUpConfig()
 
 	userRepoMock := new(mocks.UserRepository_internal_domain_user)
-	authRepoMock := new(mocks.AuthRepository_internal_domain_user)
+	authRepoMock := new(mocks.AuthRepository_internal_shared)
+	valMock := new(mocks.Validator_internal_shared)
 
-	handler := handler.NewUserHandler(userRepoMock, authRepoMock, cfg)
+	handler := handler.NewUserHandler(userRepoMock, authRepoMock, cfg, valMock)
 	err = handler.Handler(ctx, pld)
 	assert.NotNil(t, err)
 }
@@ -84,11 +85,12 @@ func TestHandler_UserWithEmailAlreadyExist(t *testing.T) {
 	cfg := SetUpConfig()
 
 	userRepoMock := new(mocks.UserRepository_internal_domain_user)
-	authRepoMock := new(mocks.AuthRepository_internal_domain_user)
+	authRepoMock := new(mocks.AuthRepository_internal_shared)
+	valMock := new(mocks.Validator_internal_shared)
 
 	userRepoMock.On("FindByEmail", ctx, userByEmailRequest).Return(userResp, nil)
 
-	handler := handler.NewUserHandler(userRepoMock, authRepoMock, cfg)
+	handler := handler.NewUserHandler(userRepoMock, authRepoMock, cfg, valMock)
 	err = handler.Handler(ctx, pld)
 	assert.ErrorIs(t, err, shared.ErrUserAlreadyExist)
 }
@@ -131,13 +133,14 @@ func TestHandler_UserWithCPFAlreadyExist(t *testing.T) {
 	cfg := SetUpConfig()
 
 	userRepoMock := new(mocks.UserRepository_internal_domain_user)
-	authRepoMock := new(mocks.AuthRepository_internal_domain_user)
+	authRepoMock := new(mocks.AuthRepository_internal_shared)
+	valMock := new(mocks.Validator_internal_shared)
 
 	userRepoMock.On("FindByEmail", ctx, userByEmailRequest).Return(&pb.UserResponse{}, nil)
 
 	userRepoMock.On("FindByCpf", ctx, userByCpfRequest).Return(userResp, nil)
 
-	handler := handler.NewUserHandler(userRepoMock, authRepoMock, cfg)
+	handler := handler.NewUserHandler(userRepoMock, authRepoMock, cfg, valMock)
 	err = handler.Handler(ctx, pld)
 	assert.ErrorIs(t, err, shared.ErrUserAlreadyExist)
 }
@@ -167,7 +170,7 @@ func TestHandler_AuthAlreadyExist(t *testing.T) {
 		Email: payload.Data.Email,
 	}
 
-	getUserResp := &model.GetUserResponse{
+	getUserResp := &shared.GetUserResponse{
 		ID:       "46c77402-ba50-4b48-9bd9-1c4f97e36565",
 		Email:    payload.Data.Email,
 		Username: payload.Data.Email,
@@ -183,7 +186,8 @@ func TestHandler_AuthAlreadyExist(t *testing.T) {
 	cfg := SetUpConfig()
 
 	userRepoMock := new(mocks.UserRepository_internal_domain_user)
-	authRepoMock := new(mocks.AuthRepository_internal_domain_user)
+	authRepoMock := new(mocks.AuthRepository_internal_shared)
+	valMock := new(mocks.Validator_internal_shared)
 
 	userRepoMock.On("FindByEmail", ctx, userByEmailRequest).Return(&pb.UserResponse{}, nil)
 
@@ -193,7 +197,7 @@ func TestHandler_AuthAlreadyExist(t *testing.T) {
 
 	userRepoMock.On("Save", ctx, mock.Anything).Return(userResp, nil)
 
-	handler := handler.NewUserHandler(userRepoMock, authRepoMock, cfg)
+	handler := handler.NewUserHandler(userRepoMock, authRepoMock, cfg, valMock)
 	err = handler.Handler(ctx, pld)
 	assert.Nil(t, err)
 }
@@ -222,7 +226,7 @@ func TestHandler_CreatedUserSuccessfully(t *testing.T) {
 	userByEmailRequest := &pb.UserByEmailRequest{
 		Email: payload.Data.Email,
 	}
-	register := &model.RegisterUserResponse{
+	register := &shared.RegisterUserResponse{
 		ID: userResp.Id,
 	}
 
@@ -235,19 +239,20 @@ func TestHandler_CreatedUserSuccessfully(t *testing.T) {
 	cfg := SetUpConfig()
 
 	userRepoMock := new(mocks.UserRepository_internal_domain_user)
-	authRepoMock := new(mocks.AuthRepository_internal_domain_user)
+	authRepoMock := new(mocks.AuthRepository_internal_shared)
+	valMock := new(mocks.Validator_internal_shared)
 
 	userRepoMock.On("FindByEmail", ctx, userByEmailRequest).Return(&pb.UserResponse{}, nil)
 
 	userRepoMock.On("FindByCpf", ctx, userByCpfRequest).Return(&pb.UserResponse{}, nil)
 
-	authRepoMock.On("FindByEmail", ctx, payload.Data.Email).Return(&model.GetUserResponse{}, nil)
+	authRepoMock.On("FindByEmail", ctx, payload.Data.Email).Return(&shared.GetUserResponse{}, nil)
 
 	authRepoMock.On("Register", ctx, payload.ToRegister()).Return(register, nil)
 
 	userRepoMock.On("Save", ctx, mock.Anything).Return(userResp, nil)
 
-	handler := handler.NewUserHandler(userRepoMock, authRepoMock, cfg)
+	handler := handler.NewUserHandler(userRepoMock, authRepoMock, cfg, valMock)
 	err = handler.Handler(ctx, pld)
 	assert.Nil(t, err)
 }
