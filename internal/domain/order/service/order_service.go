@@ -60,12 +60,12 @@ func (s *OrderService) Save(ctx context.Context, req *pb.OrderRequest) (*pb.Orde
 
 func (s *OrderService) newAddress(req *pb.OrderRequest) model.Address {
 	return model.Address{
-		Address:      req.GetAddress().GetAddress(),
-		Number:       req.GetAddress().GetNumber(),
-		PostalCode:   req.GetAddress().GetPostalCode(),
-		Neighborhood: req.GetAddress().GetNeighborhood(),
-		City:         req.GetAddress().GetCity(),
-		State:        req.GetAddress().GetState(),
+		Address:      req.GetAddresses().GetAddress(),
+		Number:       req.GetAddresses().GetNumber(),
+		PostalCode:   req.GetAddresses().GetPostalCode(),
+		Neighborhood: req.GetAddresses().GetNeighborhood(),
+		City:         req.GetAddresses().GetCity(),
+		State:        req.GetAddresses().GetState(),
 	}
 }
 
@@ -106,12 +106,12 @@ func (s *OrderService) GetAllOrders(ctx context.Context, req *pb.GetAllOrderRequ
 
 func (s *OrderService) newGetAddress(req *pb.GetAllOrderRequest) model.GetAddress {
 	return model.GetAddress{
-		Address:      req.GetAddress().GetAddress(),
-		Number:       req.GetAddress().GetNumber(),
-		PostalCode:   req.GetAddress().GetPostalCode(),
-		Neighborhood: req.GetAddress().GetNeighborhood(),
-		City:         req.GetAddress().GetCity(),
-		State:        req.GetAddress().GetState(),
+		Address:      req.GetAddresses().GetAddress(),
+		Number:       req.GetAddresses().GetNumber(),
+		PostalCode:   req.GetAddresses().GetPostalCode(),
+		Neighborhood: req.GetAddresses().GetNeighborhood(),
+		City:         req.GetAddresses().GetCity(),
+		State:        req.GetAddresses().GetState(),
 	}
 }
 
@@ -141,7 +141,7 @@ func (s *OrderService) extractPbOrder(order model.Order) *pb.Order {
 		StartDate:     order.GetStartDate(),
 		EndDate:       order.GetStartDate(),
 		Product:       &pb.Product{Name: order.Product.Name},
-		Address: &pb.Address{
+		Addresses: &pb.Address{
 			Address:      order.Address.Address,
 			PostalCode:   order.Address.PostalCode,
 			Neighborhood: order.Address.Neighborhood,
