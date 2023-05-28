@@ -3,7 +3,7 @@ package orderdataservice
 import (
 	"time"
 
-	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
+	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
 
 	"github.com/lucasd-coder/business-service/config"
 	"google.golang.org/grpc"

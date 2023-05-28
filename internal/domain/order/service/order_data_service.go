@@ -33,20 +33,11 @@ func (s *OrderDataService) GetAllOrders(ctx context.Context, req *pb.GetAllOrder
 	*pb.GetAllOrderResponse, error) {
 	log := logger.FromContext(ctx)
 
-	pld := &model.GetAllOrderRequest{
-		ID:            req.GetId(),
-		UserID:        req.GetUserId(),
-		DeliverymanID: req.GetDeliverymanId(),
-		StartDate:     req.GetStartDate(),
-		EndDate:       req.GetEndDate(),
-		CreatedAt:     req.GetCreatedAt(),
-		UpdatedAt:     req.GetUpdatedAt(),
-		CanceledAt:    req.GetCanceledAt(),
-		Limit:         req.GetLimit(),
-		Offset:        req.GetOffset(),
-		Product:       model.GetProduct{Name: req.GetProduct().GetName()},
-		Address:       s.newGetAddress(req),
-	}
+	log.WithFields(map[string]interface{}{
+		"payload": req,
+	}).Info("received request")
+
+	pld := s.newGetAllOrderRequest(req)
 
 	if err := pld.Validate(s.validate); err != nil {
 		return nil, shared.ValidationErrors(err)
@@ -68,19 +59,7 @@ func (s *OrderDataService) GetAllOrders(ctx context.Context, req *pb.GetAllOrder
 		}
 	}
 
-	reqOrderService := &pb.GetOrderServiceAllOrderRequest{
-		Id:            req.GetId(),
-		StartDate:     req.GetStartDate(),
-		EndDate:       req.GetEndDate(),
-		Product:       req.GetProduct(),
-		Address:       req.GetAddress(),
-		CreatedAt:     req.GetCreatedAt(),
-		UpdatedAt:     req.GetUpdatedAt(),
-		DeliverymanId: req.GetDeliverymanId(),
-		CanceledAt:    req.GetCanceledAt(),
-		Limit:         req.GetLimit(),
-		Offset:        req.GetLimit(),
-	}
+	reqOrderService := s.newGetOrderServiceAllOrderRequest(pld)
 
 	resp, err := s.orderRepository.GetAllOrders(ctx, reqOrderService)
 	if err != nil {
@@ -90,14 +69,54 @@ func (s *OrderDataService) GetAllOrders(ctx context.Context, req *pb.GetAllOrder
 	return resp, nil
 }
 
-func (s *OrderDataService) newGetAddress(req *pb.GetAllOrderRequest) model.GetAddress {
-	return model.GetAddress{
-		Address:      req.GetAddress().GetAddress(),
-		Number:       req.GetAddress().GetNumber(),
-		PostalCode:   req.GetAddress().GetPostalCode(),
-		Neighborhood: req.GetAddress().GetNeighborhood(),
-		City:         req.GetAddress().GetCity(),
-		State:        req.GetAddress().GetState(),
+func (s *OrderDataService) newGetAllOrderRequest(req *pb.GetAllOrderRequest) *model.GetAllOrderRequest {
+	address := model.GetAddress{
+		Address:      req.GetAddresses().GetAddress(),
+		Number:       req.GetAddresses().GetNumber(),
+		PostalCode:   req.GetAddresses().GetPostalCode(),
+		Neighborhood: req.GetAddresses().GetNeighborhood(),
+		City:         req.GetAddresses().GetCity(),
+		State:        req.GetAddresses().GetState(),
+	}
+
+	return &model.GetAllOrderRequest{
+		ID:            req.GetId(),
+		UserID:        req.GetUserId(),
+		DeliverymanID: req.GetDeliverymanId(),
+		StartDate:     req.GetStartDate(),
+		EndDate:       req.GetEndDate(),
+		CreatedAt:     req.GetCreatedAt(),
+		UpdatedAt:     req.GetUpdatedAt(),
+		CanceledAt:    req.GetCanceledAt(),
+		Limit:         req.GetLimit(),
+		Offset:        req.GetOffset(),
+		Product:       model.GetProduct{Name: req.GetProduct().GetName()},
+		Address:       address,
+	}
+}
+
+func (s *OrderDataService) newGetOrderServiceAllOrderRequest(pld *model.GetAllOrderRequest) *pb.GetOrderServiceAllOrderRequest {
+	address := &pb.Address{
+		Address:      pld.Address.Address,
+		Number:       pld.Address.Number,
+		PostalCode:   pld.Address.PostalCode,
+		Neighborhood: pld.Address.Neighborhood,
+		City:         pld.Address.City,
+		State:        pld.Address.State,
+	}
+
+	return &pb.GetOrderServiceAllOrderRequest{
+		Id:            pld.ID,
+		StartDate:     pld.StartDate,
+		EndDate:       pld.EndDate,
+		Product:       &pb.Product{Name: pld.Product.Name},
+		Addresses:     address,
+		CreatedAt:     pld.CreatedAt,
+		UpdatedAt:     pld.UpdatedAt,
+		DeliverymanId: pld.DeliverymanID,
+		CanceledAt:    pld.CanceledAt,
+		Limit:         pld.Limit,
+		Offset:        pld.Offset,
 	}
 }
 

@@ -11,7 +11,7 @@ message GetOrderServiceAllOrderRequest {
   string startDate = 2;
   string endDate = 3;
   Product product = 4;
-  Address address = 5;
+  Address addresses = 5;
   string createdAt = 6;
   string updatedAt = 7;
   string deliverymanId = 8;

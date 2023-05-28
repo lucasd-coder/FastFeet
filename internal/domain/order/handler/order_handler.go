@@ -145,7 +145,7 @@ func (h *OrderHandler) newOrderRequest(pld model.Payload, address *shared.ViaCep
 	return &pb.OrderRequest{
 		DeliverymanId: pld.Data.DeliverymanID,
 		Product:       &pb.Product{Name: pld.Data.Product.Name},
-		Address: &pb.Address{
+		Addresses: &pb.Address{
 			Address:      address.Address,
 			PostalCode:   address.PostalCode,
 			Neighborhood: address.Neighborhood,

@@ -4,9 +4,7 @@ import (
 	"context"
 	"net"
 
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
-	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
+	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/lucasd-coder/business-service/config"
 	"github.com/lucasd-coder/business-service/internal/provider/subscribe"
 	"github.com/lucasd-coder/business-service/internal/shared/queueoptions"
@@ -80,19 +78,13 @@ func Run(cfg *config.Config) {
 
 func newGrpcServer(logger *logger.Log) *grpc.Server {
 	return grpc.NewServer(
-		grpc.UnaryInterceptor(
-			grpc_middleware.ChainUnaryServer(
-				grpc_ctxtags.UnaryServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
-				logger.GetGRPCUnaryServerInterceptor(),
-				grpc_recovery.UnaryServerInterceptor(),
-			),
+		grpc.ChainUnaryInterceptor(
+			logger.GetGRPCUnaryServerInterceptor(),
+			grpc_recovery.UnaryServerInterceptor(),
 		),
-		grpc.StreamInterceptor(
-			grpc_middleware.ChainStreamServer(
-				grpc_ctxtags.StreamServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
-				logger.GetGRPCStreamServerInterceptor(),
-				grpc_recovery.StreamServerInterceptor(),
-			),
+		grpc.ChainStreamInterceptor(
+			logger.GetGRPCStreamServerInterceptor(),
+			grpc_recovery.StreamServerInterceptor(),
 		),
 	)
 }
