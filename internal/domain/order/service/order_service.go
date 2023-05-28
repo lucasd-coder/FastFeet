@@ -84,6 +84,10 @@ func (s *OrderService) GetEventDate() string {
 func (s *OrderService) GetAllOrders(ctx context.Context, pld *model.GetAllOrderPayload) (*pb.GetAllOrderResponse, error) {
 	log := logger.FromContext(ctx)
 
+	log.WithFields(map[string]interface{}{
+		"payload": pld,
+	}).Info("received request")
+
 	if err := pld.Validate(s.validate); err != nil {
 		msg := fmt.Errorf("err validating payload: %w", err)
 		log.Error(msg)
@@ -102,7 +106,7 @@ func (s *OrderService) GetAllOrders(ctx context.Context, pld *model.GetAllOrderP
 		Limit:         pld.Limit,
 		Offset:        pld.Offset,
 		Product:       &pb.Product{Name: pld.Product.Name},
-		Address:       s.newGetAddress(pld),
+		Addresses:     s.newGetAddress(pld),
 	}
 
 	res, err := s.businessRepo.GetAllOrders(ctx, req)
