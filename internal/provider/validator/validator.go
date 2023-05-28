@@ -37,6 +37,10 @@ func (v *Validation) ValidateStruct(s interface{}) error {
 		log.Fatal(err)
 	}
 
+	if err := v.validate.RegisterValidation("objectID", val.ObjectID); err != nil {
+		log.Fatal(err)
+	}
+
 	return v.validate.Struct(s)
 }
 

@@ -13,6 +13,10 @@ server:
   writeTimeout: 10s
 
 integration:
+  grpc:
+    business-service:
+      url: localhost:50053
+      max-retry: 3
   rabbit-mq:
     topic:
       user-events:

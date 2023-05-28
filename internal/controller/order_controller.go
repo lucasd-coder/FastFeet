@@ -52,3 +52,33 @@ func (h *OrderController) Save(w http.ResponseWriter, r *http.Request) {
 
 	h.Response(ctx, w, resp, http.StatusOK)
 }
+
+func (h *OrderController) GetAllOrder(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	log := logger.FromContext(ctx)
+
+	pld := &model.GetAllOrderRequest{}
+
+	if err := json.NewDecoder(r.Body).Decode(pld); err != nil {
+		msg := fmt.Errorf("error when doing decoder payload: %w", err)
+		log.Error(msg)
+		h.SendError(ctx, w, msg)
+		return
+	}
+
+	userID := chi.URLParam(r, "userId")
+
+	pldGetAllPayload := &model.GetAllOrderPayload{
+		GetAllOrderRequest: *pld,
+		UserID:             userID,
+	}
+
+	resp, err := h.orderService.GetAllOrders(ctx, pldGetAllPayload)
+	if err != nil {
+		h.SendError(ctx, w, err)
+		return
+	}
+
+	h.Response(ctx, w, resp, http.StatusOK)
+}

@@ -8,8 +8,10 @@ import (
 
 	"github.com/lucasd-coder/router-service/config"
 	"github.com/lucasd-coder/router-service/internal/controller"
-	order "github.com/lucasd-coder/router-service/internal/domain/order/service"
-	user "github.com/lucasd-coder/router-service/internal/domain/user/service"
+	order "github.com/lucasd-coder/router-service/internal/domain/order"
+	orderServi "github.com/lucasd-coder/router-service/internal/domain/order/service"
+	userServi "github.com/lucasd-coder/router-service/internal/domain/user/service"
+	businessservice "github.com/lucasd-coder/router-service/internal/provider/businessservice/repository"
 	"github.com/lucasd-coder/router-service/internal/provider/publish"
 	val "github.com/lucasd-coder/router-service/internal/provider/validator"
 	"github.com/lucasd-coder/router-service/internal/shared"
@@ -48,8 +50,13 @@ func InitializeUserEventsPublish() *publish.Published {
 	return nil
 }
 
-func InitializeUserService() *user.UserService {
-	wire.Build(InitializeValidator, InitializeUserEventsPublish, config.GetConfig, user.NewUserService)
+var initializeBusinessRepository = wire.NewSet(
+	wire.Bind(new(order.BusinessRepository), new(*businessservice.BusinessRepository)),
+	businessservice.NewBusinessRepository,
+)
+
+func InitializeUserService() *userServi.UserService {
+	wire.Build(InitializeValidator, InitializeUserEventsPublish, config.GetConfig, userServi.NewUserService)
 	return nil
 }
 
@@ -58,8 +65,8 @@ func InitializeUserController() *controller.UserController {
 	return nil
 }
 
-func InitializeOrderService() *order.OrderService {
-	wire.Build(InitializeValidator, InitializeOrderEventsPublish, config.GetConfig, order.NewOrderService)
+func InitializeOrderService() *orderServi.OrderService {
+	wire.Build(InitializeValidator, InitializeOrderEventsPublish, config.GetConfig, initializeBusinessRepository, orderServi.NewOrderService)
 	return nil
 }
 

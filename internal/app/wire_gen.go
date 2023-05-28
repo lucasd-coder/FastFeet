@@ -7,10 +7,13 @@
 package app
 
 import (
+	"github.com/google/wire"
 	"github.com/lucasd-coder/router-service/config"
 	"github.com/lucasd-coder/router-service/internal/controller"
+	"github.com/lucasd-coder/router-service/internal/domain/order"
 	service2 "github.com/lucasd-coder/router-service/internal/domain/order/service"
 	"github.com/lucasd-coder/router-service/internal/domain/user/service"
+	"github.com/lucasd-coder/router-service/internal/provider/businessservice/repository"
 	"github.com/lucasd-coder/router-service/internal/provider/publish"
 	"github.com/lucasd-coder/router-service/internal/provider/validator"
 	"github.com/lucasd-coder/router-service/internal/shared"
@@ -53,7 +56,8 @@ func InitializeOrderService() *service2.OrderService {
 	validation := InitializeValidator()
 	published := InitializeOrderEventsPublish()
 	configConfig := config.GetConfig()
-	orderService := service2.NewOrderService(validation, published, configConfig)
+	businessRepository := repository.NewBusinessRepository(configConfig)
+	orderService := service2.NewOrderService(validation, published, configConfig, businessRepository)
 	return orderService
 }
 
@@ -82,3 +86,5 @@ func extractOptionUserEvents() *shared.Options {
 		WaitingTime: cfg.TopicUserEvents.WaitingTime,
 	}
 }
+
+var initializeBusinessRepository = wire.NewSet(wire.Bind(new(model.BusinessRepository), new(*repository.BusinessRepository)), repository.NewBusinessRepository)

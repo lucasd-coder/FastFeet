@@ -23,7 +23,8 @@ type (
 	}
 
 	Integration struct {
-		RabbitMQ `env-required:"true" yaml:"rabbit-mq"`
+		RabbitMQ   `env-required:"true" yaml:"rabbit-mq"`
+		GrpcClient `env-required:"true" yaml:"grpc"`
 	}
 
 	RabbitMQ struct {
@@ -51,6 +52,15 @@ type (
 		URL         string        `env-required:"true" yaml:"url"`
 		MaxRetries  int           `yaml:"max-retries" env-default:"3"`
 		WaitingTime time.Duration `yaml:"waiting-time" env-default:"2s"`
+	}
+
+	GrpcClient struct {
+		BusinessService `env-required:"true" yaml:"business-service"`
+	}
+
+	BusinessService struct {
+		URL      string `env-required:"true" yaml:"url"`
+		MaxRetry uint   `env-required:"true" yaml:"max-retry"`
 	}
 )
 

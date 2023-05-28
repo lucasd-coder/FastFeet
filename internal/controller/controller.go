@@ -25,6 +25,7 @@ func NewRouter(
 	r.Group(func(r chi.Router) {
 		r.Route("/orders", func(r chi.Router) {
 			r.Post("/{userId}", order.Save)
+			r.Get("/{userId}", order.GetAllOrder)
 		})
 	})
 

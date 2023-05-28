@@ -11,6 +11,7 @@ import (
 )
 
 var ErrCipherText = errors.New("cipher text too short")
+var ErrUserNotFound = errors.New("user not found")
 
 type fieldError struct {
 	err validator.FieldError
@@ -50,12 +51,15 @@ func BuildError(err error) StandardError {
 	var ve validator.ValidationErrors
 	var errResp StandardError
 
-	if errors.As(err, &ve) {
+	switch {
+	case errors.As(err, &ve):
 		errResp = NewStandardError("Validation Error", http.StatusUnprocessableEntity)
 		for _, e := range ve {
 			errResp.AddError(e.StructField(), fieldError{err: e}.String())
 		}
-	} else {
+	case errors.Is(err, ErrUserNotFound):
+		errResp = NewStandardError(err.Error(), http.StatusNotFound)
+	default:
 		errResp = NewStandardError(err.Error(), http.StatusInternalServerError)
 	}
 
