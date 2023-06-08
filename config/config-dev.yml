@@ -8,6 +8,10 @@ logger:
 grpc:
   port: 50052
 
+http:
+  port: 8090
+  timeout: 20s
+
 mongodb:
   url: mongodb://admin:admin123@localhost:27017/fast-feet?connect=direct&authSource=admin
   connTimeout: 10s
@@ -15,4 +19,9 @@ mongodb:
   collections:
     user:
       collection: "users"
+integration:
+  otlp:
+      url: localhost:4317
+      protocol: grpc
+      timeout: 20s
 
