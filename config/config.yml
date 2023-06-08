@@ -8,6 +8,10 @@ logger:
 grpc:
   port: ${GRPC_PORT:50051}
 
+http:
+  port: ${HTTP_PORT}
+  timeout: 20s
+
 mongodb:
   url: ${MONGODB_URL}
   connTimeout: 10s
@@ -16,3 +20,9 @@ mongodb:
     order:
       collection: "orders"
       max-time: "2s"
+
+integration:
+  otlp:
+      url: localhost:4317
+      protocol: grpc
+      timeout: 20s

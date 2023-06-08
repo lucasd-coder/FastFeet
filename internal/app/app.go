@@ -3,13 +3,20 @@ package app
 import (
 	"context"
 	"net"
+	"net/http"
 
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
-	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
+	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
+	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/lucasd-coder/order-data-service/config"
 	"github.com/lucasd-coder/order-data-service/pkg/logger"
 	"github.com/lucasd-coder/order-data-service/pkg/mongodb"
+	"github.com/lucasd-coder/order-data-service/pkg/monitor"
 	"github.com/lucasd-coder/order-data-service/pkg/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
@@ -24,7 +31,7 @@ func Run(cfg *config.Config) {
 
 	ctx := context.Background()
 
-	lis, err := net.Listen("tcp", "localhost:"+cfg.Port)
+	lis, err := net.Listen("tcp", "localhost:"+cfg.GRPC.Port)
 	if err != nil {
 		log.Fatalf("Could not connect: %v", err)
 	}
@@ -37,33 +44,92 @@ func Run(cfg *config.Config) {
 		}
 	}()
 
-	grpcServer := grpc.NewServer(
-		grpc.UnaryInterceptor(
-			grpc_middleware.ChainUnaryServer(
-				grpc_ctxtags.UnaryServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
-				logger.GetGRPCUnaryServerInterceptor(),
-				grpc_recovery.UnaryServerInterceptor(),
-			),
-		),
-		grpc.StreamInterceptor(
-			grpc_middleware.ChainStreamServer(
-				grpc_ctxtags.StreamServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
-				logger.GetGRPCStreamServerInterceptor(),
-				grpc_recovery.StreamServerInterceptor(),
-			),
-		))
+	srvMetrics := monitor.RegisterSrvMetrics()
+	reg := prometheus.NewRegistry()
+	reg.MustRegister(srvMetrics)
 
-	orderService := InitializeOrderService()
+	tp := monitor.RegisterOtel(ctx, cfg)
+	defer func() {
+		if err := tp.Shutdown(ctx); err != nil {
+			log.Errorf("Error shutting down tracer server provider: %v", err)
+		}
+	}()
 
-	pb.RegisterOrderServiceServer(grpcServer, orderService)
+	grpcServer := newGrpcServer(ctx, logger, reg)
+	log.Infof("Started listening... address[:%s]", cfg.GRPC.Port)
 
-	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
+	registerServices(grpcServer)
 
-	reflection.Register(grpcServer)
+	go func() {
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatalf("Could not serve: %v", err)
+		}
+	}()
 
-	log.Infof("Started listening... address[:%s]", cfg.Port)
+	newHTTPServer(ctx, cfg, reg)
+}
 
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Panicf("Could not serve: %v", err)
+func newGrpcServer(ctx context.Context, logger *logger.Log, reg prometheus.Registerer) *grpc.Server {
+	exemplarFromContext := func(ctx context.Context) prometheus.Labels {
+		if span := trace.SpanContextFromContext(ctx); span.IsSampled() {
+			return prometheus.Labels{"traceID": span.TraceID().String()}
+		}
+		return nil
 	}
+
+	srvMetrics := monitor.RegisterSrvMetrics()
+
+	grpcPanicRecoveryHandler := monitor.RegisterGrpcPanicRecoveryHandler(ctx, reg)
+
+	interceptorOpt := otelgrpc.WithTracerProvider(otel.GetTracerProvider())
+
+	return grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			otelgrpc.UnaryServerInterceptor(interceptorOpt),
+			srvMetrics.UnaryServerInterceptor(grpcprom.WithExemplarFromContext(exemplarFromContext)),
+			logger.GetGRPCUnaryServerInterceptor(),
+			grpcrecovery.UnaryServerInterceptor(grpcrecovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
+		),
+		grpc.ChainStreamInterceptor(
+			otelgrpc.StreamServerInterceptor(interceptorOpt),
+			srvMetrics.StreamServerInterceptor(grpcprom.WithExemplarFromContext(exemplarFromContext)),
+			logger.GetGRPCStreamServerInterceptor(),
+			grpcrecovery.StreamServerInterceptor(grpcrecovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
+		),
+	)
+}
+
+func newHTTPServer(ctx context.Context, cfg *config.Config, reg prometheus.Gatherer) {
+	log := logger.FromContext(ctx)
+
+	m := http.NewServeMux()
+	m.Handle("/metrics", promhttp.HandlerFor(
+		reg,
+		promhttp.HandlerOpts{
+			EnableOpenMetrics: true,
+			Timeout:           cfg.HTTP.Timeout,
+		},
+	))
+
+	httpSrv := &http.Server{
+		Addr:        ":" + cfg.HTTP.Port,
+		ReadTimeout: cfg.HTTP.Timeout,
+		Handler:     m,
+	}
+	log.Infof("starting HTTP server addr: %s", httpSrv.Addr)
+	if err := httpSrv.ListenAndServe(); err != nil {
+		log.Error(err)
+		return
+	}
+
+	if err := httpSrv.Close(); err != nil {
+		log.Error(err)
+		return
+	}
+}
+func registerServices(grpcServer *grpc.Server) {
+	orderService := InitializeOrderService()
+	pb.RegisterOrderServiceServer(grpcServer, orderService)
+	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
+	reflection.Register(grpcServer)
 }

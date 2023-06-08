@@ -7,6 +7,7 @@ import (
 	"github.com/lucasd-coder/order-data-service/pkg/logger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo"
 )
 
 var client *mongo.Client
@@ -15,6 +16,7 @@ func SetUpMongoDB(ctx context.Context, cfg *config.Config) {
 	log := logger.FromContext(ctx)
 
 	opts := options.Client().ApplyURI(cfg.MongoDB.URL)
+	opts.Monitor = otelmongo.NewMonitor()
 	opts.SetConnectTimeout(cfg.MongoDBConnTimeout)
 
 	mongoClient, err := mongo.Connect(ctx, opts)
