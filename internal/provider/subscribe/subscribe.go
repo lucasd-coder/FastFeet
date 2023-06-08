@@ -2,11 +2,17 @@ package subscribe
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/lucasd-coder/business-service/internal/shared/queueoptions"
 	"github.com/lucasd-coder/business-service/pkg/logger"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"gocloud.dev/pubsub"
 )
 
@@ -41,18 +47,18 @@ func (s *Subscription) Start(ctx context.Context) {
 	}()
 
 	var wg sync.WaitGroup
+	sem := make(chan struct{}, s.opt.MaxConcurrentMessages)
 
-	s.start(ctx, client, &wg)
+	s.start(ctx, client, &wg, sem)
 
 	wg.Wait()
+	close(sem)
 }
 
-func (s *Subscription) start(ctx context.Context, client *pubsub.Subscription, wg *sync.WaitGroup) {
+func (s *Subscription) start(ctx context.Context, client *pubsub.Subscription, wg *sync.WaitGroup, sem chan struct{}) {
 	log := logger.FromContext(ctx)
 
 	msgChan := make(chan *pubsub.Message)
-
-	sem := make(chan struct{}, s.opt.MaxConcurrentMessages)
 
 	s.startReceivers(ctx, client, msgChan)
 
@@ -69,6 +75,7 @@ func (s *Subscription) start(ctx context.Context, client *pubsub.Subscription, w
 					<-sem
 					wg.Done()
 				}()
+
 				if err := s.processMessage(ctx, currentMsg.Body); err != nil {
 					log.Errorf("error processing message for queueURL: %s, err: %v", s.queueURL, err)
 					if currentMsg.Nackable() {
@@ -86,19 +93,39 @@ func (s *Subscription) processMessage(ctx context.Context, messages []byte) erro
 	log := logger.FromContext(ctx)
 	log.Infof("start process mensagens for queueURL: %s", s.queueURL)
 
+	spanName := fmt.Sprintf("Processing-%s", s.extractQueueName(s.queueURL))
+	traceName := "ProcessingMessage"
+
+	tracer := otel.GetTracerProvider().Tracer(traceName)
+
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("queueURL", s.queueURL),
+	}
+
+	newCtx, span := tracer.Start(ctx, spanName,
+		trace.WithAttributes(commonAttrs...),
+		trace.WithSpanKind(trace.SpanKindConsumer),
+	)
+	defer span.End()
+
 	defer func() {
 		if r := recover(); r != nil {
+			span.SetStatus(codes.Error, "recovered from panic")
 			log.Errorf("recovered from panic: %v", r)
 		}
 	}()
 
 	var err error
 	for i := 0; i < s.opt.MaxRetries; i++ {
+		_, iSpan := tracer.Start(newCtx, fmt.Sprintf(" ProcessingMessage MaxRetries-%d", i))
 		err = s.handler(ctx, messages)
 		if err == nil {
+			iSpan.SetStatus(codes.Ok, "Successfully Processing Message")
 			break
 		}
 		log.Errorf("error while handling message: %v", err)
+		iSpan.SetStatus(codes.Error, "Error Processing Message")
+		iSpan.RecordError(err)
 
 		if i == s.opt.MaxRetries-1 {
 			log.Errorf("max retries exceeded, not processing message anymore: %v", err)
@@ -108,6 +135,7 @@ func (s *Subscription) processMessage(ctx context.Context, messages []byte) erro
 
 		backOffTime := time.Duration(1+i) * s.opt.WaitingTime
 		log.Infof("waiting %v before retrying", backOffTime)
+		iSpan.End()
 		time.Sleep(backOffTime)
 	}
 	return err
@@ -150,4 +178,13 @@ func (s *Subscription) receiveMessage(ctx context.Context, client *pubsub.Subscr
 
 func (s *Subscription) applyBackPressure() {
 	time.Sleep(s.opt.PollDelay)
+}
+
+func (s *Subscription) extractQueueName(queueURL string) string {
+	index := 2
+	parts := strings.SplitN(queueURL, "rabbit://", index)
+
+	queueName := parts[1]
+
+	return queueName
 }

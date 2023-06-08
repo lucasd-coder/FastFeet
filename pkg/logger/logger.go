@@ -2,14 +2,11 @@ package logger
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	grpc_logrus "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
-	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/lucasd-coder/business-service/config"
 	logrus "github.com/sirupsen/logrus"
-	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 )
 
@@ -27,10 +24,6 @@ func FromContext(ctx context.Context) Logger {
 
 	logger := &logger{
 		logger: log.WithContext(ctx),
-	}
-
-	if span := trace.SpanContextFromContext(ctx); span.IsSampled() {
-		logger.WithField("traceID", span.TraceID().String())
 	}
 
 	return logger
@@ -58,42 +51,12 @@ func (l *Log) GetGRPCStreamServerInterceptor() grpc.StreamServerInterceptor {
 	return grpc_logrus.StreamServerInterceptor(l.GetGRPCLogger())
 }
 
-// var logTraceID = func(ctx context.Context) logging.Fields {
-// 	if span := trace.SpanContextFromContext(ctx); span.IsSampled() {
-// 		return logging.Fields{"traceID", span.TraceID().String()}
-// 	}
-// 	return nil
-// }
+func (l *Log) GetGRPCUnaryClientInterceptor() grpc.UnaryClientInterceptor {
+	return grpc_logrus.UnaryClientInterceptor(l.GetGRPCLogger())
+}
 
-// var opts = []logging.Option{
-// 	logging.WithLogOnEvents(logging.StartCall, logging.FinishCall),
-// 	logging.WithFieldsFromContext(logTraceID),
-// 	// Add any other option (check functions starting with logging.With).
-// }
-
-func InterceptorLogger(l logrus.FieldLogger) logging.Logger {
-	return logging.LoggerFunc(func(_ context.Context, lvl logging.Level, msg string, fields ...any) {
-		f := make(map[string]any, len(fields)/2)
-		i := logging.Fields(fields).Iterator()
-		if i.Next() {
-			k, v := i.At()
-			f[k] = v
-		}
-		l := l.WithFields(f)
-
-		switch lvl {
-		case logging.LevelDebug:
-			l.Debug(msg)
-		case logging.LevelInfo:
-			l.Info(msg)
-		case logging.LevelWarn:
-			l.Warn(msg)
-		case logging.LevelError:
-			l.Error(msg)
-		default:
-			panic(fmt.Sprintf("unknown level %v", lvl))
-		}
-	})
+func (l *Log) GetGRPCStreamClientInterceptor() grpc.StreamClientInterceptor {
+	return grpc_logrus.StreamClientInterceptor(l.GetGRPCLogger())
 }
 
 type logger struct {

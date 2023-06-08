@@ -10,6 +10,10 @@ logger:
 grpc:
   port: ${GRPC_PORT}
 
+http:
+  port: ${HTTP_PORT}
+  timeout: 20s
+
 integration:
   grpc:
     user-manager-service:
@@ -54,3 +58,8 @@ integration:
     port: ${REDIS_PORT}
     db: ${REDIS_DB}
     password: ${REDIS_HOST_PASSWORD}
+  
+  otlp:
+    url: 127.0.0.0:4318
+    protocol: http
+    timeout: 20s

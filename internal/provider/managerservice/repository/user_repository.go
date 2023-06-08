@@ -21,7 +21,7 @@ func NewUserRepository(cfg *config.Config) *UserRepository {
 func (r *UserRepository) Save(ctx context.Context, req *pb.UserRequest) (*pb.UserResponse, error) {
 	log := logger.FromContext(ctx)
 
-	conn, err := managerservice.NewClient(r.cfg)
+	conn, err := managerservice.NewClient(ctx, r.cfg)
 	if err != nil {
 		log.Errorf("err while integration save: %+v", err)
 		return nil, fmt.Errorf("err while integration save: %w", err)
@@ -37,7 +37,7 @@ func (r *UserRepository) Save(ctx context.Context, req *pb.UserRequest) (*pb.Use
 func (r *UserRepository) FindByEmail(ctx context.Context, req *pb.UserByEmailRequest) (*pb.UserResponse, error) {
 	log := logger.FromContext(ctx)
 
-	conn, err := managerservice.NewClient(r.cfg)
+	conn, err := managerservice.NewClient(ctx, r.cfg)
 	if err != nil {
 		log.Errorf("err while integration findByEmail: %+v", err)
 		return nil, fmt.Errorf("err while integration findByEmail: %w", err)
@@ -55,7 +55,7 @@ func (r *UserRepository) FindByEmail(ctx context.Context, req *pb.UserByEmailReq
 func (r *UserRepository) FindByCpf(ctx context.Context, req *pb.UserByCpfRequest) (*pb.UserResponse, error) {
 	log := logger.FromContext(ctx)
 
-	conn, err := managerservice.NewClient(r.cfg)
+	conn, err := managerservice.NewClient(ctx, r.cfg)
 	if err != nil {
 		log.Errorf("err while integration findByCpf: %+v", err)
 		return nil, fmt.Errorf("err while integration findByCpf: %w", err)

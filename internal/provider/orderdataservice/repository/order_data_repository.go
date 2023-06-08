@@ -22,7 +22,7 @@ func NewOrderDataRepository(cfg *config.Config) *OrderDataRepository {
 func (r *OrderDataRepository) Save(ctx context.Context, req *pb.OrderRequest) (*pb.OrderResponse, error) {
 	log := logger.FromContext(ctx)
 
-	conn, err := orderdataservice.NewClient(r.cfg)
+	conn, err := orderdataservice.NewClient(ctx, r.cfg)
 	if err != nil {
 		log.Errorf("err while integration save: %+v", err)
 		return nil, fmt.Errorf("err while integration save: %w", err)
@@ -38,7 +38,7 @@ func (r *OrderDataRepository) Save(ctx context.Context, req *pb.OrderRequest) (*
 func (r *OrderDataRepository) GetAllOrders(ctx context.Context,
 	req *pb.GetOrderServiceAllOrderRequest) (*pb.GetAllOrderResponse, error) {
 	log := logger.FromContext(ctx)
-	conn, err := orderdataservice.NewClient(r.cfg)
+	conn, err := orderdataservice.NewClient(ctx, r.cfg)
 	if err != nil {
 		log.Errorf("err while integration save: %+v", err)
 		return nil, fmt.Errorf("err while integration save: %w", err)

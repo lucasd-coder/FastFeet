@@ -8,6 +8,7 @@ type (
 	Config struct {
 		App         `yaml:"app"`
 		GRPC        `yaml:"grpc"`
+		HTTP        `yaml:"http"`
 		Log         `yaml:"logger"`
 		Integration `yaml:"integration"`
 	}
@@ -27,11 +28,17 @@ type (
 		Port string `env-required:"true" yaml:"port" env:"GRPC_PORT"`
 	}
 
+	HTTP struct {
+		Port    string        `env-required:"true" yaml:"port" env:"HTTP_PORT"`
+		Timeout time.Duration `env-required:"true" yaml:"timeout"`
+	}
+
 	Integration struct {
-		GrpcClient `env-required:"true" yaml:"grpc"`
-		HTTPClint  `env-required:"true" yaml:"http"`
-		RabbitMQ   `env-required:"true" yaml:"rabbit-mq"`
-		Redis      `env-required:"true" yaml:"redis"`
+		GrpcClient    `env-required:"true" yaml:"grpc"`
+		HTTPClint     `env-required:"true" yaml:"http"`
+		RabbitMQ      `env-required:"true" yaml:"rabbit-mq"`
+		Redis         `env-required:"true" yaml:"redis"`
+		OpenTelemetry `env-required:"true" yaml:"otlp"`
 	}
 
 	GrpcClient struct {
@@ -124,6 +131,12 @@ type (
 		RedisDB       int           `env-required:"true" yaml:"db" env:"REDIS_DB"`
 		RedisPassword string        `env-required:"true" yaml:"password" env:"REDIS_HOST_PASSWORD"`
 		RedisTTL      time.Duration `env-required:"true" yaml:"ttl"`
+	}
+
+	OpenTelemetry struct {
+		URL      string        `env-required:"true" yaml:"url" env:"OTEL_EXPORTER_OTLP_ENDPOINT"`
+		Protocol string        `env-required:"true" yaml:"protocol" env:"OTEL_EXPORTER_OTLP_PROTOCOL"`
+		Timeout  time.Duration `env-required:"true" yaml:"timeout" env:"OTEL_EXPORTER_OTLP_TIMEOUT"`
 	}
 )
 

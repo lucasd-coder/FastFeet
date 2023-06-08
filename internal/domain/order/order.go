@@ -1,14 +1,12 @@
 package model
 
 import (
-	"time"
-
 	"github.com/lucasd-coder/business-service/internal/shared"
 )
 
 type Payload struct {
-	Data      Data      `json:"data,omitempty" validate:"required,dive"`
-	EventDate time.Time `json:"eventDate,omitempty" validate:"required,rfc3339"`
+	Data      Data   `json:"data,omitempty" validate:"required,dive"`
+	EventDate string `json:"eventDate,omitempty" validate:"required,rfc3339"`
 }
 
 type Data struct {

@@ -5,6 +5,7 @@ import (
 
 	"github.com/lucasd-coder/business-service/config"
 	"github.com/lucasd-coder/business-service/pkg/logger"
+	"github.com/redis/go-redis/extra/redisotel/v9"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -23,6 +24,14 @@ func SetUpRedis(ctx context.Context, cfg *config.Config) {
 	if err != nil {
 		log.Errorf("Error Redis connection: %+v", err.Error())
 		return
+	}
+
+	if err := redisotel.InstrumentTracing(redisClient); err != nil {
+		log.Errorf("Error Redis InstrumentTracing: %v", err)
+	}
+
+	if err := redisotel.InstrumentMetrics(redisClient); err != nil {
+		log.Errorf("Error Redis InstrumentMetrics: %v", err)
 	}
 
 	log.Info("Redis Connected")
