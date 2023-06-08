@@ -56,4 +56,4 @@ application:
       exporter:
         otlp:
           traces:
-            endpoint: http://localhost:14278
+            endpoint: http://localhost:4318
