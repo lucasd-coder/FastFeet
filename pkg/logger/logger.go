@@ -4,8 +4,10 @@ import (
 	"context"
 	"os"
 
+	grpc_logrus "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
 	"github.com/lucasd-coder/router-service/config"
 	logrus "github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
 )
 
 type Log struct {
@@ -43,6 +45,14 @@ func (l *Log) GetLogger() *logrus.Entry {
 		"logName":  l.cfg.App.Name,
 		"logIndex": "message",
 	})
+}
+
+func (l *Log) GetGRPCUnaryClientInterceptor() grpc.UnaryClientInterceptor {
+	return grpc_logrus.UnaryClientInterceptor(l.GetLogger())
+}
+
+func (l *Log) GetGRPCStreamClientInterceptor() grpc.StreamClientInterceptor {
+	return grpc_logrus.StreamClientInterceptor(l.GetLogger())
 }
 
 type logger struct {

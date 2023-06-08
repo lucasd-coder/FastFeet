@@ -25,3 +25,8 @@ integration:
       order-events:
         url: rabbit://router-service-order-events
         max-retry: 3
+  
+  otlp:
+    url: localhost:4317
+    protocol: grpc
+    timeout: 20s

@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -9,15 +10,25 @@ import (
 	"github.com/lucasd-coder/router-service/internal/controller"
 	"github.com/lucasd-coder/router-service/internal/provider/middleware"
 	"github.com/lucasd-coder/router-service/pkg/logger"
+	"github.com/lucasd-coder/router-service/pkg/monitor"
 )
 
 func Run(cfg *config.Config) {
+	ctx := context.Background()
 	logger := logger.NewLog(cfg)
 
 	log := logger.GetLogger()
 
+	tp := monitor.RegisterOtel(ctx, cfg)
+	defer func() {
+		if err := tp.Shutdown(ctx); err != nil {
+			log.Errorf("Error shutting down tracer server provider: %v", err)
+		}
+	}()
+
 	r := chi.NewRouter()
 
+	r.Use(middleware.OpenTelemetryMiddleware(cfg.Name))
 	r.Use(chiMiddleware.Recoverer)
 	r.Use(chiMiddleware.RequestID)
 	r.Use(chiMiddleware.RealIP)

@@ -23,8 +23,9 @@ type (
 	}
 
 	Integration struct {
-		RabbitMQ   `env-required:"true" yaml:"rabbit-mq"`
-		GrpcClient `env-required:"true" yaml:"grpc"`
+		RabbitMQ      `env-required:"true" yaml:"rabbit-mq"`
+		GrpcClient    `env-required:"true" yaml:"grpc"`
+		OpenTelemetry `env-required:"true" yaml:"otlp"`
 	}
 
 	RabbitMQ struct {
@@ -61,6 +62,12 @@ type (
 	BusinessService struct {
 		URL      string `env-required:"true" yaml:"url"`
 		MaxRetry uint   `env-required:"true" yaml:"max-retry"`
+	}
+
+	OpenTelemetry struct {
+		URL      string        `env-required:"true" yaml:"url" env:"OTEL_EXPORTER_OTLP_ENDPOINT"`
+		Protocol string        `env-required:"true" yaml:"protocol" env:"OTEL_EXPORTER_OTLP_PROTOCOL"`
+		Timeout  time.Duration `env-required:"true" yaml:"timeout" env:"OTEL_EXPORTER_OTLP_TIMEOUT"`
 	}
 )
 

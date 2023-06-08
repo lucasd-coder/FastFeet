@@ -21,7 +21,7 @@ func NewBusinessRepository(cfg *config.Config) *BusinessRepository {
 func (r *BusinessRepository) GetAllOrders(ctx context.Context, req *pb.GetAllOrderRequest) (*pb.GetAllOrderResponse, error) {
 	log := logger.FromContext(ctx)
 
-	conn, err := businessservice.NewClient(r.cfg)
+	conn, err := businessservice.NewClient(ctx, r.cfg)
 	if err != nil {
 		log.Errorf("err while integration save: %+v", err)
 		return nil, fmt.Errorf("err while integration save: %w", err)
