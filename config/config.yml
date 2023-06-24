@@ -22,6 +22,6 @@ mongodb:
 
 integration:
   otlp:
-      url: ${OTEL_EXPORTER_OTLP_ENDPOINT:4317}
+      url: ${OTEL_EXPORTER_OTLP_ENDPOINT}
       protocol: grpc
       timeout: 20s
