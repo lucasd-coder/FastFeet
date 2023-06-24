@@ -38,19 +38,19 @@ type (
 	}
 
 	Server struct {
-		Port         string        `env-required:"true" yaml:"port" env:"SERVER_PORT"`
+		Port         string        `env-required:"true" yaml:"port" env:"HTTP_PORT"`
 		ReadTimeout  time.Duration `yaml:"readTimeout" default:"10s"`
 		WriteTimeout time.Duration `yaml:"writeTimeout" default:"10s"`
 	}
 
 	TopicUserEvents struct {
-		URL         string        `env-required:"true" yaml:"url"`
+		URL         string        `env-required:"true" yaml:"url" env:"USER_EVENTS_URL"`
 		MaxRetries  int           `yaml:"max-retries" env-default:"3"`
 		WaitingTime time.Duration `yaml:"waiting-time" env-default:"2s"`
 	}
 
 	TopicOrderEvents struct {
-		URL         string        `env-required:"true" yaml:"url"`
+		URL         string        `env-required:"true" yaml:"url" env:"ORDER_EVENTS_URL"`
 		MaxRetries  int           `yaml:"max-retries" env-default:"3"`
 		WaitingTime time.Duration `yaml:"waiting-time" env-default:"2s"`
 	}
@@ -60,7 +60,7 @@ type (
 	}
 
 	BusinessService struct {
-		URL      string `env-required:"true" yaml:"url"`
+		URL      string `env-required:"true" yaml:"url" env:"BUSINESS_SERVICE_URL"`
 		MaxRetry uint   `env-required:"true" yaml:"max-retry"`
 	}
 

@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: router-service
+spec:
+  replicas: 1
+  minReadySeconds: 10
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: router-service
+  template:
+    metadata:
+      labels:
+        app: router-service
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8080'
+        prometheus.io/path: '/health'
+    spec:
+      containers:
+        - name: router-service
+          image: lucasd-coder/router-service:latest          
+          resources:
+            requests:
+              memory: "500Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: 1         
+          env:
+            - name: LOG_LEVEL
+              value: info
+            - name: GRPC_PORT
+              value: "50051"
+            - name: HTTP_PORT
+              value: "8080"
+            - name: BUSINESS_SERVICE_URL
+              value: "http://localhost:50051"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "localhost:4317"
+            - name: RABBIT_SERVER_URL
+              value: "amqp://admin:admin123@localhost:5672/fastfeet"
+            - name: USER_EVENTS_URL
+              value: "rabbit://router-service-order-events"
+            - name: ORDER_EVENTS_URL
+              value: "rabbit://router-service-user-events"            
+            - name: AES_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aeskey
+                  key: aes-key-config
+          ports:
+            - containerPort: 50051
+          readinessProbe:
+            httpGet:
+              port: 8080
+              path: "/health"
+            initialDelaySeconds: 45
+            periodSeconds: 10
+          livenessProbe:            
+            httpGet:
+              port: 8080
+              path: "/health"
+            initialDelaySeconds: 45
+            periodSeconds: 10
+          lifecycle:
+              preStop:
+                exec:
+                  command:
+                    - /bin/sleep
+                    - "30"

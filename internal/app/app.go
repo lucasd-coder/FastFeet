@@ -19,7 +19,11 @@ func Run(cfg *config.Config) {
 
 	log := logger.GetLogger()
 
-	tp := monitor.RegisterOtel(ctx, cfg)
+	tp, err := monitor.RegisterOtel(ctx, cfg)
+	if err != nil {
+		log.Errorf("Error creating register otel: %v", err)
+		return
+	}
 	defer func() {
 		if err := tp.Shutdown(ctx); err != nil {
 			log.Errorf("Error shutting down tracer server provider: %v", err)
@@ -33,7 +37,7 @@ func Run(cfg *config.Config) {
 	r.Use(chiMiddleware.RequestID)
 	r.Use(chiMiddleware.RealIP)
 	r.Use(middleware.LoggerMiddleware)
-	r.Use(chiMiddleware.Heartbeat("/" + cfg.Name + "/health"))
+	r.Use(chiMiddleware.Heartbeat("/health"))
 
 	log.Infof("Started listening... address[:%s]", cfg.Port)
 
@@ -54,5 +58,11 @@ func Run(cfg *config.Config) {
 
 	if err := s.ListenAndServe(); err != nil {
 		log.Panic(err)
+		return
+	}
+
+	if err := s.Close(); err != nil {
+		log.Error(err)
+		return
 	}
 }
