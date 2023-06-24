@@ -33,7 +33,7 @@ type (
 	}
 
 	MongoDB struct {
-		URL                string           `env-required:"true" yaml:"url"`
+		URL                string           `env-required:"true" yaml:"url" env:"MONGODB_URL"`
 		MongoDBConnTimeout string           `yaml:"connTimeout" default:"10s"`
 		MongoDatabase      string           `env-required:"true" yaml:"database"`
 		MongoCollections   MongoCollections `env-required:"true" yaml:"collections"`

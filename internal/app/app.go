@@ -4,6 +4,9 @@ import (
 	"context"
 	"net"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 
 	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
 	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
@@ -49,7 +52,11 @@ func Run(cfg *config.Config) {
 	reg := prometheus.NewRegistry()
 	reg.MustRegister(srvMetrics)
 
-	tp := monitor.RegisterOtel(ctx, cfg)
+	tp, err := monitor.RegisterOtel(ctx, cfg)
+	if err != nil {
+		log.Errorf("Error creating register otel: %v", err)
+		return
+	}
 	defer func() {
 		if err := tp.Shutdown(ctx); err != nil {
 			log.Errorf("Error shutting down tracer server provider: %v", err)
@@ -67,7 +74,15 @@ func Run(cfg *config.Config) {
 		}
 	}()
 
-	newHTTPServer(ctx, cfg, reg)
+	go newHTTPServer(ctx, cfg, reg)
+
+	stopChan := make(chan os.Signal, 1)
+
+	signal.Notify(stopChan, syscall.SIGTERM, syscall.SIGINT)
+	<-stopChan
+	close(stopChan)
+
+	grpcServer.GracefulStop()
 }
 
 func newGrpcServer(ctx context.Context, logger *logger.Log, reg prometheus.Registerer) *grpc.Server {
@@ -111,6 +126,10 @@ func newHTTPServer(ctx context.Context, cfg *config.Config, reg prometheus.Gathe
 			Timeout:           cfg.HTTP.Timeout,
 		},
 	))
+
+	m.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("ok"))
+	})
 
 	httpSrv := &http.Server{
 		Addr:        ":" + cfg.HTTP.Port,

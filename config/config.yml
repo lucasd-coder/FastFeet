@@ -13,7 +13,7 @@ http:
   timeout: 20s
 
 mongodb:
-  url: mongodb://admin:admin123@localhost:27017/user-manger-service?connect=direct&authSource=admin
+  url: ${MONGODB_URL}
   connTimeout: 10s
   database: user-manger-service
   collections:
@@ -22,6 +22,6 @@ mongodb:
 
 integration:
   otlp:
-      url: localhost:4317
+      url: ${OTEL_EXPORTER_OTLP_ENDPOINT:4317}
       protocol: grpc
       timeout: 20s
