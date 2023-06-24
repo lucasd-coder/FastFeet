@@ -3,10 +3,10 @@ app:
   version: 1.0.0
 
 logger:
-  log_level: ${LOG_LEVEL:info}
+  log_level: ${LOG_LEVEL}
 
 grpc:
-  port: ${GRPC_PORT:50051}
+  port: ${GRPC_PORT}
 
 http:
   port: ${HTTP_PORT}
@@ -23,6 +23,6 @@ mongodb:
 
 integration:
   otlp:
-      url: localhost:4317
+      url: ${OTEL_EXPORTER_OTLP_ENDPOINT}
       protocol: grpc
       timeout: 20s
