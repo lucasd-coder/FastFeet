@@ -3,7 +3,7 @@ FIND ?= $(shell find proto/ -iname "*.proto")
 
 GOPATH ?= go env GOPATH
 
-.PHONY: proto-gen generate-mocks wire-gen run-application test coverage
+.PHONY: proto-gen generate-mocks wire-gen wire-check run-application test coverage
 
 proto-gen:	
 	protoc --proto_path=proto/ $(FIND) \
@@ -13,9 +13,11 @@ proto-gen:
 generate-mocks:
 	./scripts/mockery.sh
 
-
 wire-gen:
-	cd internal/app && wire
+	wire ./internal/app
+
+wire-check:
+	wire check ./internal/app
 
 run-application:
 	RABBIT_SERVER_URL=amqp://admin:admin123@localhost:5672/fastfeet GO_PROFILE=dev GO111MODULE=on go run ./cmd/app/main.go

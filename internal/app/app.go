@@ -9,8 +9,11 @@ import (
 	"github.com/lucasd-coder/router-service/config"
 	"github.com/lucasd-coder/router-service/internal/controller"
 	"github.com/lucasd-coder/router-service/internal/provider/middleware"
+
 	"github.com/lucasd-coder/router-service/pkg/logger"
 	"github.com/lucasd-coder/router-service/pkg/monitor"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func Run(cfg *config.Config) {
@@ -37,7 +40,7 @@ func Run(cfg *config.Config) {
 	r.Use(chiMiddleware.RequestID)
 	r.Use(chiMiddleware.RealIP)
 	r.Use(middleware.LoggerMiddleware)
-	r.Use(chiMiddleware.Heartbeat("/health"))
+	r.Use(middleware.PromMiddleware)
 
 	log.Infof("Started listening... address[:%s]", cfg.Port)
 
@@ -47,7 +50,15 @@ func Run(cfg *config.Config) {
 
 	controller := controller.NewRouter(userController, orderController)
 
-	r.Mount("/"+cfg.Name, controller)
+	r.Mount("/", controller)
+
+	r.Handle("/metrics", promhttp.HandlerFor(
+		prometheus.DefaultGatherer,
+		promhttp.HandlerOpts{
+			Registry:          prometheus.DefaultRegisterer,
+			EnableOpenMetrics: true,
+		},
+	))
 
 	s := &http.Server{
 		Addr:         ":" + cfg.Port,

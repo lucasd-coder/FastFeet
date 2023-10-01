@@ -7,6 +7,6 @@ option go_package = "./pkg/pb";
 import "response/get_all_order_response.proto";
 import "request/get_all_order_request.proto";
 
-service GetAllOrderService {
-    rpc GetAllOrders (GetAllOrderRequest) returns (GetAllOrderResponse); 
+service OrderHandler {
+    rpc GetAllOrder (GetAllOrderRequest) returns (GetAllOrderResponse); 
 }

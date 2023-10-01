@@ -8,9 +8,8 @@ import (
 
 	"github.com/lucasd-coder/router-service/config"
 	"github.com/lucasd-coder/router-service/internal/controller"
-	order "github.com/lucasd-coder/router-service/internal/domain/order"
-	orderServi "github.com/lucasd-coder/router-service/internal/domain/order/service"
-	userServi "github.com/lucasd-coder/router-service/internal/domain/user/service"
+	"github.com/lucasd-coder/router-service/internal/domain/order"
+	"github.com/lucasd-coder/router-service/internal/domain/user"
 	businessservice "github.com/lucasd-coder/router-service/internal/provider/businessservice/repository"
 	"github.com/lucasd-coder/router-service/internal/provider/publish"
 	val "github.com/lucasd-coder/router-service/internal/provider/validator"
@@ -51,26 +50,17 @@ func InitializeUserEventsPublish() *publish.Published {
 }
 
 var initializeBusinessRepository = wire.NewSet(
-	wire.Bind(new(order.BusinessRepository), new(*businessservice.BusinessRepository)),
+	wire.Bind(new(shared.BusinessRepository), new(*businessservice.BusinessRepository)),
 	businessservice.NewBusinessRepository,
 )
 
-func InitializeUserService() *userServi.UserService {
-	wire.Build(InitializeValidator, InitializeUserEventsPublish, config.GetConfig, userServi.NewUserService)
-	return nil
-}
-
 func InitializeUserController() *controller.UserController {
-	wire.Build(InitializeUserService, controller.NewUserController)
-	return nil
-}
-
-func InitializeOrderService() *orderServi.OrderService {
-	wire.Build(InitializeValidator, InitializeOrderEventsPublish, config.GetConfig, initializeBusinessRepository, orderServi.NewOrderService)
+	wire.Build(InitializeValidator, InitializeUserEventsPublish, config.GetConfig, initializeBusinessRepository,
+		user.InitializeService, controller.NewUserController)
 	return nil
 }
 
 func InitializeOrderController() *controller.OrderController {
-	wire.Build(InitializeOrderService, controller.NewOrderController)
+	wire.Build(InitializeValidator, InitializeOrderEventsPublish, config.GetConfig, initializeBusinessRepository, order.InitializeService, controller.NewOrderController)
 	return nil
 }

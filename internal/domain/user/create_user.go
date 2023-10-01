@@ -1,34 +1,16 @@
-package service
+package user
 
 import (
 	"context"
 	"fmt"
-	"time"
 
-	"github.com/lucasd-coder/router-service/config"
-	model "github.com/lucasd-coder/router-service/internal/domain/user"
-	"github.com/lucasd-coder/router-service/internal/provider/publish"
-	"github.com/lucasd-coder/router-service/internal/provider/validator"
 	"github.com/lucasd-coder/router-service/internal/shared"
 	"github.com/lucasd-coder/router-service/internal/shared/ciphers"
 	"github.com/lucasd-coder/router-service/internal/shared/codec"
 	"github.com/lucasd-coder/router-service/pkg/logger"
 )
 
-type UserService struct {
-	validate shared.Validator
-	publish  shared.Publish
-	cfg      *config.Config
-}
-
-func NewUserService(
-	validate *validator.Validation,
-	publish *publish.Published,
-	cfg *config.Config) *UserService {
-	return &UserService{validate: validate, publish: publish, cfg: cfg}
-}
-
-func (s *UserService) Save(ctx context.Context, user *model.User) error {
+func (s *ServiceImpl) Save(ctx context.Context, user *User) error {
 	log := logger.FromContext(ctx)
 
 	if err := user.Validate(s.validate); err != nil {
@@ -37,14 +19,14 @@ func (s *UserService) Save(ctx context.Context, user *model.User) error {
 		return msg
 	}
 
-	eventDate := s.GetEventDate()
+	eventDate := s.getEventDate()
 
-	pld := model.Payload{
+	pld := Payload{
 		Data:      *user,
 		EventDate: eventDate,
 	}
 
-	codec := codec.New[model.Payload]()
+	codec := codec.New[Payload]()
 
 	enc, err := codec.Encode(pld)
 	if err != nil {
@@ -84,8 +66,4 @@ func (s *UserService) Save(ctx context.Context, user *model.User) error {
 	log.WithFields(fields).Info("payload successfully processed")
 
 	return nil
-}
-
-func (s *UserService) GetEventDate() string {
-	return time.Now().Format(time.RFC3339)
 }

@@ -14,7 +14,7 @@ message Address {
   string neighborhood = 3;
   string city = 4;
   string state = 5;
-  int32 number = 6;
+  int64 number = 6;
 }
 
 message Order {

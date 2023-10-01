@@ -1,4 +1,4 @@
-package model
+package user
 
 import (
 	"github.com/lucasd-coder/router-service/internal/shared"
@@ -16,6 +16,14 @@ type User struct {
 	Authority string `json:"authority,omitempty" validate:"required,oneof=ADMIN USER"`
 }
 
+type FindByEmailRequest struct {
+	Email string `json:"email,omitempty" validate:"required,email,pattern"`
+}
+
 func (user *User) Validate(val shared.Validator) error {
 	return val.ValidateStruct(user)
+}
+
+func (f *FindByEmailRequest) Validate(val shared.Validator) error {
+	return val.ValidateStruct(f)
 }

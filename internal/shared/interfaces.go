@@ -1,11 +1,22 @@
 package shared
 
-import "context"
+import (
+	"context"
 
-type Validator interface {
-	ValidateStruct(s interface{}) error
-}
+	"github.com/lucasd-coder/router-service/pkg/pb"
+)
 
-type Publish interface {
-	Send(ctx context.Context, msg *Message) error
-}
+type (
+	Validator interface {
+		ValidateStruct(s interface{}) error
+	}
+
+	Publish interface {
+		Send(ctx context.Context, msg *Message) error
+	}
+
+	BusinessRepository interface {
+		GetAllOrder(ctx context.Context, req *pb.GetAllOrderRequest) (*pb.GetAllOrderResponse, error)
+		FindByEmail(ctx context.Context, req *pb.UserByEmailRequest) (*pb.UserResponse, error)
+	}
+)

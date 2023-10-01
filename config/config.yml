@@ -17,12 +17,12 @@ integration:
       url: ${BUSINESS_SERVICE_URL}
       max-retry: 3
   rabbit-mq:
-    queue:
+    topic:
       user-events:
-        url: ${USER_EVENTS_URL}
+        url: rabbit://router-service-user-events
         max-retry: 5
       order-events:
-        url: ${ORDER_EVENTS_URL}
+        url: rabbit://router-service-order-events
         max-retry: 3
   otlp:
       url: ${OTEL_EXPORTER_OTLP_ENDPOINT}

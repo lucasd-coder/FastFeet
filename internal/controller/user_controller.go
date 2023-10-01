@@ -5,18 +5,18 @@ import (
 	"fmt"
 	"net/http"
 
-	model "github.com/lucasd-coder/router-service/internal/domain/user"
-	"github.com/lucasd-coder/router-service/internal/domain/user/service"
+	"github.com/go-chi/chi/v5"
+	"github.com/lucasd-coder/router-service/internal/domain/user"
 	"github.com/lucasd-coder/router-service/internal/shared"
 	"github.com/lucasd-coder/router-service/pkg/logger"
 )
 
 type UserController struct {
 	controller
-	userService model.UserService
+	userService user.Service
 }
 
-func NewUserController(userService *service.UserService) *UserController {
+func NewUserController(userService user.Service) *UserController {
 	return &UserController{
 		userService: userService,
 	}
@@ -27,7 +27,7 @@ func (h *UserController) Save(w http.ResponseWriter, r *http.Request) {
 
 	log := logger.FromContext(ctx)
 
-	pld := &model.User{}
+	pld := &user.User{}
 
 	if err := json.NewDecoder(r.Body).Decode(pld); err != nil {
 		msg := fmt.Errorf("error when doing decoder payload: %w", err)
@@ -45,5 +45,22 @@ func (h *UserController) Save(w http.ResponseWriter, r *http.Request) {
 		Message: "Please wait while we process your request.",
 	}
 
+	h.Response(ctx, w, resp, http.StatusOK)
+}
+
+func (h *UserController) FindUserByEmail(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	email := chi.URLParam(r, "email")
+
+	pld := user.FindByEmailRequest{
+		Email: email,
+	}
+
+	resp, err := h.userService.FindUserByEmail(ctx, &pld)
+	if err != nil {
+		h.SendError(ctx, w, err)
+		return
+	}
 	h.Response(ctx, w, resp, http.StatusOK)
 }

@@ -5,10 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	appError "github.com/lucasd-coder/router-service/internal/shared/errors"
 	"github.com/lucasd-coder/router-service/pkg/logger"
+)
+
+var (
+	defaultLimit  int64 = 10
+	defaultOffSet int64 = 1
+	defaultNumber int64 = 0
 )
 
 type controller struct{}
@@ -18,8 +26,15 @@ func NewRouter(
 	order *OrderController) *chi.Mux {
 	r := chi.NewRouter()
 
+	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("ok"))
+	})
+
 	r.Group(func(r chi.Router) {
-		r.Post("/users", user.Save)
+		r.Route("/users", func(r chi.Router) {
+			r.Post("/", user.Save)
+			r.Get("/{email}", user.FindUserByEmail)
+		})
 	})
 
 	r.Group(func(r chi.Router) {
@@ -54,4 +69,13 @@ func (c *controller) Response(ctx context.Context, w http.ResponseWriter, body i
 		msg := fmt.Errorf("err during http.ResponseWriter: %w", err)
 		log.Error(msg)
 	}
+}
+
+func (c *controller) getQueryParamConvertStringToInt(u *url.URL, param string, value int64) int64 {
+	intValue, err := strconv.ParseInt(
+		u.Query().Get(param), 10, 64)
+	if err != nil {
+		return value
+	}
+	return intValue
 }

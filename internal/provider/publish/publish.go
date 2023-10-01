@@ -6,6 +6,11 @@ import (
 
 	"github.com/lucasd-coder/router-service/internal/shared"
 	"github.com/lucasd-coder/router-service/pkg/logger"
+	octrace "go.opencensus.io/trace"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/bridge/opencensus"
+	"go.opentelemetry.io/otel/trace"
 	"gocloud.dev/pubsub"
 )
 
@@ -22,13 +27,28 @@ func NewPublished(opt *shared.Options) *Published {
 func (p *Published) Send(ctx context.Context, msg *shared.Message) error {
 	log := logger.FromContext(ctx)
 
+	traceName := "gocloud.dev/pubsub/Topic.Send"
+	tracer := otel.GetTracerProvider().Tracer(traceName)
+	octrace.DefaultTracer = opencensus.NewTracer(tracer)
+
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("queueURL", p.opt.TopicURL),
+	}
+	ctx, span := tracer.Start(ctx, "Topic.Send",
+		trace.WithAttributes(commonAttrs...),
+		trace.WithSpanKind(trace.SpanKindInternal),
+	)
+	defer span.End()
+
 	client, err := NewClient(ctx, p.opt.TopicURL)
 	if err != nil {
+		span.RecordError(err)
 		log.Errorf("error creating Publish client: %v", err)
 	}
 
 	defer func() {
 		if err := client.Shutdown(ctx); err != nil {
+			span.RecordError(err)
 			log.Fatalf("error client shutdown: %v", err)
 		}
 	}()
@@ -52,6 +72,7 @@ func (p *Published) Send(ctx context.Context, msg *shared.Message) error {
 		}
 		backOffTime := time.Duration(1+i) * p.opt.WaitingTime
 		log.Infof("waiting %v before retrying", backOffTime)
+		span.RecordError(err)
 		time.Sleep(backOffTime)
 	}
 	return er

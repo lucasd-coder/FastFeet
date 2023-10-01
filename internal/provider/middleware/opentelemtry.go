@@ -136,7 +136,7 @@ func (tw traceware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if tw.chiRoutes != nil {
 		rctx := chi.NewRouteContext()
 		if tw.chiRoutes.Match(rctx, r.Method, r.URL.Path) {
-			routePattern = rctx.RoutePattern()
+			routePattern = chi.RouteContext(r.Context()).RoutePattern()
 			spanName = addPrefixToSpanName(tw.reqMethodInSpanName, r.Method, routePattern)
 		}
 	}

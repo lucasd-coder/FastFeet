@@ -1,4 +1,4 @@
-package model
+package order
 
 import (
 	"context"
@@ -7,12 +7,8 @@ import (
 )
 
 type (
-	OrderService interface {
+	Service interface {
 		Save(ctx context.Context, order *Order) error
-		GetAllOrders(ctx context.Context, pld *GetAllOrderPayload) (*pb.GetAllOrderResponse, error)
-	}
-
-	BusinessRepository interface {
-		GetAllOrders(ctx context.Context, req *pb.GetAllOrderRequest) (*pb.GetAllOrderResponse, error)
+		GetAllOrder(ctx context.Context, pld *GetAllOrderPayload) (*pb.GetAllOrderResponse, error)
 	}
 )
