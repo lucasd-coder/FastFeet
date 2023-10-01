@@ -2,6 +2,7 @@ package shared
 
 import (
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
+	"github.com/lucasd-coder/fast-feet/pkg/mongodb"
 	"github.com/lucasd-coder/fast-feet/pkg/monitor"
 	"github.com/lucasd-coder/order-data-service/config"
 )
@@ -18,5 +19,12 @@ func NewOptOtel(cfg *config.Config) monitor.Option {
 		ServiceName: cfg.Name,
 		Protocol:    cfg.OpenTelemetry.Protocol,
 		URL:         cfg.OpenTelemetry.URL,
+	}
+}
+
+func NewOptMongoDB(cfg *config.Config) mongodb.Option {
+	return mongodb.Option{
+		ConnTimeout: cfg.MongoDBConnTimeout,
+		URL:         cfg.MongoDB.URL,
 	}
 }
