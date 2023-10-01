@@ -1,0 +1,14 @@
+version: '3.4'
+
+services:
+  router-service:
+    container_name: router-service
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - ${SERVER_PORT}:${SERVER_PORT}
+    volumes:
+      - .:/go/src
+    env_file:
+      - .env

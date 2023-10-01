@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "./pkg/pb";
+
+import "response/get_all_order_response.proto";
+import "request/get_all_order_request.proto";
+
+service OrderHandler {
+    rpc GetAllOrder (GetAllOrderRequest) returns (GetAllOrderResponse); 
+}

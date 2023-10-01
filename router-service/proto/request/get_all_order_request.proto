@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "./pkg/pb";
+
+import "model/order.proto";
+
+message GetAllOrderRequest {
+  string userId = 1;
+  string id = 2;
+  string startDate = 3;
+  string endDate = 4;
+  Product product = 5;
+  Address addresses = 6;
+  string createdAt = 7;
+  string updatedAt = 8;
+  string deliverymanId = 9;
+  string canceledAt = 10;
+  int64 limit = 11;
+  int64 offset = 12;
+}
