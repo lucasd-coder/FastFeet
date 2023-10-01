@@ -6,11 +6,13 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"regexp"
 	"syscall"
 
 	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
 	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel"
@@ -43,14 +45,10 @@ func Run(cfg *config.Config) {
 		}
 	}()
 
-	lis, err := net.Listen("tcp", "localhost:"+cfg.GRPC.Port)
+	lis, err := net.Listen("tcp", ":"+cfg.GRPC.Port)
 	if err != nil {
 		panic(err)
 	}
-
-	srvMetrics := monitor.RegisterSrvMetrics()
-	reg := prometheus.NewRegistry()
-	reg.MustRegister(srvMetrics)
 
 	tp, err := monitor.RegisterOtel(ctx, cfg)
 	if err != nil {
@@ -62,11 +60,11 @@ func Run(cfg *config.Config) {
 			log.Errorf("Error shutting down tracer server provider: %v", err)
 		}
 	}()
-
+	reg := prometheus.NewRegistry()
 	grpcServer := newGrpcServer(ctx, logger, reg)
-	log.Infof("Started listening... address[:%s]", cfg.GRPC.Port)
-
 	registerServices(grpcServer)
+
+	log.Infof("Started listening... address[:%s]", cfg.GRPC.Port)
 
 	go func() {
 		if err := grpcServer.Serve(lis); err != nil {
@@ -85,7 +83,7 @@ func Run(cfg *config.Config) {
 	grpcServer.GracefulStop()
 }
 
-func newGrpcServer(ctx context.Context, logger *logger.Log, reg prometheus.Registerer) *grpc.Server {
+func newGrpcServer(ctx context.Context, logger *logger.Log, reg *prometheus.Registry) *grpc.Server {
 	exemplarFromContext := func(ctx context.Context) prometheus.Labels {
 		if span := trace.SpanContextFromContext(ctx); span.IsSampled() {
 			return prometheus.Labels{"traceID": span.TraceID().String()}
@@ -94,25 +92,33 @@ func newGrpcServer(ctx context.Context, logger *logger.Log, reg prometheus.Regis
 	}
 
 	srvMetrics := monitor.RegisterSrvMetrics()
+	reg.MustRegister(srvMetrics)
+	reg.MustRegister(collectors.NewBuildInfoCollector())
+	reg.MustRegister(collectors.NewGoCollector(
+		collectors.WithGoCollectorRuntimeMetrics(
+			collectors.GoRuntimeMetricsRule{Matcher: regexp.MustCompile("/.*")}),
+	))
 
 	grpcPanicRecoveryHandler := monitor.RegisterGrpcPanicRecoveryHandler(ctx, reg)
 
 	interceptorOpt := otelgrpc.WithTracerProvider(otel.GetTracerProvider())
 
-	return grpc.NewServer(
+	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
+			logger.GetGRPCUnaryServerInterceptor(),
 			otelgrpc.UnaryServerInterceptor(interceptorOpt),
 			srvMetrics.UnaryServerInterceptor(grpcprom.WithExemplarFromContext(exemplarFromContext)),
-			logger.GetGRPCUnaryServerInterceptor(),
 			grpcrecovery.UnaryServerInterceptor(grpcrecovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
 		),
 		grpc.ChainStreamInterceptor(
+			logger.GetGRPCStreamServerInterceptor(),
 			otelgrpc.StreamServerInterceptor(interceptorOpt),
 			srvMetrics.StreamServerInterceptor(grpcprom.WithExemplarFromContext(exemplarFromContext)),
-			logger.GetGRPCStreamServerInterceptor(),
 			grpcrecovery.StreamServerInterceptor(grpcrecovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
 		),
 	)
+	srvMetrics.InitializeMetrics(grpcServer)
+	return grpcServer
 }
 
 func newHTTPServer(ctx context.Context, cfg *config.Config, reg prometheus.Gatherer) {

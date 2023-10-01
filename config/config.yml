@@ -15,7 +15,7 @@ http:
 mongodb:
   url: ${MONGODB_URL}
   connTimeout: 10s
-  database: user-manger-service
+  database: fast-feet
   collections:
     user:
       collection: "users"
