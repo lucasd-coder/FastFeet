@@ -6,18 +6,23 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"regexp"
 	"syscall"
 
 	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
 	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/lucasd-coder/business-service/config"
+	orderHandler "github.com/lucasd-coder/business-service/internal/domain/order/handler"
+	userHandler "github.com/lucasd-coder/business-service/internal/domain/user/handler"
 	"github.com/lucasd-coder/business-service/internal/provider/subscribe"
 	"github.com/lucasd-coder/business-service/internal/shared/queueoptions"
+	"github.com/lucasd-coder/business-service/internal/shared/utils"
 	"github.com/lucasd-coder/business-service/pkg/cache"
 	"github.com/lucasd-coder/business-service/pkg/logger"
 	"github.com/lucasd-coder/business-service/pkg/monitor"
 	"github.com/lucasd-coder/business-service/pkg/pb"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel"
@@ -35,26 +40,27 @@ func Run(cfg *config.Config) {
 
 	cache.SetUpRedis(ctx, cfg)
 
-	lis, err := net.Listen("tcp", "localhost:"+cfg.GRPC.Port)
+	lis, err := net.Listen("tcp", ":"+cfg.GRPC.Port)
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
-	srvMetrics := monitor.RegisterSrvMetrics()
-	reg := prometheus.NewRegistry()
-	reg.MustRegister(srvMetrics)
-
-	tp := monitor.RegisterOtel(ctx, cfg)
+	tp, err := monitor.RegisterOtel(ctx, cfg)
+	if err != nil {
+		log.Errorf("Error creating register otel: %v", err)
+		return
+	}
 	defer func() {
 		if err := tp.Shutdown(ctx); err != nil {
 			log.Errorf("Error shutting down tracer server provider: %v", err)
 		}
 	}()
+	reg := prometheus.NewRegistry()
 
 	grpcServer := newGrpcServer(ctx, logger, reg)
-	log.Infof("Started listening... address[:%s]", cfg.GRPC.Port)
-
 	registerServices(grpcServer)
+
+	log.Infof("Started listening... address[:%s]", cfg.GRPC.Port)
 
 	go func() {
 		if err := grpcServer.Serve(lis); err != nil {
@@ -64,9 +70,9 @@ func Run(cfg *config.Config) {
 
 	go newHTTPServer(ctx, cfg, reg)
 
-	go subscribeUserEvents(ctx, cfg)
+	go subscribeUserEvents(ctx, cfg, reg)
 
-	go subscribeOrderEvents(ctx, cfg)
+	go subscribeOrderEvents(ctx, cfg, reg)
 
 	stopChan := make(chan os.Signal, 1)
 
@@ -77,7 +83,7 @@ func Run(cfg *config.Config) {
 	grpcServer.GracefulStop()
 }
 
-func newGrpcServer(ctx context.Context, logger *logger.Log, reg prometheus.Registerer) *grpc.Server {
+func newGrpcServer(ctx context.Context, logger *logger.Log, reg *prometheus.Registry) *grpc.Server {
 	exemplarFromContext := func(ctx context.Context) prometheus.Labels {
 		if span := trace.SpanContextFromContext(ctx); span.IsSampled() {
 			return prometheus.Labels{"traceID": span.TraceID().String()}
@@ -86,25 +92,32 @@ func newGrpcServer(ctx context.Context, logger *logger.Log, reg prometheus.Regis
 	}
 
 	srvMetrics := monitor.RegisterSrvMetrics()
-
+	reg.MustRegister(srvMetrics)
+	reg.MustRegister(collectors.NewBuildInfoCollector())
+	reg.MustRegister(collectors.NewGoCollector(
+		collectors.WithGoCollectorRuntimeMetrics(
+			collectors.GoRuntimeMetricsRule{Matcher: regexp.MustCompile("/.*")}),
+	))
 	grpcPanicRecoveryHandler := monitor.RegisterGrpcPanicRecoveryHandler(ctx, reg)
 
 	interceptorOpt := otelgrpc.WithTracerProvider(otel.GetTracerProvider())
 
-	return grpc.NewServer(
+	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
+			logger.GetGRPCUnaryServerInterceptor(),
 			otelgrpc.UnaryServerInterceptor(interceptorOpt),
 			srvMetrics.UnaryServerInterceptor(grpcprom.WithExemplarFromContext(exemplarFromContext)),
-			logger.GetGRPCUnaryServerInterceptor(),
 			grpcrecovery.UnaryServerInterceptor(grpcrecovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
 		),
 		grpc.ChainStreamInterceptor(
+			logger.GetGRPCStreamServerInterceptor(),
 			otelgrpc.StreamServerInterceptor(interceptorOpt),
 			srvMetrics.StreamServerInterceptor(grpcprom.WithExemplarFromContext(exemplarFromContext)),
-			logger.GetGRPCStreamServerInterceptor(),
 			grpcrecovery.StreamServerInterceptor(grpcrecovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
 		),
 	)
+	srvMetrics.InitializeMetrics(grpcServer)
+	return grpcServer
 }
 
 func newHTTPServer(ctx context.Context, cfg *config.Config, reg prometheus.Gatherer) {
@@ -118,6 +131,10 @@ func newHTTPServer(ctx context.Context, cfg *config.Config, reg prometheus.Gathe
 			Timeout:           cfg.HTTP.Timeout,
 		},
 	))
+
+	m.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("ok"))
+	})
 
 	httpSrv := &http.Server{
 		Addr:        ":" + cfg.HTTP.Port,
@@ -136,35 +153,53 @@ func newHTTPServer(ctx context.Context, cfg *config.Config, reg prometheus.Gathe
 	}
 }
 
-func subscribeUserEvents(ctx context.Context, cfg *config.Config) {
+func subscribeUserEvents(ctx context.Context, cfg *config.Config, reg *prometheus.Registry) {
 	optsQueueUserEvents := queueoptions.NewOptionQueueUserEvents(cfg)
 	userHandler := InitializeUserHandler()
-	subscribeUserEvents := subscribe.New(cfg.QueueUserEvents.URL, func(ctx context.Context, m []byte) error {
-		if err := userHandler.Handler(ctx, m); err != nil {
-			return err
-		}
-		return nil
-	}, optsQueueUserEvents)
+	log := logger.FromContext(ctx)
+
+	metric, err := monitor.CreateMetrics(utils.ExtractQueueName(cfg.QueueUserEvents.QueueURL), reg)
+	if err != nil {
+		log.Errorf("CreateMetrics Error: %s", err)
+		return
+	}
+
+	subscribeUserEvents := subscribe.New(func(ctx context.Context, m []byte) error {
+		return userHandler.CreateUser(ctx, m)
+	}, optsQueueUserEvents, metric)
 
 	subscribeUserEvents.Start(ctx)
 }
 
-func subscribeOrderEvents(ctx context.Context, cfg *config.Config) {
+func subscribeOrderEvents(ctx context.Context, cfg *config.Config, reg *prometheus.Registry) {
 	optsQueueOrderEvents := queueoptions.NewOptionOrderEvents(cfg)
 	orderHandler := InitializeOrderHandler()
-	subscribeOrderEvents := subscribe.New(cfg.QueueOrderEvents.URL, func(ctx context.Context, m []byte) error {
-		if err := orderHandler.Handler(ctx, m); err != nil {
-			return err
-		}
-		return nil
-	}, optsQueueOrderEvents)
+
+	log := logger.FromContext(ctx)
+
+	metric, err := monitor.CreateMetrics(utils.ExtractQueueName(cfg.QueueOrderEvents.QueueURL), reg)
+	if err != nil {
+		log.Errorf("CreateMetrics Error: %s", err)
+		return
+	}
+
+	subscribeOrderEvents := subscribe.New(func(ctx context.Context, m []byte) error {
+		return orderHandler.CreateOrderHandler(ctx, m)
+	}, optsQueueOrderEvents, metric)
 
 	subscribeOrderEvents.Start(ctx)
 }
 
 func registerServices(grpcServer *grpc.Server) {
-	orderDataService := InitializeOrderDataService()
-	pb.RegisterGetAllOrderServiceServer(grpcServer, orderDataService)
+	initializeOrder := InitializeOrderHandler()
+	initializeUser := InitializeUserHandler()
+
+	order := orderHandler.NewOrderHandler(*initializeOrder)
+	user := userHandler.NewUserHandler(*initializeUser)
+
+	pb.RegisterOrderHandlerServer(grpcServer, order)
+	pb.RegisterUserHandlerServer(grpcServer, user)
+
 	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
 	reflection.Register(grpcServer)
 }

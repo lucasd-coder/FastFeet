@@ -1,19 +1,19 @@
-package model
+package order
 
 import (
 	"github.com/lucasd-coder/business-service/internal/shared"
 )
 
 type Payload struct {
-	Data      Data   `json:"data,omitempty" validate:"required,dive"`
+	Data      Data   `json:"data,omitempty" validate:"required"`
 	EventDate string `json:"eventDate,omitempty" validate:"required,rfc3339"`
 }
 
 type Data struct {
 	UserID        string  `json:"userId,omitempty" validate:"required,uuid4"`
 	DeliverymanID string  `json:"deliverymanId,omitempty" validate:"required,uuid4" `
-	Product       Product `json:"product,omitempty" validate:"required,dive"`
-	Address       Address `json:"address,omitempty" validate:"required,dive"`
+	Product       Product `json:"product,omitempty" validate:"required"`
+	Address       Address `json:"address,omitempty" validate:"required"`
 }
 
 type Product struct {
@@ -40,8 +40,8 @@ type GetAllOrderRequest struct {
 	CanceledAt    string     `json:"canceledAt,omitempty" validate:"rfc3339"`
 	Limit         int64      `json:"limit,omitempty" validate:"numeric=integer"`
 	Offset        int64      `json:"offset,omitempty" validate:"numeric=integer"`
-	Product       GetProduct `json:"product,omitempty" validate:"required,dive"`
-	Address       GetAddress `json:"addresses,omitempty" validate:"required,dive"`
+	Product       GetProduct `json:"product,omitempty" validate:"required"`
+	Address       GetAddress `json:"addresses,omitempty" validate:"required"`
 }
 
 type GetProduct struct {

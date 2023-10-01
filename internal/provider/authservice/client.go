@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/lucasd-coder/business-service/config"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/oauth2"
 )
 
@@ -28,7 +29,7 @@ func NewClient(cfg *config.Config) *resty.Client {
 	client.EnableTrace().
 		SetBaseURL(opt.url).
 		SetRetryCount(cfg.AuthServiceMaxRetries).
-		SetTransport(opt.transport).
+		SetTransport(otelhttp.NewTransport(opt.transport)).
 		SetDebug(opt.debug).
 		SetTimeout(opt.requestTimeout).
 		SetRetryCount(opt.maxRetries).
@@ -62,7 +63,8 @@ func NewClientWithAuth(ctx context.Context, cfg *config.Config) (*resty.Client, 
 	client.EnableTrace().
 		SetBaseURL(opt.url).
 		SetDebug(opt.debug).
-		SetTimeout(opt.requestTimeout)
+		SetTimeout(opt.requestTimeout).
+		SetTransport(otelhttp.NewTransport(clientConf.Transport))
 
 	return client, err
 }

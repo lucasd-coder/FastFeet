@@ -13,6 +13,7 @@ type Options struct {
 	NumberOfMessageReceivers int
 	MaxReceiveMessage        time.Duration
 	PollDelay                time.Duration
+	QueueURL                 string
 }
 
 func NewOptionQueueUserEvents(cfg *config.Config) *Options {
@@ -23,6 +24,7 @@ func NewOptionQueueUserEvents(cfg *config.Config) *Options {
 		NumberOfMessageReceivers: cfg.QueueUserEvents.NumberOfMessageReceivers,
 		MaxReceiveMessage:        cfg.QueueUserEvents.MaxReceiveMessage,
 		PollDelay:                cfg.QueueUserEvents.PollDelay,
+		QueueURL:                 cfg.QueueUserEvents.QueueURL,
 	}
 }
 
@@ -34,5 +36,6 @@ func NewOptionOrderEvents(cfg *config.Config) *Options {
 		NumberOfMessageReceivers: cfg.QueueOrderEvents.NumberOfMessageReceivers,
 		MaxReceiveMessage:        cfg.QueueOrderEvents.MaxReceiveMessage,
 		PollDelay:                cfg.QueueOrderEvents.PollDelay,
+		QueueURL:                 cfg.QueueOrderEvents.QueueURL,
 	}
 }

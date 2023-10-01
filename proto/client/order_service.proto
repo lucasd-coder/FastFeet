@@ -11,5 +11,5 @@ import "request/get_order_service_all_order_request.proto";
 
 service OrderService {
     rpc Save (OrderRequest) returns (OrderResponse);
-    rpc GetAllOrders (GetOrderServiceAllOrderRequest) returns (GetAllOrderResponse);
+    rpc GetAllOrder (GetOrderServiceAllOrderRequest) returns (GetAllOrderResponse);
 }

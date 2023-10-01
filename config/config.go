@@ -47,17 +47,18 @@ type (
 	}
 
 	UserManagerService struct {
-		URL      string `env-required:"true" yaml:"url"`
+		URL      string `env-required:"true" yaml:"url" env:"USER_MANAGER_URL"`
 		MaxRetry uint   `env-required:"true" yaml:"max-retry"`
 	}
 
 	OrderDataService struct {
-		URL      string `env-required:"true" yaml:"url"`
+		URL      string `env-required:"true" yaml:"url" env:"ORDER_DATA_URL"`
 		MaxRetry uint   `env-required:"true" yaml:"max-retry"`
 	}
 
 	RabbitMQ struct {
-		Queue `env-required:"true" yaml:"queue"`
+		Queue           `env-required:"true" yaml:"queue"`
+		RabbitServerURL string `env-required:"true" env:"RABBIT_SERVER_URL"`
 	}
 
 	Queue struct {
@@ -72,8 +73,8 @@ type (
 	}
 
 	QueueUserEvents struct {
-		URL                      string        `env-required:"true" yaml:"url"`
-		MaxReceiveMessage        time.Duration `yaml:"max-receive-message" env-default:"30s"`
+		QueueURL                 string        `env-required:"true" yaml:"url"`
+		MaxReceiveMessage        time.Duration `yaml:"max-receive-message" env-default:"60s"`
 		MaxRetries               int           `yaml:"max-retries" env-default:"5"`
 		MaxConcurrentMessages    int           `yaml:"max-concurrent-messages" env-default:"10"`
 		NumberOfMessageReceivers int           `yaml:"number-of-message-receivers" env-default:"2"`
@@ -82,8 +83,8 @@ type (
 	}
 
 	QueueOrderEvents struct {
-		URL                      string        `env-required:"true" yaml:"url"`
-		MaxReceiveMessage        time.Duration `yaml:"max-receive-message" env-default:"30s"`
+		QueueURL                 string        `env-required:"true" yaml:"url"`
+		MaxReceiveMessage        time.Duration `yaml:"max-receive-message" env-default:"60s"`
 		MaxRetries               int           `yaml:"max-retries" env-default:"5"`
 		MaxConcurrentMessages    int           `yaml:"max-concurrent-messages" env-default:"10"`
 		NumberOfMessageReceivers int           `yaml:"number-of-message-receivers" env-default:"2"`
@@ -92,7 +93,7 @@ type (
 	}
 
 	AccessAuthService struct {
-		AuthServiceURL              string        `env-required:"true" yaml:"url"`
+		AuthServiceURL              string        `env-required:"true" yaml:"url" env:"ACCESS_AUTH_URL"`
 		AuthServiceMaxConn          int           `env-required:"true" yaml:"max-conn"`
 		AuthServiceMaxRoutes        int           `env-required:"true" yaml:"max-routes"`
 		AuthServiceReadTimeout      time.Duration `yaml:"read-timeout" env-default:"60s"`
@@ -105,16 +106,16 @@ type (
 	}
 
 	KeyCloak struct {
-		KeyCloakTokenURL       string        `env-required:"true" yaml:"token-url"`
-		KeyCloakUsername       string        `env-required:"true" yaml:"username"`
-		KeyCloakPassword       string        `env-required:"true" yaml:"password"`
+		KeyCloakTokenURL       string        `env-required:"true" yaml:"token-url" env:"KEYCLOAK_URL"`
+		KeyCloakUsername       string        `env-required:"true" yaml:"username" env:"USERNAME"`
+		KeyCloakPassword       string        `env-required:"true" yaml:"password" env:"PASSWORD"`
 		KeyCloakRequestTimeout time.Duration `env-required:"true" yaml:"request-timeout"`
-		KeyCloakClientID       string        `env-required:"true" yaml:"client-id"`
-		KeyCloakClientSecret   string        `env-required:"true" yaml:"client-secret"`
+		KeyCloakClientID       string        `env-required:"true" yaml:"client-id" env:"CLIENT_ID"`
+		KeyCloakClientSecret   string        `env-required:"true" yaml:"client-secret" env:"CLIENT_SECRET"`
 	}
 
 	ViaCep struct {
-		ViaCepURL              string        `env-required:"true" yaml:"url"`
+		ViaCepURL              string        `env-required:"true" yaml:"url" env:"VIA_CEP_URL"`
 		ViaCepMaxConn          int           `env-required:"true" yaml:"max-conn"`
 		ViaCepMaxRoutes        int           `env-required:"true" yaml:"max-routes"`
 		ViaCepReadTimeout      time.Duration `yaml:"read-timeout" env-default:"60s"`

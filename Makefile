@@ -13,9 +13,11 @@ proto-gen:
 generate-mocks:
 	./scripts/mockery.sh
 
-
 wire-gen:
-	cd internal/app && wire
+	wire ./internal/app
+
+wire-check:
+	wire check ./internal/app
 
 run-application:
 	RABBIT_SERVER_URL=amqp://admin:admin123@localhost:5672/fastfeet GO_PROFILE=dev GO111MODULE=on go run -race ./cmd/app/main.go

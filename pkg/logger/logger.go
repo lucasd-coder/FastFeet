@@ -7,6 +7,7 @@ import (
 	grpc_logrus "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
 	"github.com/lucasd-coder/business-service/config"
 	logrus "github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 )
 
@@ -24,6 +25,10 @@ func FromContext(ctx context.Context) Logger {
 
 	logger := &logger{
 		logger: log.WithContext(ctx),
+	}
+
+	if span := trace.SpanContextFromContext(ctx); span.IsSampled() {
+		logger.WithField("traceID", span.TraceID().String())
 	}
 
 	return logger

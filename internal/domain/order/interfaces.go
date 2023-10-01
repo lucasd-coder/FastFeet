@@ -1,4 +1,4 @@
-package model
+package order
 
 import (
 	"context"
@@ -12,9 +12,14 @@ type (
 		GetAddress(ctx context.Context, cep string) (*shared.ViaCepAddressResponse, error)
 	}
 
-	OrderDataRepository interface {
+	Repository interface {
 		Save(ctx context.Context, req *pb.OrderRequest) (*pb.OrderResponse, error)
-		GetAllOrders(ctx context.Context,
+		GetAllOrder(ctx context.Context,
 			req *pb.GetOrderServiceAllOrderRequest) (*pb.GetAllOrderResponse, error)
+	}
+
+	Service interface {
+		GetAllOrder(ctx context.Context, pld *GetAllOrderRequest) (*pb.GetAllOrderResponse, error)
+		CreateOrder(ctx context.Context, pld Payload) (*pb.OrderResponse, error)
 	}
 )

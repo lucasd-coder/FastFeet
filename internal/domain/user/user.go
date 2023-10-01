@@ -1,11 +1,11 @@
-package model
+package user
 
 import (
 	"github.com/lucasd-coder/business-service/internal/shared"
 )
 
 type Payload struct {
-	Data      Data   `json:"data,omitempty" validate:"required,dive"`
+	Data      Data   `json:"data,omitempty" validate:"required"`
 	EventDate string `json:"eventDate,omitempty" validate:"required"`
 }
 
@@ -26,8 +26,16 @@ type User struct {
 	Attributes map[string]string `json:"attributes,omitempty"`
 }
 
+type FindByEmailRequest struct {
+	Email string `json:"email,omitempty" validate:"required,email,pattern"`
+}
+
 func (payload *Payload) Validate(val shared.Validator) error {
 	return val.ValidateStruct(payload)
+}
+
+func (f *FindByEmailRequest) Validate(val shared.Validator) error {
+	return val.ValidateStruct(f)
 }
 
 func (payload *Payload) ToRegister() *shared.Register {

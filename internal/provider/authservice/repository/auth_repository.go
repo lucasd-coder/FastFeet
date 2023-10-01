@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/httptrace"
 	"net/url"
 	"strings"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/lucasd-coder/business-service/internal/provider/authservice"
 	"github.com/lucasd-coder/business-service/internal/shared"
 	"github.com/lucasd-coder/business-service/pkg/logger"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -37,6 +39,7 @@ func NewAuthRepository(cfg *config.Config) *AuthRepository {
 func (r *AuthRepository) Register(ctx context.Context, pld *shared.Register) (*shared.RegisterUserResponse, error) {
 	log := logger.FromContext(ctx)
 	span := trace.SpanFromContext(ctx)
+	ctx = httptrace.WithClientTrace(ctx, otelhttptrace.NewClientTrace(ctx))
 
 	client := authservice.NewClient(r.cfg)
 
@@ -52,7 +55,9 @@ func (r *AuthRepository) Register(ctx context.Context, pld *shared.Register) (*s
 	response, err := request.SetBody(body).
 		SetHeader("Content-Type", "application/json").
 		SetError(&shared.HTTPError{}).
+		SetResult(&shared.RegisterUserResponse{}).
 		Post("/api/register")
+
 	if err != nil {
 		r.createSpanError(ctx, err, spanErrRequest)
 		return nil, err
@@ -82,6 +87,7 @@ func (r *AuthRepository) Register(ctx context.Context, pld *shared.Register) (*s
 func (r *AuthRepository) FindByEmail(ctx context.Context, email string) (*shared.GetUserResponse, error) {
 	log := logger.FromContext(ctx)
 	span := trace.SpanFromContext(ctx)
+	ctx = httptrace.WithClientTrace(ctx, otelhttptrace.NewClientTrace(ctx))
 
 	client, err := authservice.NewClientWithAuth(ctx, r.cfg)
 	if err != nil {
@@ -135,6 +141,7 @@ func (r *AuthRepository) FindByEmail(ctx context.Context, email string) (*shared
 func (r *AuthRepository) FindRolesByID(ctx context.Context, id string) (*shared.GetRolesResponse, error) {
 	log := logger.FromContext(ctx)
 	span := trace.SpanFromContext(ctx)
+	ctx = httptrace.WithClientTrace(ctx, otelhttptrace.NewClientTrace(ctx))
 
 	client, err := authservice.NewClientWithAuth(ctx, r.cfg)
 	if err != nil {
@@ -181,6 +188,7 @@ func (r *AuthRepository) FindRolesByID(ctx context.Context, id string) (*shared.
 func (r *AuthRepository) IsActiveUser(ctx context.Context, id string) (*shared.IsActiveUser, error) {
 	log := logger.FromContext(ctx)
 	span := trace.SpanFromContext(ctx)
+	ctx = httptrace.WithClientTrace(ctx, otelhttptrace.NewClientTrace(ctx))
 
 	client, err := authservice.NewClientWithAuth(ctx, r.cfg)
 	if err != nil {

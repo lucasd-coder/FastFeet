@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"net/http/httptrace"
 
 	"github.com/lucasd-coder/business-service/config"
 	cacheProvider "github.com/lucasd-coder/business-service/internal/provider/cache"
@@ -11,6 +12,7 @@ import (
 	"github.com/lucasd-coder/business-service/internal/shared/codec"
 	"github.com/lucasd-coder/business-service/pkg/logger"
 	"github.com/redis/go-redis/v9"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -37,6 +39,7 @@ func NewViaCepRepository(cfg *config.Config,
 func (r *ViaCepRepository) GetAddress(ctx context.Context, cep string) (*shared.ViaCepAddressResponse, error) {
 	log := logger.FromContext(ctx)
 	span := trace.SpanFromContext(ctx)
+	ctx = httptrace.WithClientTrace(ctx, otelhttptrace.NewClientTrace(ctx))
 
 	address, err := r.getCachedToAddress(ctx, cep)
 	if err != nil {
@@ -55,6 +58,7 @@ func (r *ViaCepRepository) GetAddress(ctx context.Context, cep string) (*shared.
 
 func (r *ViaCepRepository) getAddress(ctx context.Context, cep string) (*shared.ViaCepAddressResponse, error) {
 	log := logger.FromContext(ctx)
+	ctx = httptrace.WithClientTrace(ctx, otelhttptrace.NewClientTrace(ctx))
 
 	client := viacepservice.NewClient(r.cfg)
 

@@ -2,156 +2,65 @@ package handler
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
-	"fmt"
-	"strings"
 
-	"github.com/lucasd-coder/business-service/config"
-	model "github.com/lucasd-coder/business-service/internal/domain/order"
-	"github.com/lucasd-coder/business-service/internal/shared"
+	"github.com/lucasd-coder/business-service/internal/domain/order"
 	"github.com/lucasd-coder/business-service/pkg/logger"
 	"github.com/lucasd-coder/business-service/pkg/pb"
 )
 
 type OrderHandler struct {
-	authRepository      shared.AuthRepository
-	viaCepRepository    model.ViaCepRepository
-	orderDataRepository model.OrderDataRepository
-	cfg                 *config.Config
-	validate            shared.Validator
+	pb.UnimplementedOrderHandlerServer
+	Handler
 }
 
-func NewOrderHandler(
-	authRepo shared.AuthRepository,
-	viaCepRepo model.ViaCepRepository,
-	orderDatRepo model.OrderDataRepository,
-	cfg *config.Config,
-	validate shared.Validator) *OrderHandler {
+func NewOrderHandler(h Handler) *OrderHandler {
 	return &OrderHandler{
-		authRepository:      authRepo,
-		viaCepRepository:    viaCepRepo,
-		orderDataRepository: orderDatRepo,
-		cfg:                 cfg,
-		validate:            validate,
+		Handler: h,
 	}
 }
 
-func (h *OrderHandler) Handler(ctx context.Context, m []byte) error {
-	var pld model.Payload
-
-	if err := json.Unmarshal(m, &pld); err != nil {
-		return fmt.Errorf("err Unmarshal: %w", err)
-	}
-	return h.handler(ctx, pld)
-}
-
-func (h *OrderHandler) handler(ctx context.Context, pld model.Payload) error {
+func (g *OrderHandler) GetAllOrder(ctx context.Context, req *pb.GetAllOrderRequest) (
+	*pb.GetAllOrderResponse, error) {
 	log := logger.FromContext(ctx)
 
-	fields := map[string]interface{}{
-		"payload": pld,
-	}
+	log.WithFields(map[string]interface{}{
+		"payload": req,
+	}).Info("received request")
 
-	log.WithFields(fields).Info("received payload")
+	pld := g.newGetAllOrderRequest(req)
 
-	if err := pld.Validate(h.validate); err != nil {
-		return fmt.Errorf("validation error: %w", err)
-	}
-
-	err := h.hasActiveUser(ctx, pld.Data.DeliverymanID)
+	resp, err := g.service.GetAllOrder(ctx, pld)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	isAdmin, err := h.hasPermissionIsAdmin(ctx, pld.Data.UserID)
-	if err != nil {
-		return err
-	}
+	log.Info("successfully fetching orders")
 
-	if !isAdmin {
-		log.Errorf("error mission not permission to id: %s", pld.Data.UserID)
-		return nil
-	}
-
-	log.Infof("get started address with postalCode: %s", pld.Data.Address.PostalCode)
-
-	address, err := h.viaCepRepository.GetAddress(ctx, pld.Data.Address.PostalCode)
-	if err != nil {
-		log.Errorf("error when get address with postalCode: %s err: %v", pld.Data.Address.PostalCode, err)
-		return err
-	}
-
-	if address.GetPostalCode() == "" {
-		log.Errorf("error validating address invalid to payload: %v", pld)
-		return nil
-	}
-
-	req := h.newOrderRequest(pld, address)
-
-	resp, err := h.orderDataRepository.Save(ctx, req)
-	if err != nil {
-		log.Errorf("error while call order-repository err: %v", err)
-		return err
-	}
-
-	log.Infof("event processed successfully id: %s generated", resp.GetId())
-
-	return nil
+	return resp, nil
 }
 
-func (h *OrderHandler) hasPermissionIsAdmin(ctx context.Context, id string) (bool, error) {
-	log := logger.FromContext(ctx)
-
-	log.Infof("get started roles with id: %s", id)
-
-	roles, err := h.authRepository.FindRolesByID(ctx, id)
-	if err != nil {
-		log.Errorf("error when check permission with id: %s, err: %v", id, err)
-		return false, err
+func (g *OrderHandler) newGetAllOrderRequest(req *pb.GetAllOrderRequest) *order.GetAllOrderRequest {
+	address := order.GetAddress{
+		Address:      req.GetAddresses().GetAddress(),
+		Number:       req.GetAddresses().GetNumber(),
+		PostalCode:   req.GetAddresses().GetPostalCode(),
+		Neighborhood: req.GetAddresses().GetNeighborhood(),
+		City:         req.GetAddresses().GetCity(),
+		State:        req.GetAddresses().GetState(),
 	}
 
-	for _, role := range roles.Roles {
-		if strings.EqualFold(shared.ADMIN, role) {
-			return true, nil
-		}
-	}
-
-	return false, nil
-}
-
-func (h *OrderHandler) hasActiveUser(ctx context.Context, id string) error {
-	log := logger.FromContext(ctx)
-
-	log.Infof("get started to check is active user with id: %s", id)
-
-	isActiveUser, err := h.authRepository.IsActiveUser(ctx, id)
-	if err != nil {
-		if errors.Is(err, shared.ErrUserNotFound) {
-			log.Errorf("%v with id %s", err, id)
-			return nil
-		}
-		return err
-	}
-
-	if !isActiveUser.Active {
-		log.Errorf("deliveryman not active with id: %s", id)
-		return nil
-	}
-	return nil
-}
-
-func (h *OrderHandler) newOrderRequest(pld model.Payload, address *shared.ViaCepAddressResponse) *pb.OrderRequest {
-	return &pb.OrderRequest{
-		DeliverymanId: pld.Data.DeliverymanID,
-		Product:       &pb.Product{Name: pld.Data.Product.Name},
-		Addresses: &pb.Address{
-			Address:      address.Address,
-			PostalCode:   address.PostalCode,
-			Neighborhood: address.Neighborhood,
-			City:         address.City,
-			State:        address.State,
-			Number:       pld.Data.Address.Number,
-		},
+	return &order.GetAllOrderRequest{
+		ID:            req.GetId(),
+		UserID:        req.GetUserId(),
+		DeliverymanID: req.GetDeliverymanId(),
+		StartDate:     req.GetStartDate(),
+		EndDate:       req.GetEndDate(),
+		CreatedAt:     req.GetCreatedAt(),
+		UpdatedAt:     req.GetUpdatedAt(),
+		CanceledAt:    req.GetCanceledAt(),
+		Limit:         req.GetLimit(),
+		Offset:        req.GetOffset(),
+		Product:       order.GetProduct{Name: req.GetProduct().GetName()},
+		Address:       address,
 	}
 }

@@ -35,7 +35,7 @@ func (r *OrderDataRepository) Save(ctx context.Context, req *pb.OrderRequest) (*
 	return client.Save(ctx, req)
 }
 
-func (r *OrderDataRepository) GetAllOrders(ctx context.Context,
+func (r *OrderDataRepository) GetAllOrder(ctx context.Context,
 	req *pb.GetOrderServiceAllOrderRequest) (*pb.GetAllOrderResponse, error) {
 	log := logger.FromContext(ctx)
 	conn, err := orderdataservice.NewClient(ctx, r.cfg)
@@ -48,5 +48,5 @@ func (r *OrderDataRepository) GetAllOrders(ctx context.Context,
 
 	client := pb.NewOrderServiceClient(conn)
 
-	return client.GetAllOrders(ctx, req)
+	return client.GetAllOrder(ctx, req)
 }

@@ -8,7 +8,6 @@ import (
 	"github.com/lucasd-coder/business-service/config"
 	order "github.com/lucasd-coder/business-service/internal/domain/order"
 	orderHandler "github.com/lucasd-coder/business-service/internal/domain/order/handler"
-	orderDataService "github.com/lucasd-coder/business-service/internal/domain/order/service"
 	user "github.com/lucasd-coder/business-service/internal/domain/user"
 	userHandler "github.com/lucasd-coder/business-service/internal/domain/user/handler"
 	"github.com/lucasd-coder/business-service/pkg/cache"
@@ -27,7 +26,7 @@ var initializeValidator = wire.NewSet(
 )
 
 var initializeUserRepository = wire.NewSet(
-	wire.Bind(new(user.UserRepository), new(*managerservice.UserRepository)),
+	wire.Bind(new(user.Repository), new(*managerservice.UserRepository)),
 	managerservice.NewUserRepository,
 )
 
@@ -43,23 +42,18 @@ var initializeViaCepRepository = wire.NewSet(
 )
 
 var initializeOrderDataRepository = wire.NewSet(
-	wire.Bind(new(order.OrderDataRepository), new(*orderdataservice.OrderDataRepository)),
+	wire.Bind(new(order.Repository), new(*orderdataservice.OrderDataRepository)),
 	orderdataservice.NewOrderDataRepository,
 )
 
-func InitializeUserHandler() *userHandler.UserHandler {
+func InitializeUserHandler() *userHandler.Handler {
 	wire.Build(initializeUserRepository,
-		initializeAuthRepository, config.GetConfig, initializeValidator, userHandler.NewUserHandler)
+		initializeAuthRepository, initializeValidator, user.InitializeService, config.GetConfig, userHandler.NewHandler)
 	return nil
 }
 
-func InitializeOrderHandler() *orderHandler.OrderHandler {
+func InitializeOrderHandler() *orderHandler.Handler {
 	wire.Build(initializeAuthRepository, initializeViaCepRepository, initializeOrderDataRepository,
-		config.GetConfig, initializeValidator, orderHandler.NewOrderHandler)
-	return nil
-}
-
-func InitializeOrderDataService() *orderDataService.OrderDataService {
-	wire.Build(initializeValidator, config.GetConfig, initializeOrderDataRepository, initializeAuthRepository, orderDataService.NewOrderDataService)
+		initializeValidator, order.InitializeService, config.GetConfig, orderHandler.NewHandler)
 	return nil
 }

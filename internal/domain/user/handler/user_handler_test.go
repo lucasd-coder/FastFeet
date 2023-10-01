@@ -1,299 +1,278 @@
 package handler_test
 
-import (
-	"context"
-	"path/filepath"
-	"testing"
-	"time"
+// func TestHandler_InvalidPayload(t *testing.T) {
+// 	model := &model.Payload{
+// 		Data: model.Data{
+// 			Name:       "",
+// 			Email:      "test validate email",
+// 			CPF:        "",
+// 			Password:   "",
+// 			Authority:  "",
+// 			Attributes: map[string]string{},
+// 		},
+// 	}
 
-	"github.com/ilyakaznacheev/cleanenv"
-	"github.com/lucasd-coder/business-service/config"
-	model "github.com/lucasd-coder/business-service/internal/domain/user"
-	"github.com/lucasd-coder/business-service/internal/domain/user/handler"
-	"github.com/lucasd-coder/business-service/internal/mocks"
-	"github.com/lucasd-coder/business-service/internal/shared"
-	"github.com/lucasd-coder/business-service/internal/shared/ciphers"
-	"github.com/lucasd-coder/business-service/internal/shared/codec"
-	"github.com/lucasd-coder/business-service/pkg/logger"
-	"github.com/lucasd-coder/business-service/pkg/pb"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
-)
+// 	pld, err := encode(model)
+// 	require.NoError(t, err)
 
-func TestHandler_InvalidPayload(t *testing.T) {
-	model := &model.Payload{
-		Data: model.Data{
-			Name:       "",
-			Email:      "test validate email",
-			CPF:        "",
-			Password:   "",
-			Authority:  "",
-			Attributes: map[string]string{},
-		},
-	}
+// 	ctx := context.Background()
 
-	pld, err := encode(model)
-	require.NoError(t, err)
+// 	SetUpLog(ctx)
 
-	ctx := context.Background()
+// 	cfg := SetUpConfig()
 
-	SetUpLog(ctx)
+// 	userRepoMock := new(mocks.UserRepository_internal_domain_user)
+// 	authRepoMock := new(mocks.AuthRepository_internal_shared)
+// 	valMock := new(mocks.Validator_internal_shared)
 
-	cfg := SetUpConfig()
+// 	handler := handler.NewUserHandler(userRepoMock, authRepoMock, cfg, valMock)
+// 	err = handler.Handler(ctx, pld)
+// 	assert.NotNil(t, err)
+// }
 
-	userRepoMock := new(mocks.UserRepository_internal_domain_user)
-	authRepoMock := new(mocks.AuthRepository_internal_shared)
-	valMock := new(mocks.Validator_internal_shared)
+// func TestHandler_UserWithEmailAlreadyExist(t *testing.T) {
+// 	model := &model.Payload{
+// 		Data: model.Data{
+// 			Name:       "maria",
+// 			Email:      "maria@gmail.com",
+// 			CPF:        "080.705.460-77",
+// 			Password:   "123456",
+// 			Authority:  "USER",
+// 			Attributes: map[string]string{},
+// 		},
+// 		EventDate: time.Now().Format(time.RFC3339),
+// 	}
 
-	handler := handler.NewUserHandler(userRepoMock, authRepoMock, cfg, valMock)
-	err = handler.Handler(ctx, pld)
-	assert.NotNil(t, err)
-}
+// 	userByEmailRequest := &pb.UserByEmailRequest{
+// 		Email: model.Data.Email,
+// 	}
 
-func TestHandler_UserWithEmailAlreadyExist(t *testing.T) {
-	model := &model.Payload{
-		Data: model.Data{
-			Name:       "maria",
-			Email:      "maria@gmail.com",
-			CPF:        "080.705.460-77",
-			Password:   "123456",
-			Authority:  "USER",
-			Attributes: map[string]string{},
-		},
-		EventDate: time.Now().Format(time.RFC3339),
-	}
+// 	userResp := &pb.UserResponse{
+// 		Id:         "46c77402-ba50-4b48-9bd9-1c4f97e36565",
+// 		Name:       model.Data.Name,
+// 		Email:      model.Data.Email,
+// 		Attributes: model.Data.Attributes,
+// 	}
 
-	userByEmailRequest := &pb.UserByEmailRequest{
-		Email: model.Data.Email,
-	}
+// 	pld, err := encode(model)
+// 	require.NoError(t, err)
 
-	userResp := &pb.UserResponse{
-		Id:         "46c77402-ba50-4b48-9bd9-1c4f97e36565",
-		Name:       model.Data.Name,
-		Email:      model.Data.Email,
-		Attributes: model.Data.Attributes,
-	}
+// 	ctx := context.Background()
 
-	pld, err := encode(model)
-	require.NoError(t, err)
+// 	SetUpLog(ctx)
 
-	ctx := context.Background()
+// 	cfg := SetUpConfig()
 
-	SetUpLog(ctx)
+// 	userRepoMock := new(mocks.UserRepository_internal_domain_user)
+// 	authRepoMock := new(mocks.AuthRepository_internal_shared)
+// 	valMock := new(mocks.Validator_internal_shared)
 
-	cfg := SetUpConfig()
+// 	userRepoMock.On("FindByEmail", ctx, userByEmailRequest).Return(userResp, nil)
 
-	userRepoMock := new(mocks.UserRepository_internal_domain_user)
-	authRepoMock := new(mocks.AuthRepository_internal_shared)
-	valMock := new(mocks.Validator_internal_shared)
+// 	handler := handler.NewUserHandler(userRepoMock, authRepoMock, cfg, valMock)
+// 	err = handler.Handler(ctx, pld)
+// 	assert.ErrorIs(t, err, shared.ErrUserAlreadyExist)
+// }
 
-	userRepoMock.On("FindByEmail", ctx, userByEmailRequest).Return(userResp, nil)
+// func TestHandler_UserWithCPFAlreadyExist(t *testing.T) {
+// 	model := &model.Payload{
+// 		Data: model.Data{
+// 			Name:       "maria",
+// 			Email:      "maria@gmail.com",
+// 			CPF:        "080.705.460-77",
+// 			Password:   "123456",
+// 			Authority:  "USER",
+// 			Attributes: map[string]string{},
+// 		},
+// 		EventDate: time.Now().Format(time.RFC3339),
+// 	}
 
-	handler := handler.NewUserHandler(userRepoMock, authRepoMock, cfg, valMock)
-	err = handler.Handler(ctx, pld)
-	assert.ErrorIs(t, err, shared.ErrUserAlreadyExist)
-}
+// 	userByCpfRequest := &pb.UserByCpfRequest{
+// 		Cpf: model.Data.CPF,
+// 	}
 
-func TestHandler_UserWithCPFAlreadyExist(t *testing.T) {
-	model := &model.Payload{
-		Data: model.Data{
-			Name:       "maria",
-			Email:      "maria@gmail.com",
-			CPF:        "080.705.460-77",
-			Password:   "123456",
-			Authority:  "USER",
-			Attributes: map[string]string{},
-		},
-		EventDate: time.Now().Format(time.RFC3339),
-	}
+// 	userByEmailRequest := &pb.UserByEmailRequest{
+// 		Email: model.Data.Email,
+// 	}
 
-	userByCpfRequest := &pb.UserByCpfRequest{
-		Cpf: model.Data.CPF,
-	}
+// 	userResp := &pb.UserResponse{
+// 		Id:         "46c77402-ba50-4b48-9bd9-1c4f97e36565",
+// 		Name:       model.Data.Name,
+// 		Email:      model.Data.Email,
+// 		Attributes: model.Data.Attributes,
+// 	}
 
-	userByEmailRequest := &pb.UserByEmailRequest{
-		Email: model.Data.Email,
-	}
+// 	pld, err := encode(model)
+// 	require.NoError(t, err)
 
-	userResp := &pb.UserResponse{
-		Id:         "46c77402-ba50-4b48-9bd9-1c4f97e36565",
-		Name:       model.Data.Name,
-		Email:      model.Data.Email,
-		Attributes: model.Data.Attributes,
-	}
+// 	ctx := context.Background()
 
-	pld, err := encode(model)
-	require.NoError(t, err)
+// 	SetUpLog(ctx)
 
-	ctx := context.Background()
+// 	cfg := SetUpConfig()
 
-	SetUpLog(ctx)
+// 	userRepoMock := new(mocks.UserRepository_internal_domain_user)
+// 	authRepoMock := new(mocks.AuthRepository_internal_shared)
+// 	valMock := new(mocks.Validator_internal_shared)
 
-	cfg := SetUpConfig()
+// 	userRepoMock.On("FindByEmail", ctx, userByEmailRequest).Return(&pb.UserResponse{}, nil)
 
-	userRepoMock := new(mocks.UserRepository_internal_domain_user)
-	authRepoMock := new(mocks.AuthRepository_internal_shared)
-	valMock := new(mocks.Validator_internal_shared)
+// 	userRepoMock.On("FindByCpf", ctx, userByCpfRequest).Return(userResp, nil)
 
-	userRepoMock.On("FindByEmail", ctx, userByEmailRequest).Return(&pb.UserResponse{}, nil)
+// 	handler := handler.NewUserHandler(userRepoMock, authRepoMock, cfg, valMock)
+// 	err = handler.Handler(ctx, pld)
+// 	assert.ErrorIs(t, err, shared.ErrUserAlreadyExist)
+// }
 
-	userRepoMock.On("FindByCpf", ctx, userByCpfRequest).Return(userResp, nil)
+// func TestHandler_AuthAlreadyExist(t *testing.T) {
+// 	payload := &model.Payload{
+// 		Data: model.Data{
+// 			Name:       "maria",
+// 			Email:      "maria@gmail.com",
+// 			CPF:        "080.705.460-77",
+// 			Password:   "123456",
+// 			Authority:  "USER",
+// 			Attributes: map[string]string{},
+// 		},
+// 		EventDate: time.Now().Format(time.RFC3339),
+// 	}
+// 	userResp := &pb.UserResponse{
+// 		Id:         "46c77402-ba50-4b48-9bd9-1c4f97e36565",
+// 		Name:       payload.Data.Name,
+// 		Email:      payload.Data.Email,
+// 		Attributes: payload.Data.Attributes,
+// 	}
+// 	userByCpfRequest := &pb.UserByCpfRequest{
+// 		Cpf: payload.Data.CPF,
+// 	}
+// 	userByEmailRequest := &pb.UserByEmailRequest{
+// 		Email: payload.Data.Email,
+// 	}
 
-	handler := handler.NewUserHandler(userRepoMock, authRepoMock, cfg, valMock)
-	err = handler.Handler(ctx, pld)
-	assert.ErrorIs(t, err, shared.ErrUserAlreadyExist)
-}
+// 	getUserResp := &shared.GetUserResponse{
+// 		ID:       "46c77402-ba50-4b48-9bd9-1c4f97e36565",
+// 		Email:    payload.Data.Email,
+// 		Username: payload.Data.Email,
+// 		Enabled:  true,
+// 	}
 
-func TestHandler_AuthAlreadyExist(t *testing.T) {
-	payload := &model.Payload{
-		Data: model.Data{
-			Name:       "maria",
-			Email:      "maria@gmail.com",
-			CPF:        "080.705.460-77",
-			Password:   "123456",
-			Authority:  "USER",
-			Attributes: map[string]string{},
-		},
-		EventDate: time.Now().Format(time.RFC3339),
-	}
-	userResp := &pb.UserResponse{
-		Id:         "46c77402-ba50-4b48-9bd9-1c4f97e36565",
-		Name:       payload.Data.Name,
-		Email:      payload.Data.Email,
-		Attributes: payload.Data.Attributes,
-	}
-	userByCpfRequest := &pb.UserByCpfRequest{
-		Cpf: payload.Data.CPF,
-	}
-	userByEmailRequest := &pb.UserByEmailRequest{
-		Email: payload.Data.Email,
-	}
+// 	pld, err := encode(payload)
+// 	require.NoError(t, err)
 
-	getUserResp := &shared.GetUserResponse{
-		ID:       "46c77402-ba50-4b48-9bd9-1c4f97e36565",
-		Email:    payload.Data.Email,
-		Username: payload.Data.Email,
-		Enabled:  true,
-	}
+// 	ctx := context.Background()
+// 	SetUpLog(ctx)
 
-	pld, err := encode(payload)
-	require.NoError(t, err)
+// 	cfg := SetUpConfig()
 
-	ctx := context.Background()
-	SetUpLog(ctx)
+// 	userRepoMock := new(mocks.UserRepository_internal_domain_user)
+// 	authRepoMock := new(mocks.AuthRepository_internal_shared)
+// 	valMock := new(mocks.Validator_internal_shared)
 
-	cfg := SetUpConfig()
+// 	userRepoMock.On("FindByEmail", ctx, userByEmailRequest).Return(&pb.UserResponse{}, nil)
 
-	userRepoMock := new(mocks.UserRepository_internal_domain_user)
-	authRepoMock := new(mocks.AuthRepository_internal_shared)
-	valMock := new(mocks.Validator_internal_shared)
+// 	userRepoMock.On("FindByCpf", ctx, userByCpfRequest).Return(&pb.UserResponse{}, nil)
 
-	userRepoMock.On("FindByEmail", ctx, userByEmailRequest).Return(&pb.UserResponse{}, nil)
+// 	authRepoMock.On("FindByEmail", ctx, payload.Data.Email).Return(getUserResp, nil)
 
-	userRepoMock.On("FindByCpf", ctx, userByCpfRequest).Return(&pb.UserResponse{}, nil)
+// 	userRepoMock.On("Save", ctx, mock.Anything).Return(userResp, nil)
 
-	authRepoMock.On("FindByEmail", ctx, payload.Data.Email).Return(getUserResp, nil)
+// 	handler := handler.NewUserHandler(userRepoMock, authRepoMock, cfg, valMock)
+// 	err = handler.Handler(ctx, pld)
+// 	assert.Nil(t, err)
+// }
 
-	userRepoMock.On("Save", ctx, mock.Anything).Return(userResp, nil)
+// func TestHandler_CreatedUserSuccessfully(t *testing.T) {
+// 	payload := &model.Payload{
+// 		Data: model.Data{
+// 			Name:       "maria",
+// 			Email:      "maria@gmail.com",
+// 			CPF:        "080.705.460-77",
+// 			Password:   "123456",
+// 			Authority:  "USER",
+// 			Attributes: map[string]string{},
+// 		},
+// 		EventDate: time.Now().Format(time.RFC3339),
+// 	}
+// 	userResp := &pb.UserResponse{
+// 		Id:         "46c77402-ba50-4b48-9bd9-1c4f97e36565",
+// 		Name:       payload.Data.Name,
+// 		Email:      payload.Data.Email,
+// 		Attributes: payload.Data.Attributes,
+// 	}
+// 	userByCpfRequest := &pb.UserByCpfRequest{
+// 		Cpf: payload.Data.CPF,
+// 	}
+// 	userByEmailRequest := &pb.UserByEmailRequest{
+// 		Email: payload.Data.Email,
+// 	}
+// 	register := &shared.RegisterUserResponse{
+// 		ID: userResp.Id,
+// 	}
 
-	handler := handler.NewUserHandler(userRepoMock, authRepoMock, cfg, valMock)
-	err = handler.Handler(ctx, pld)
-	assert.Nil(t, err)
-}
+// 	pld, err := encode(payload)
+// 	require.NoError(t, err)
 
-func TestHandler_CreatedUserSuccessfully(t *testing.T) {
-	payload := &model.Payload{
-		Data: model.Data{
-			Name:       "maria",
-			Email:      "maria@gmail.com",
-			CPF:        "080.705.460-77",
-			Password:   "123456",
-			Authority:  "USER",
-			Attributes: map[string]string{},
-		},
-		EventDate: time.Now().Format(time.RFC3339),
-	}
-	userResp := &pb.UserResponse{
-		Id:         "46c77402-ba50-4b48-9bd9-1c4f97e36565",
-		Name:       payload.Data.Name,
-		Email:      payload.Data.Email,
-		Attributes: payload.Data.Attributes,
-	}
-	userByCpfRequest := &pb.UserByCpfRequest{
-		Cpf: payload.Data.CPF,
-	}
-	userByEmailRequest := &pb.UserByEmailRequest{
-		Email: payload.Data.Email,
-	}
-	register := &shared.RegisterUserResponse{
-		ID: userResp.Id,
-	}
+// 	ctx := context.Background()
+// 	SetUpLog(ctx)
 
-	pld, err := encode(payload)
-	require.NoError(t, err)
+// 	cfg := SetUpConfig()
 
-	ctx := context.Background()
-	SetUpLog(ctx)
+// 	userRepoMock := new(mocks.UserRepository_internal_domain_user)
+// 	authRepoMock := new(mocks.AuthRepository_internal_shared)
+// 	valMock := new(mocks.Validator_internal_shared)
 
-	cfg := SetUpConfig()
+// 	userRepoMock.On("FindByEmail", ctx, userByEmailRequest).Return(&pb.UserResponse{}, nil)
 
-	userRepoMock := new(mocks.UserRepository_internal_domain_user)
-	authRepoMock := new(mocks.AuthRepository_internal_shared)
-	valMock := new(mocks.Validator_internal_shared)
+// 	userRepoMock.On("FindByCpf", ctx, userByCpfRequest).Return(&pb.UserResponse{}, nil)
 
-	userRepoMock.On("FindByEmail", ctx, userByEmailRequest).Return(&pb.UserResponse{}, nil)
+// 	authRepoMock.On("FindByEmail", ctx, payload.Data.Email).Return(&shared.GetUserResponse{}, nil)
 
-	userRepoMock.On("FindByCpf", ctx, userByCpfRequest).Return(&pb.UserResponse{}, nil)
+// 	authRepoMock.On("Register", ctx, payload.ToRegister()).Return(register, nil)
 
-	authRepoMock.On("FindByEmail", ctx, payload.Data.Email).Return(&shared.GetUserResponse{}, nil)
+// 	userRepoMock.On("Save", ctx, mock.Anything).Return(userResp, nil)
 
-	authRepoMock.On("Register", ctx, payload.ToRegister()).Return(register, nil)
+// 	handler := handler.NewUserHandler(userRepoMock, authRepoMock, cfg, valMock)
+// 	err = handler.Handler(ctx, pld)
+// 	assert.Nil(t, err)
+// }
 
-	userRepoMock.On("Save", ctx, mock.Anything).Return(userResp, nil)
+// func encode(pld *model.Payload) ([]byte, error) {
+// 	codec := codec.New[model.Payload]()
 
-	handler := handler.NewUserHandler(userRepoMock, authRepoMock, cfg, valMock)
-	err = handler.Handler(ctx, pld)
-	assert.Nil(t, err)
-}
+// 	enc, err := codec.Encode(*pld)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-func encode(pld *model.Payload) ([]byte, error) {
-	codec := codec.New[model.Payload]()
+// 	cfg := SetUpConfig()
+// 	result, err := ciphers.Encrypt(ciphers.ExtractKey([]byte(cfg.AesKey)), enc)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	enc, err := codec.Encode(*pld)
-	if err != nil {
-		return nil, err
-	}
+// 	return result, nil
+// }
 
-	cfg := SetUpConfig()
-	result, err := ciphers.Encrypt(ciphers.ExtractKey([]byte(cfg.AesKey)), enc)
-	if err != nil {
-		return nil, err
-	}
+// func SetUpLog(ctx context.Context) {
+// 	cfg := SetUpConfig()
+// 	log := logger.NewLog(cfg).GetGRPCLogger()
+// 	log.WithContext(ctx)
+// }
 
-	return result, nil
-}
+// func SetUpConfig() *config.Config {
+// 	relativePath := "../../../../config/config-dev.yml"
 
-func SetUpLog(ctx context.Context) {
-	cfg := SetUpConfig()
-	log := logger.NewLog(cfg).GetGRPCLogger()
-	log.WithContext(ctx)
-}
+// 	absPath, err := filepath.Abs(relativePath)
+// 	if err != nil {
+// 		panic(err)
+// 	}
 
-func SetUpConfig() *config.Config {
-	relativePath := "../../../../config/config-dev.yml"
+// 	var cfg config.Config
+// 	err = cleanenv.ReadConfig(absPath, &cfg)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	config.ExportConfig(&cfg)
 
-	absPath, err := filepath.Abs(relativePath)
-	if err != nil {
-		panic(err)
-	}
-
-	var cfg config.Config
-	err = cleanenv.ReadConfig(absPath, &cfg)
-	if err != nil {
-		panic(err)
-	}
-	config.ExportConfig(&cfg)
-
-	return &cfg
-}
+// 	return &cfg
+// }

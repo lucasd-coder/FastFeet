@@ -35,7 +35,7 @@ integration:
       retry-wait-time: 5s
       retry-max-wait-time: 20s
     keycloak:
-      token-url: "http://localhost:8080/realms/fastfeet/protocol/openid-connect/token"      
+      token-url: "http://local.projectcontour.io/auth/realms/fastfeet/protocol/openid-connect/token"      
       username: business-service
       password: "&&u1PG9OE*c8"     
       client-id: business-service
