@@ -14,6 +14,7 @@ import (
 
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/lucasd-coder/router-service/config"
+	"github.com/lucasd-coder/router-service/internal/shared"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
@@ -23,10 +24,7 @@ func NewClient(ctx context.Context, cfg *config.Config) (*grpc.ClientConn, error
 	url := cfg.Integration.GrpcClient.BusinessService.URL
 	maxRetry := cfg.Integration.GrpcClient.BusinessService.MaxRetry
 
-	opt := logger.Option{
-		AppName: cfg.Name,
-		Level:   cfg.Level,
-	}
+	opt := shared.NewOptLogger(cfg)
 
 	logger := logger.NewLog(opt)
 

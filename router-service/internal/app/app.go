@@ -9,25 +9,23 @@ import (
 	"github.com/lucasd-coder/router-service/config"
 	"github.com/lucasd-coder/router-service/internal/controller"
 	"github.com/lucasd-coder/router-service/internal/provider/middleware"
+	"github.com/lucasd-coder/router-service/internal/shared"
 
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
-	"github.com/lucasd-coder/router-service/pkg/monitor"
+	"github.com/lucasd-coder/fast-feet/pkg/monitor"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func Run(cfg *config.Config) {
-	opt := logger.Option{
-		AppName: cfg.Name,
-		Level:   cfg.Level,
-	}
+	optlogger := shared.NewOptLogger(cfg)
+	optOtel := shared.NewOptOtel(cfg)
 	ctx := context.Background()
 
-	logger := logger.NewLog(opt)
-
+	logger := logger.NewLog(optlogger)
 	log := logger.GetLogger()
 
-	tp, err := monitor.RegisterOtel(ctx, cfg)
+	tp, err := monitor.RegisterOtel(ctx, &optOtel)
 	if err != nil {
 		log.Errorf("Error creating register otel: %v", err)
 		return
@@ -39,7 +37,6 @@ func Run(cfg *config.Config) {
 	}()
 
 	r := chi.NewRouter()
-
 	r.Use(middleware.OpenTelemetryMiddleware(cfg.Name))
 	r.Use(chiMiddleware.Recoverer)
 	r.Use(chiMiddleware.RequestID)
