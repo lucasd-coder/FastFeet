@@ -1,0 +1,164 @@
+version: '3.4'
+
+services:
+  mongodb:
+    image: bitnami/mongodb:latest
+    environment:
+      MONGODB_DATABASE: fast-feet
+      MONGODB_ROOT_USER: admin
+      MONGODB_ROOT_PASSWORD: admin123  
+      MONGODB_REPLICA_SET_MODE: primary
+      MONGODB_REPLICA_SET_KEY: dbrs123  
+    ports:
+      - 27017:27017
+    restart: unless-stopped
+    volumes:      
+      - ./infra/mongo:/docker-entrypoint-initdb.d/
+    extra_hosts:
+      - "host.docker.internal:172.17.0.1"
+  
+  rabbitmq:
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+      RABBITMQ_DEFAULT_VHOST: fastfeet   
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    extra_hosts:
+      - "host.docker.internal:172.17.0.1"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    ports:
+      - "8080:8080"
+    environment:
+      KC_DB_URL: jdbc:postgresql://db:5432/keycloak
+      KC_DB: postgres
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak123
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin123
+    command: 
+      - start-dev
+      - --import-realm      
+    healthcheck:
+      test: "curl -f http://localhost:8080/admin || exit 1"
+    depends_on:
+      - db
+    volumes:
+      - ./infra/keycloak/quarkus-realm.json:/opt/keycloak/data/import/quarkus-realm.json
+    extra_hosts:
+      - "host.docker.internal:172.17.0.1"
+  db:
+    image: postgres
+    environment:
+      - POSTGRES_DB=keycloak
+      - POSTGRES_USER=keycloak
+      - POSTGRES_PASSWORD=keycloak123
+      - ANON=web_anon
+      - AUTHENTICATOR=authenticator
+    ports: 
+      - "5432:5432"
+    volumes:            
+      - ./infra/postgres/initdb.sh:/docker-entrypoint-initdb.d/initdb.sh
+      - postgres_data:/var/lib/postgresql/data/
+  
+  krakend_ce:
+    image: devopsfaith/krakend:watch
+    volumes:
+      - ./infra/krakend:/etc/krakend
+    ports:      
+      - "8585:8585"
+      - "8090:8090"
+    command: ["run", "-d", "-c", "/etc/krakend/krakend.json"]
+    depends_on:     
+      - jaeger
+    extra_hosts:
+      - "host.docker.internal:172.17.0.1"
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    volumes:
+      - "./infra/jaeger/jaeger-ui.json:/etc/jaeger/jaeger-ui.json"
+    command: --query.ui-config /etc/jaeger/jaeger-ui.json
+    environment:
+      - METRICS_STORAGE_TYPE=prometheus
+      - PROMETHEUS_SERVER_URL=http://prometheus:9090
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "16686:16686"
+      - "14268:14268"
+      # - "4317:4317"
+  
+  router-service:
+    container_name: router-service
+    build:
+      context: ./router-service
+      dockerfile: ./router-service/Dockerfile
+    # ports:
+    #   - ${SERVER_PORT}:${SERVER_PORT}
+    volumes:
+      - ./router-service:/go/src
+    env_file:
+      - .env
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus    
+    ports:
+      - 9090:9090
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+  otel_collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    volumes:
+      - "./infra/ote/otel-collector-config.yml:/etc/otelcol/otel-collector-config.yml"
+    command: --config /etc/otelcol/otel-collector-config.yml
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    depends_on:
+      - jaeger
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.0
+    container_name: cadvisor
+    ports:
+    - "8181:8080"
+    volumes:
+    - /:/rootfs:ro
+    - /var/run:/var/run:ro
+    - /sys:/sys:ro
+    - /var/lib/docker/:/var/lib/docker:ro
+    - /dev/disk/:/dev/disk:ro    
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    privileged: true
+  
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./infra/grafana/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yaml
+    container_name: grafana
+    depends_on:
+      - prometheus
+  
+  redis:
+    image: redis:alpine
+    ports:
+      - 6379:6379
+    command: /bin/sh -c "redis-server --requirepass $$REDIS_HOST_PASSWORD"
+    extra_hosts:
+      - "host.docker.internal:172.17.0.1"
+    env_file:
+      - .env
+
+volumes:
+  postgres_data:
+
+
