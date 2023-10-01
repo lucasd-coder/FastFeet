@@ -68,6 +68,14 @@ func (l *Log) GetGRPCStreamServerInterceptor() grpc.StreamServerInterceptor {
 	return grpc_logrus.StreamServerInterceptor(l.GetLogger())
 }
 
+func (l *Log) GetGRPCUnaryClientInterceptor() grpc.UnaryClientInterceptor {
+	return grpc_logrus.UnaryClientInterceptor(l.GetLogger())
+}
+
+func (l *Log) GetGRPCStreamClientInterceptor() grpc.StreamClientInterceptor {
+	return grpc_logrus.StreamClientInterceptor(l.GetLogger())
+}
+
 type logger struct {
 	logger *logrus.Entry
 }
