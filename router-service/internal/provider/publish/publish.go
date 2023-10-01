@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/lucasd-coder/router-service/internal/shared"
-	"github.com/lucasd-coder/router-service/pkg/logger"
 	octrace "go.opencensus.io/trace"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"

@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/lucasd-coder/router-service/pkg/logger"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/lucasd-coder/router-service/pkg/val"
 )
 

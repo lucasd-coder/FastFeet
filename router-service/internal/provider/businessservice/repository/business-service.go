@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/lucasd-coder/router-service/config"
 	"github.com/lucasd-coder/router-service/internal/provider/businessservice"
-	"github.com/lucasd-coder/router-service/pkg/logger"
 	"github.com/lucasd-coder/router-service/pkg/pb"
 )
 

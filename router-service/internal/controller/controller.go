@@ -9,8 +9,8 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	appError "github.com/lucasd-coder/router-service/internal/shared/errors"
-	"github.com/lucasd-coder/router-service/pkg/logger"
 )
 
 var (

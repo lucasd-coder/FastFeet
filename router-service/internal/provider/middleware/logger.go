@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/lucasd-coder/router-service/pkg/logger"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 )
 
 func LoggerMiddleware(next http.Handler) http.Handler {

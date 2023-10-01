@@ -10,15 +10,20 @@ import (
 	"github.com/lucasd-coder/router-service/internal/controller"
 	"github.com/lucasd-coder/router-service/internal/provider/middleware"
 
-	"github.com/lucasd-coder/router-service/pkg/logger"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/lucasd-coder/router-service/pkg/monitor"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func Run(cfg *config.Config) {
+	opt := logger.Option{
+		AppName: cfg.Name,
+		Level:   cfg.Level,
+	}
 	ctx := context.Background()
-	logger := logger.NewLog(cfg)
+
+	logger := logger.NewLog(opt)
 
 	log := logger.GetLogger()
 

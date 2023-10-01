@@ -6,9 +6,9 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/lucasd-coder/router-service/internal/domain/user"
 	"github.com/lucasd-coder/router-service/internal/shared"
-	"github.com/lucasd-coder/router-service/pkg/logger"
 )
 
 type UserController struct {

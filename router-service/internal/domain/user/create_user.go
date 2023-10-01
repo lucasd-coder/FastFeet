@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/lucasd-coder/router-service/internal/shared"
 	"github.com/lucasd-coder/router-service/internal/shared/ciphers"
 	"github.com/lucasd-coder/router-service/internal/shared/codec"
-	"github.com/lucasd-coder/router-service/pkg/logger"
 )
 
 func (s *ServiceImpl) Save(ctx context.Context, user *User) error {
