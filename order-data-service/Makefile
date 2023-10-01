@@ -15,7 +15,10 @@ generate-mocks:
 
 
 wire-gen:
-	cd internal/app && wire
+	wire ./internal/app
+
+wire-check:
+	wire check ./internal/app
 
 run-application:
 	GO_PROFILE=dev GO111MODULE=on go run ./cmd/app/main.go

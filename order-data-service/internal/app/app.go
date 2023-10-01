@@ -19,10 +19,10 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
+	"github.com/lucasd-coder/fast-feet/pkg/mongodb"
 	"github.com/lucasd-coder/fast-feet/pkg/monitor"
 	"github.com/lucasd-coder/order-data-service/config"
 	"github.com/lucasd-coder/order-data-service/internal/shared"
-	"github.com/lucasd-coder/order-data-service/pkg/mongodb"
 	"github.com/lucasd-coder/order-data-service/pkg/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
@@ -44,7 +44,8 @@ func Run(cfg *config.Config) {
 		log.Fatalf("Could not connect: %v", err)
 	}
 
-	mongodb.SetUpMongoDB(ctx, cfg)
+	optMongo := shared.NewOptMongoDB(cfg)
+	mongodb.SetUpMongoDB(ctx, &optMongo)
 
 	defer func() {
 		if err := mongodb.CloseConnMongoDB(ctx); err != nil {
