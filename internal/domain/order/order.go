@@ -11,8 +11,8 @@ type Order struct {
 	ID            primitive.ObjectID `bson:"_id,omitempty"`
 	DeliverymanID string             `bson:"deliverymanId,omitempty" validate:"required,uuid4"`
 	CanceledAt    time.Time          `bson:"canceledAt,omitempty"`
-	Product       Product            `bson:"product,omitempty" validate:"required,dive"`
-	Address       Address            `bson:"addresses,omitempty" validate:"required,dive"`
+	Product       Product            `bson:"product,omitempty" validate:"required"`
+	Address       Address            `bson:"addresses,omitempty" validate:"required"`
 	SignatureID   string             `bson:"signatureId,omitempty"`
 	RecipientID   string             `bson:"recipientId,omitempty"`
 	StartDate     time.Time          `bson:"startDate,omitempty" validate:"required"`
@@ -36,8 +36,8 @@ type Address struct {
 
 type CreateOrder struct {
 	DeliverymanID string  `json:"deliverymanId,omitempty" validate:"required,uuid4"`
-	Product       Product `json:"product,omitempty" validate:"required,dive"`
-	Address       Address `json:"addresses,omitempty" validate:"required,dive"`
+	Product       Product `json:"product,omitempty" validate:"required"`
+	Address       Address `json:"addresses,omitempty" validate:"required"`
 }
 
 type GetAllOrderRequest struct {
@@ -50,8 +50,8 @@ type GetAllOrderRequest struct {
 	CanceledAt    string     `bson:"canceledAt,omitempty" validate:"rfc3339"`
 	Limit         int64      `bson:"limit,omitempty" validate:"numeric=integer"`
 	Offset        int64      `bson:"offset,omitempty" validate:"numeric=integer"`
-	Product       GetProduct `bson:"product,omitempty" validate:"required,dive"`
-	Address       GetAddress `bson:"addresses,omitempty" validate:"required,dive"`
+	Product       GetProduct `bson:"product,omitempty" validate:"required"`
+	Address       GetAddress `bson:"addresses,omitempty" validate:"required"`
 }
 
 type GetProduct struct {

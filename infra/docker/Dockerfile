@@ -1,4 +1,4 @@
-FROM golang:1.20-alpine AS build
+FROM golang:1.21-alpine AS build
 
 RUN apk add --no-cache git wget
 RUN apk --no-cache add ca-certificates
@@ -18,7 +18,7 @@ COPY . .
  
 RUN CGO_ENABLED=0 GOOS=linux go build -o /app -ldflags="-s -w -a" ./cmd/app
  
-FROM scratch
+FROM alpine:latest
 
 COPY --from=build /app /app
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/

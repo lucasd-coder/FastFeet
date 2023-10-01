@@ -69,7 +69,7 @@ func (s *OrderService) newAddress(req *pb.OrderRequest) model.Address {
 	}
 }
 
-func (s *OrderService) GetAllOrders(ctx context.Context, req *pb.GetAllOrderRequest) (*pb.GetAllOrderResponse, error) {
+func (s *OrderService) GetAllOrder(ctx context.Context, req *pb.GetAllOrderRequest) (*pb.GetAllOrderResponse, error) {
 	log := logger.FromContext(ctx)
 
 	log.WithFields(map[string]interface{}{
@@ -99,7 +99,7 @@ func (s *OrderService) GetAllOrders(ctx context.Context, req *pb.GetAllOrderRequ
 		return nil, fmt.Errorf("error when orderRepository findAll: %w", err)
 	}
 
-	log.Info("successfully return getAllOrders")
+	log.Info("successfully return getAllOrder")
 
 	return s.extractGetAllOrderResponse(pld, orders), nil
 }

@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: order-data-service
+  labels:
+    app: order-data-service
 spec:
   replicas: 1
   minReadySeconds: 10
@@ -19,8 +21,8 @@ spec:
         app: order-data-service
       annotations:
         prometheus.io/scrape: 'true'
+        prometheus.io/path: '/metrics'
         prometheus.io/port: '8080'
-        prometheus.io/path: '/health'
     spec:
       containers:
         - name: order-data-service
@@ -31,7 +33,7 @@ spec:
               cpu: "500m"
             limits:
               memory: "1Gi"
-              cpu: 1         
+              cpu: "1"      
           env:
             - name: LOG_LEVEL
               value: info
@@ -40,21 +42,23 @@ spec:
             - name: HTTP_PORT
               value: "8080"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: "localhost:4317"
+              value: "opentelemetry-collector.default.svc.cluster.local:4317"
             - name: MONGODB_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: username
+                  name: mongo-username
                   key: mongo-username
             - name: MONGODB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: password
+                  name: mongo-password
                   key: mongo-password
             - name: MONGODB_URL
               value: "mongodb://$(MONGODB_USERNAME):$(MONGODB_PASSWORD)@server-mongo:27017/fast-feet?connect=direct&authSource=admin"
           ports:
             - containerPort: 50051
+              protocol: TCP
+            - containerPort: 8080
           readinessProbe:
             httpGet:
               port: 8080
@@ -72,3 +76,25 @@ spec:
                   command:
                     - /bin/sleep
                     - "30"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: order-data-service
+  name: order-data-service
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '8080'
+spec:
+  ports:
+  - port: 50051
+    name: grpc
+    protocol: TCP
+    targetPort: 50051
+  - port: 8080
+    name: http-metrics
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: order-data-service
