@@ -2,15 +2,15 @@ package github.com.lucasdcoder.accessauthservice.resources;
 
 import static github.com.lucasdcoder.accessauthservice.utils.Constants.UUID_REGEX;
 
-import javax.annotation.security.RolesAllowed;
-import javax.inject.Inject;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.Pattern;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Response;
+import jakarta.inject.Inject;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.core.Response;
 
+import jakarta.annotation.security.RolesAllowed;
 import org.jboss.resteasy.reactive.NoCache;
 
 import github.com.lucasdcoder.accessauthservice.resources.response.GetUserResponse;

@@ -8,23 +8,21 @@ application:
     application:
       name: access-auth-service
     http:
-      port: 8081
-      root-path: access-auth-service
-      access-log:
-        pattern: "...traceId=%{X,traceId} spanId=%{X,spanId}"
+      port: 8082      
     log:
       console:
-        format: "%d{HH:mm:ss} %-5p traceId=%X{traceId}, parentId=%X{parentId}, spanId=%X{spanId}, sampled=%X{sampled} [%c{2.}] (%t) %s%e%n"
-        level: DEBUG
+        enable: true
+        json:
+          print-details: true        
       level: INFO
       min-level: DEBUG
       category:
         "org.keycloak":
-          level: ERROR
-        "io.quarkus":
-          level: INFO
+          min-level: DEBUG
+        "io.opentelemetry":
+          min-level: DEBUG
     oidc:
-      auth-server-url: http://localhost:8080/realms/fastfeet
+      auth-server-url: ${AUTH_URL:http://local.projectcontour.io/auth/realms/fastfeet}
       client-id: ${CLIENT_ID:access-auth-service}
       credentials:
         secret: ${CLIENT_SECRET:OO6s0DTZE1BN0HSLkZyk0I9utmbrgC9n}
@@ -36,8 +34,8 @@ application:
   # Enable Policy Enforcement
     keycloak:
       admin-client:
-        server-url: http://localhost:8080
-        realm: fastfeet  
+        server-url: ${KEYCLOAK_URL:http://local.projectcontour.io/auth}
+        realm: fastfeet
         client-id: ${ADMIN_ID:admin-cli}
         password: ${ADMIN_PASSWORD:admin}
         username: ${ADMIN_USERNAME:admin}
@@ -52,8 +50,102 @@ application:
             path: /api/register
             enforcement-mode: DISABLED
     
+    micrometer:
+      exporter:
+        prometheus:
+          path: metrics/prometheus
+
+    
     otel:
+      exporter:
+        traces:
+          endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4317}
+    
+    native:
+      additional-build-args:
+        - --no-fallback        
+        - -H:+ReportUnsupportedElementsAtRuntime
+        - --link-at-build-time
+        - -H:+ReportExceptionStackTraces
+
+"%prod":
+   quarkus:    
+    application:
+      name: access-auth-service
+    http:
+      port: 8080           
+    log:
+      console:
+        enable: true   
+        json:
+          print-details: true        
+      level: INFO
+      category:
+        "org.keycloak":
+          min-level: DEBUG        
+        "io.opentelemetry":
+          level: DEBUG
+    oidc:
+      auth-server-url: ${AUTH_URL}
+      client-id: ${CLIENT_ID}
+      credentials:
+        secret: ${CLIENT_SECRET}
+      tls:
+        verification: none
+      token: 
+        issuer: any   
+  
+  # Enable Policy Enforcement
+    keycloak:
+      admin-client:
+        server-url: ${KEYCLOAK_URL}
+        realm: ${KEYCLOAK_REALM}
+        client-id: ${ADMIN_ID}
+        password: ${ADMIN_PASSWORD}
+        username: ${ADMIN_USERNAME}
+        client-secret: ${ADMIN_SECRET}     
+        grant-type: PASSWORD
+      devservices:
+        enabled: false
+      policy-enforcer:
+        enable: true
+        paths:
+          1:
+            path: /api/register
+            enforcement-mode: DISABLED
+    
+    otel:
+      resource:
+        attributes: "app=${quarkus.application.name}"
+      propagators: tracecontext,baggage,jaeger
       exporter:
         otlp:
           traces:
-            endpoint: http://localhost:4318
+            endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+
+    micrometer:
+      exporter:
+        prometheus:
+          path: metrics/prometheus
+    
+    native:
+      additional-build-args:
+        - --no-fallback        
+        - --initialize-at-build-time=com.fasterxml.jackson,io.vertx.core.json,com.fasterxml.jackson.databind.ObjectMapper
+        - --trace-object-instantiation=com.fasterxml.jackson.core.io.SerializedString
+        - --trace-object-instantiation=com.fasterxml.jackson.databind.ObjectMapper
+        - -H:ReflectionConfigurationFiles=../resources/main/native-image/reflect-config.json,
+        # - -H:DynamicProxyConfigurationResources=../resources/main/native-image/proxy-config.json,
+        - -H:ResourceConfigurationFiles=../resources/main/native-image/resource-config.json,
+        # - -H:DynamicProxyConfigurationFiles=../resources/main/native-image/proxy-config.json
+        - -H:+ReportUnsupportedElementsAtRuntime
+        - --link-at-build-time
+        - -H:+ReportExceptionStackTraces
+        - --static
+        - --libc=musl
+      enable-jni: true
+      enable-https-url-handler: true
+      enable-http-url-handler: true
+      enable-all-security-services: true
+      
+

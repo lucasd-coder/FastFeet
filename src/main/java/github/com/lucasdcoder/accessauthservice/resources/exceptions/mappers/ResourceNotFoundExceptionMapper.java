@@ -2,10 +2,10 @@ package github.com.lucasdcoder.accessauthservice.resources.exceptions.mappers;
 
 import java.time.Instant;
 
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.ext.ExceptionMapper;
+import jakarta.ws.rs.ext.Provider;
 
 import github.com.lucasdcoder.accessauthservice.resources.exceptions.StandardError;
 import github.com.lucasdcoder.accessauthservice.services.exceptions.ResourceNotFoundException;

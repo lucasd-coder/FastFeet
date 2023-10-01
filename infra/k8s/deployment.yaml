@@ -1,0 +1,121 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: access-auth-service
+spec:
+  replicas: 1
+  minReadySeconds: 10
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: access-auth-service
+  template:
+    metadata:
+      labels:
+        app: access-auth-service
+      annotations:
+        prometheus.io/scrape: 'true'       
+        prometheus.io/path: '/q/metrics/prometheus'
+        prometheus.io/port: '8080'
+    spec:
+      containers:
+        - name: access-auth-service
+          image: lucasd-coder/access-auth-service:latest          
+          resources:
+            requests:
+              memory: "500Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1"         
+          env:            
+            - name: AUTH_URL
+              value: "http://keycloak.default.svc.cluster.local:80/auth/realms/fastfeet"          
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://opentelemetry-collector.default.svc.cluster.local:4317"
+            - name: KEYCLOAK_URL
+              value: "http://keycloak.default.svc.cluster.local:80/auth"
+            - name: KEYCLOAK_REALM
+              value: "fastfeet"        
+            - name: CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: access-auth-service-oidc-client-id
+                  key: oidc-client-id
+            - name: CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: access-auth-service-oidc-client-secret
+                  key: oidc-client-secret
+            - name: ADMIN_ID
+              valueFrom:
+                secretKeyRef:
+                  name: access-auth-service-keycloak-admin-id
+                  key: keycloak-admin-id
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: access-auth-service-keycloak-admin-password
+                  key: keycloak-admin-password
+            - name: ADMIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: access-auth-service-keycloak-admin-username
+                  key: keycloak-admin-username
+            - name: ADMIN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: access-auth-service-keycloak-admin-secret
+                  key: keycloak-admin-secret
+            - name: JAVA_OPTS
+              value: >-
+                    -Xms512m -Xmx768m
+                    -Dquarkus.http.access-log.enabled=true                    
+                    -Dquarkus.exporter.otlp.traces.protocol=grpc
+                    -Dquarkus.otel.service.name=access-auth-service
+                    -Dquarkus.otel.exporter.otlp.traces.endpoint=http://opentelemetry-collector.default.svc.cluster.local:4317               
+                    -Dquarkus.http.host=0.0.0.0
+                    -Dquarkus.keycloak.connection-pool-size=40
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              port: 8080
+              path: "/q/health/ready"
+            initialDelaySeconds: 50
+            periodSeconds: 12
+          livenessProbe:            
+            httpGet:
+              port: 8080
+              path: "/q/health/live"
+            initialDelaySeconds: 50
+            periodSeconds: 12
+          lifecycle:
+              preStop:
+                exec:
+                  command:
+                    - /bin/sleep
+                    - "30"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: access-auth-service
+  name: access-auth-service
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '8080'
+    prometheus.io/path: '/q/metrics/prometheus'
+spec:
+  ports:
+  - port: 8080
+    name: http-server
+    protocol: TCP      
+    targetPort: 8080
+  selector:
+    app: access-auth-service
