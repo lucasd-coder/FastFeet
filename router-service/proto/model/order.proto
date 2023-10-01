@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "./pkg/pb";
+
+message Product {
+    string name = 1;
+}
+
+message Address {
+  string address = 1;
+  string postalCode = 2;
+  string neighborhood = 3;
+  string city = 4;
+  string state = 5;
+  int64 number = 6;
+}
+
+message Order {
+  string id = 1;
+  string startDate = 2;
+  string endDate = 3;
+  Product product = 4;
+  Address addresses = 5;
+  string createdAt = 6;
+  string updatedAt = 7;
+  string deliverymanId = 8;
+  string canceledAt = 9;
+}

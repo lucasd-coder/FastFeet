@@ -1,0 +1,30 @@
+app:
+  name: router-service
+  version: 1.0.0
+  aes-key: ${AES_KEY}
+
+logger:
+  log_level: ${LOG_LEVEL}
+
+server:
+  port: ${HTTP_PORT}
+  readTimeout: 10s
+  writeTimeout: 10s
+
+integration:
+  grpc:
+    business-service:
+      url: ${BUSINESS_SERVICE_URL}
+      max-retry: 3
+  rabbit-mq:
+    topic:
+      user-events:
+        url: rabbit://router-service-user-events
+        max-retry: 5
+      order-events:
+        url: rabbit://router-service-order-events
+        max-retry: 3
+  otlp:
+      url: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+      protocol: grpc
+      timeout: 20s
