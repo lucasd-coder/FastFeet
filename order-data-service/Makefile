@@ -18,7 +18,7 @@ wire-gen:
 	cd internal/app && wire
 
 run-application:
-	GO_PROFILE=dev GO111MODULE=on go1.20.1 run ./cmd/app/main.go
+	GO_PROFILE=dev GO111MODULE=on go run ./cmd/app/main.go
 
 test:
 	GO111MODULE=on go test -coverprofile coverage.out ./...

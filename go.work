@@ -1,4 +1,8 @@
 go 1.21.0
 
 use .
-use ./router-service
+
+use (
+	./order-data-service
+	./router-service
+)

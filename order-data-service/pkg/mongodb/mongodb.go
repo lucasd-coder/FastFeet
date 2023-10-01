@@ -3,8 +3,8 @@ package mongodb
 import (
 	"context"
 
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/lucasd-coder/order-data-service/config"
-	"github.com/lucasd-coder/order-data-service/pkg/logger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo"
@@ -40,9 +40,5 @@ func GetClientMongoDB() *mongo.Client {
 }
 
 func CloseConnMongoDB(ctx context.Context) error {
-	if err := client.Disconnect(ctx); err != nil {
-		return err
-	}
-
-	return nil
+	return client.Disconnect(ctx)
 }

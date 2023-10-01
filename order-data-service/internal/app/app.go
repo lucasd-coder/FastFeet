@@ -18,10 +18,11 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
+	"github.com/lucasd-coder/fast-feet/pkg/monitor"
 	"github.com/lucasd-coder/order-data-service/config"
-	"github.com/lucasd-coder/order-data-service/pkg/logger"
+	"github.com/lucasd-coder/order-data-service/internal/shared"
 	"github.com/lucasd-coder/order-data-service/pkg/mongodb"
-	"github.com/lucasd-coder/order-data-service/pkg/monitor"
 	"github.com/lucasd-coder/order-data-service/pkg/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
@@ -30,9 +31,11 @@ import (
 )
 
 func Run(cfg *config.Config) {
-	logger := logger.NewLog(cfg)
+	optlogger := shared.NewOptLogger(cfg)
+	optOtel := shared.NewOptOtel(cfg)
+	logger := logger.NewLog(optlogger)
 
-	log := logger.GetGRPCLogger()
+	log := logger.GetLogger()
 
 	ctx := context.Background()
 
@@ -49,7 +52,7 @@ func Run(cfg *config.Config) {
 		}
 	}()
 
-	tp, err := monitor.RegisterOtel(ctx, cfg)
+	tp, err := monitor.RegisterOtel(ctx, &optOtel)
 	if err != nil {
 		log.Errorf("Error creating register otel: %v", err)
 		return
