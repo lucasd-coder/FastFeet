@@ -1,0 +1,13 @@
+version: '3.4'
+
+services:
+  order-data-service:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - ${GRPC_PORT}:${GRPC_PORT}
+    volumes:
+      - .:/go/src
+    env_file:
+      - .env
