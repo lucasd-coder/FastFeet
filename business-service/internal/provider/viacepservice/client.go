@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/lucasd-coder/business-service/config"
+	"github.com/lucasd-coder/fast-feet/business-service/config"
 )
 
 type options struct {

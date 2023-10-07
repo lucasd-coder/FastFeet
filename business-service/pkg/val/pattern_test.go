@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/lucasd-coder/business-service/pkg/val"
+	"github.com/lucasd-coder/fast-feet/business-service/pkg/val"
 )
 
 var valInst *validator.Validate

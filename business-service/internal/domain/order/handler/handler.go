@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"github.com/lucasd-coder/business-service/config"
-	"github.com/lucasd-coder/business-service/internal/domain/order"
+	"github.com/lucasd-coder/fast-feet/business-service/config"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/domain/order"
 )
 
 type Handler struct {

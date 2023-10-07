@@ -11,8 +11,8 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/lucasd-coder/business-service/config"
-	"github.com/lucasd-coder/business-service/internal/shared"
+	"github.com/lucasd-coder/fast-feet/business-service/config"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/shared"
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"

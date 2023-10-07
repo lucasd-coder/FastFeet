@@ -1,4 +1,4 @@
-module github.com/lucasd-coder/business-service
+module github.com/lucasd-coder/fast-feet/business-service
 
 go 1.21.0
 

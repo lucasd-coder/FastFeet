@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	model "github.com/lucasd-coder/business-service/internal/domain/user"
-	val "github.com/lucasd-coder/business-service/internal/provider/validator"
-	"github.com/lucasd-coder/business-service/internal/shared"
+	model "github.com/lucasd-coder/fast-feet/business-service/internal/domain/user"
+	val "github.com/lucasd-coder/fast-feet/business-service/internal/provider/validator"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/shared"
 )
 
 func TestPayloadValidate(t *testing.T) {

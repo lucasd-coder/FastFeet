@@ -3,8 +3,8 @@ package handler
 import (
 	"context"
 
-	"github.com/lucasd-coder/business-service/internal/domain/order"
-	"github.com/lucasd-coder/business-service/pkg/pb"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/domain/order"
+	"github.com/lucasd-coder/fast-feet/business-service/pkg/pb"
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
 )
 

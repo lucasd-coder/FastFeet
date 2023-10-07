@@ -5,19 +5,19 @@ package app
 
 import (
 	"github.com/google/wire"
-	"github.com/lucasd-coder/business-service/config"
-	order "github.com/lucasd-coder/business-service/internal/domain/order"
-	orderHandler "github.com/lucasd-coder/business-service/internal/domain/order/handler"
-	user "github.com/lucasd-coder/business-service/internal/domain/user"
-	userHandler "github.com/lucasd-coder/business-service/internal/domain/user/handler"
-	"github.com/lucasd-coder/business-service/pkg/cache"
+	"github.com/lucasd-coder/fast-feet/business-service/config"
+	order "github.com/lucasd-coder/fast-feet/business-service/internal/domain/order"
+	orderHandler "github.com/lucasd-coder/fast-feet/business-service/internal/domain/order/handler"
+	user "github.com/lucasd-coder/fast-feet/business-service/internal/domain/user"
+	userHandler "github.com/lucasd-coder/fast-feet/business-service/internal/domain/user/handler"
+	"github.com/lucasd-coder/fast-feet/business-service/pkg/cache"
 
-	authservice "github.com/lucasd-coder/business-service/internal/provider/authservice/repository"
-	managerservice "github.com/lucasd-coder/business-service/internal/provider/managerservice/repository"
-	orderdataservice "github.com/lucasd-coder/business-service/internal/provider/orderdataservice/repository"
-	val "github.com/lucasd-coder/business-service/internal/provider/validator"
-	viacepservice "github.com/lucasd-coder/business-service/internal/provider/viacepservice/repository"
-	"github.com/lucasd-coder/business-service/internal/shared"
+	authservice "github.com/lucasd-coder/fast-feet/business-service/internal/provider/authservice/repository"
+	managerservice "github.com/lucasd-coder/fast-feet/business-service/internal/provider/managerservice/repository"
+	orderdataservice "github.com/lucasd-coder/fast-feet/business-service/internal/provider/orderdataservice/repository"
+	val "github.com/lucasd-coder/fast-feet/business-service/internal/provider/validator"
+	viacepservice "github.com/lucasd-coder/fast-feet/business-service/internal/provider/viacepservice/repository"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/shared"
 )
 
 var initializeValidator = wire.NewSet(

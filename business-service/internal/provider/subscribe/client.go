@@ -3,7 +3,7 @@ package subscribe
 import (
 	"context"
 
-	"github.com/lucasd-coder/business-service/internal/shared/queueoptions"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/shared/queueoptions"
 	// revive
 	_ "gocloud.dev/pubsub/rabbitpubsub"
 

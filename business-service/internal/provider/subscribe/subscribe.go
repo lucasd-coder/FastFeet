@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lucasd-coder/business-service/internal/shared/queueoptions"
-	"github.com/lucasd-coder/business-service/internal/shared/utils"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/shared/queueoptions"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/shared/utils"
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/lucasd-coder/fast-feet/pkg/monitor"
 

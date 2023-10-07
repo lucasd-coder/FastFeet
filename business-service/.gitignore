@@ -11,5 +11,3 @@ tmp/*
 !tmp/.gitkeep
 *.scannerwork
 *.out
-
-.vscode
