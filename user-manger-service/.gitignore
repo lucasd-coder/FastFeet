@@ -1,0 +1,15 @@
+.idea/
+node_modules/
+build/
+dist
+.env
+coverage
+temp/
+ormconfig.json
+
+tmp/*
+!tmp/.gitkeep
+*.scannerwork
+*.out
+
+.vscode
