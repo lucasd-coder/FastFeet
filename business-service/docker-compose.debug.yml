@@ -1,0 +1,12 @@
+version: '3.4'
+
+services:
+  business-service:
+    image: business-service
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - 8080:8080
+    volumes:
+      - .:/go/src
