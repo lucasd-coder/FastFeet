@@ -5,8 +5,8 @@ import (
 	"sync"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/lucasd-coder/fast-feet/business-service/pkg/val"
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
+	"github.com/lucasd-coder/fast-feet/pkg/val"
 )
 
 type Validation struct {
