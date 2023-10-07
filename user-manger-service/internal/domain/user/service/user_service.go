@@ -7,10 +7,10 @@ import (
 	"net/mail"
 	"time"
 
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	model "github.com/lucasd-coder/user-manger-service/internal/domain/user"
 	"github.com/lucasd-coder/user-manger-service/internal/domain/user/repository"
 	pkgErrors "github.com/lucasd-coder/user-manger-service/internal/errors"
-	"github.com/lucasd-coder/user-manger-service/pkg/logger"
 	pb "github.com/lucasd-coder/user-manger-service/pkg/pb"
 	"github.com/lucasd-coder/user-manger-service/pkg/val"
 	"github.com/sirupsen/logrus"
