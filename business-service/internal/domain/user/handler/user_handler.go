@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/lucasd-coder/business-service/internal/domain/user"
-	"github.com/lucasd-coder/business-service/pkg/logger"
 	"github.com/lucasd-coder/business-service/pkg/pb"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 )
 
 type UserHandler struct {

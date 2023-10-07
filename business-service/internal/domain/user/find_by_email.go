@@ -3,8 +3,8 @@ package user
 import (
 	"context"
 
-	"github.com/lucasd-coder/business-service/pkg/logger"
 	"github.com/lucasd-coder/business-service/pkg/pb"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 )
 
 func (s *ServiceImpl) FindByEmail(ctx context.Context, pld *FindByEmailRequest) (*pb.UserResponse, error) {

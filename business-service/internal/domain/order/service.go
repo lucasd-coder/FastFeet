@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/wire"
 	"github.com/lucasd-coder/business-service/internal/shared"
-	"github.com/lucasd-coder/business-service/pkg/logger"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 )
 
 var InitializeService = wire.NewSet(

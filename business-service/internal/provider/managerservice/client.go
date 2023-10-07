@@ -7,7 +7,8 @@ import (
 	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
 	"github.com/lucasd-coder/business-service/config"
-	"github.com/lucasd-coder/business-service/pkg/logger"
+	"github.com/lucasd-coder/business-service/internal/shared"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel"
@@ -17,11 +18,12 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func NewClient(ctx context.Context, cfg *config.Config) (*grpc.ClientConn, error) {
+func NewClient(_ context.Context, cfg *config.Config) (*grpc.ClientConn, error) {
 	url := cfg.Integration.UserManagerService.URL
 	maxRetry := cfg.Integration.UserManagerService.MaxRetry
+	optlogger := shared.NewOptLogger(cfg)
 
-	logger := logger.NewLog(cfg)
+	logger := logger.NewLog(optlogger)
 
 	reg := prometheus.NewRegistry()
 	clMetrics := grpcprom.NewClientMetrics(

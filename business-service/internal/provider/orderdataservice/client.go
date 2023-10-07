@@ -12,17 +12,19 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/lucasd-coder/business-service/config"
-	"github.com/lucasd-coder/business-service/pkg/logger"
+	"github.com/lucasd-coder/business-service/internal/shared"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func NewClient(ctx context.Context, cfg *config.Config) (*grpc.ClientConn, error) {
+func NewClient(_ context.Context, cfg *config.Config) (*grpc.ClientConn, error) {
 	url := cfg.Integration.OrderDataService.URL
 	maxRetry := cfg.Integration.OrderDataService.MaxRetry
+	optlogger := shared.NewOptLogger(cfg)
 
-	logger := logger.NewLog(cfg)
+	logger := logger.NewLog(optlogger)
 
 	reg := prometheus.NewRegistry()
 	clMetrics := grpcprom.NewClientMetrics(

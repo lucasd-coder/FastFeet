@@ -7,7 +7,7 @@ import (
 	model "github.com/lucasd-coder/business-service/internal/domain/user"
 	"github.com/lucasd-coder/business-service/internal/shared/ciphers"
 	"github.com/lucasd-coder/business-service/internal/shared/codec"
-	"github.com/lucasd-coder/business-service/pkg/logger"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 )
 
 func (h *Handler) CreateUser(ctx context.Context, m []byte) error {

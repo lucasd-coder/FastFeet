@@ -8,8 +8,8 @@ import (
 
 	"github.com/lucasd-coder/business-service/internal/shared/queueoptions"
 	"github.com/lucasd-coder/business-service/internal/shared/utils"
-	"github.com/lucasd-coder/business-service/pkg/logger"
-	"github.com/lucasd-coder/business-service/pkg/monitor"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
+	"github.com/lucasd-coder/fast-feet/pkg/monitor"
 
 	octrace "go.opencensus.io/trace"
 	"go.opentelemetry.io/otel"
