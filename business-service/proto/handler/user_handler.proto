@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "./pkg/pb";
+
+import "request/user_by_email_request.proto";
+import "response/user_response.proto";
+
+service UserHandler{   
+    rpc FindByEmail (UserByEmailRequest) returns (UserResponse);
+}

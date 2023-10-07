@@ -1,0 +1,2 @@
+./internal/domain/user=[UserRepository]
+./internal/shared=[Validator, AuthRepository]

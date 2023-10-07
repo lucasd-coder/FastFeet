@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "./pkg/pb";
+
+import "model/order.proto";
+
+message OrderRequest {
+  string deliverymanId = 1;
+  Product product = 2;
+  Address addresses = 3;
+}
