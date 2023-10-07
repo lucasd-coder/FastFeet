@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	shared "github.com/lucasd-coder/business-service/internal/shared"
+	shared "github.com/lucasd-coder/fast-feet/business-service/internal/shared"
 	mock "github.com/stretchr/testify/mock"
 )
 

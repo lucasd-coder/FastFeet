@@ -1,7 +1,7 @@
 package shared
 
 import (
-	"github.com/lucasd-coder/business-service/config"
+	"github.com/lucasd-coder/fast-feet/business-service/config"
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/lucasd-coder/fast-feet/pkg/monitor"
 )

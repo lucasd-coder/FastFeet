@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	model "github.com/lucasd-coder/business-service/internal/domain/user"
-	"github.com/lucasd-coder/business-service/internal/shared/ciphers"
-	"github.com/lucasd-coder/business-service/internal/shared/codec"
+	model "github.com/lucasd-coder/fast-feet/business-service/internal/domain/user"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/shared/ciphers"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/shared/codec"
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
 )
 

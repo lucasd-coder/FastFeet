@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	model "github.com/lucasd-coder/business-service/internal/domain/order"
+	model "github.com/lucasd-coder/fast-feet/business-service/internal/domain/order"
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
 )
 

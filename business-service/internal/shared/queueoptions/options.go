@@ -3,7 +3,7 @@ package queueoptions
 import (
 	"time"
 
-	"github.com/lucasd-coder/business-service/config"
+	"github.com/lucasd-coder/fast-feet/business-service/config"
 )
 
 type Options struct {

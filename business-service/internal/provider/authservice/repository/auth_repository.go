@@ -10,9 +10,9 @@ import (
 	"strings"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/lucasd-coder/business-service/config"
-	"github.com/lucasd-coder/business-service/internal/provider/authservice"
-	"github.com/lucasd-coder/business-service/internal/shared"
+	"github.com/lucasd-coder/fast-feet/business-service/config"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/provider/authservice"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/shared"
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace"
 	"go.opentelemetry.io/otel/codes"

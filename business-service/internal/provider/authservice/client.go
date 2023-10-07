@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/lucasd-coder/business-service/config"
+	"github.com/lucasd-coder/fast-feet/business-service/config"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/oauth2"
 )

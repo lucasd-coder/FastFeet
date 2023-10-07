@@ -3,7 +3,7 @@ package cache
 import (
 	"context"
 
-	"github.com/lucasd-coder/business-service/config"
+	"github.com/lucasd-coder/fast-feet/business-service/config"
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/redis/go-redis/extra/redisotel/v9"
 	"github.com/redis/go-redis/v9"

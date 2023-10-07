@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/google/wire"
-	"github.com/lucasd-coder/business-service/internal/shared"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/shared"
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
 )
 

@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/lucasd-coder/business-service/config"
-	"github.com/lucasd-coder/business-service/internal/provider/managerservice"
-	"github.com/lucasd-coder/business-service/pkg/pb"
+	"github.com/lucasd-coder/fast-feet/business-service/config"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/provider/managerservice"
+	"github.com/lucasd-coder/fast-feet/business-service/pkg/pb"
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
 )
 

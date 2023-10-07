@@ -8,18 +8,18 @@ package app
 
 import (
 	"github.com/google/wire"
-	"github.com/lucasd-coder/business-service/config"
-	"github.com/lucasd-coder/business-service/internal/domain/order"
-	handler2 "github.com/lucasd-coder/business-service/internal/domain/order/handler"
-	"github.com/lucasd-coder/business-service/internal/domain/user"
-	"github.com/lucasd-coder/business-service/internal/domain/user/handler"
-	repository2 "github.com/lucasd-coder/business-service/internal/provider/authservice/repository"
-	"github.com/lucasd-coder/business-service/internal/provider/managerservice/repository"
-	repository3 "github.com/lucasd-coder/business-service/internal/provider/orderdataservice/repository"
-	"github.com/lucasd-coder/business-service/internal/provider/validator"
-	repository4 "github.com/lucasd-coder/business-service/internal/provider/viacepservice/repository"
-	"github.com/lucasd-coder/business-service/internal/shared"
-	"github.com/lucasd-coder/business-service/pkg/cache"
+	"github.com/lucasd-coder/fast-feet/business-service/config"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/domain/order"
+	handler2 "github.com/lucasd-coder/fast-feet/business-service/internal/domain/order/handler"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/domain/user"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/domain/user/handler"
+	repository2 "github.com/lucasd-coder/fast-feet/business-service/internal/provider/authservice/repository"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/provider/managerservice/repository"
+	repository3 "github.com/lucasd-coder/fast-feet/business-service/internal/provider/orderdataservice/repository"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/provider/validator"
+	repository4 "github.com/lucasd-coder/fast-feet/business-service/internal/provider/viacepservice/repository"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/shared"
+	"github.com/lucasd-coder/fast-feet/business-service/pkg/cache"
 )
 
 // Injectors from wire.go:

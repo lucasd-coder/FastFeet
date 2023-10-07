@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/lucasd-coder/business-service/internal/shared/codec"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/shared/codec"
 	"github.com/redis/go-redis/v9"
 )
 

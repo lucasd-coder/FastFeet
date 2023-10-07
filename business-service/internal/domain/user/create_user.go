@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/lucasd-coder/business-service/internal/shared"
-	"github.com/lucasd-coder/business-service/pkg/pb"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/shared"
+	"github.com/lucasd-coder/fast-feet/business-service/pkg/pb"
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

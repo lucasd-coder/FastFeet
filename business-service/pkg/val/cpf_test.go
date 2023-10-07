@@ -3,7 +3,7 @@ package val_test
 import (
 	"testing"
 
-	"github.com/lucasd-coder/business-service/pkg/val"
+	"github.com/lucasd-coder/fast-feet/business-service/pkg/val"
 )
 
 func TestIsCPF(t *testing.T) {
