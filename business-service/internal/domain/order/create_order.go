@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/lucasd-coder/business-service/internal/shared"
-	"github.com/lucasd-coder/business-service/pkg/logger"
 	"github.com/lucasd-coder/business-service/pkg/pb"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 )
 
 func (s *ServiceImpl) CreateOrder(ctx context.Context, pld Payload) (*pb.OrderResponse, error) {

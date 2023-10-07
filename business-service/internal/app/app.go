@@ -15,12 +15,13 @@ import (
 	orderHandler "github.com/lucasd-coder/business-service/internal/domain/order/handler"
 	userHandler "github.com/lucasd-coder/business-service/internal/domain/user/handler"
 	"github.com/lucasd-coder/business-service/internal/provider/subscribe"
+	"github.com/lucasd-coder/business-service/internal/shared"
 	"github.com/lucasd-coder/business-service/internal/shared/queueoptions"
 	"github.com/lucasd-coder/business-service/internal/shared/utils"
 	"github.com/lucasd-coder/business-service/pkg/cache"
-	"github.com/lucasd-coder/business-service/pkg/logger"
-	"github.com/lucasd-coder/business-service/pkg/monitor"
 	"github.com/lucasd-coder/business-service/pkg/pb"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
+	"github.com/lucasd-coder/fast-feet/pkg/monitor"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -35,8 +36,9 @@ import (
 
 func Run(cfg *config.Config) {
 	ctx := context.Background()
-	logger := logger.NewLog(cfg)
-	log := logger.GetGRPCLogger()
+	optlogger := shared.NewOptLogger(cfg)
+	logger := logger.NewLog(optlogger)
+	log := logger.GetLogger()
 
 	cache.SetUpRedis(ctx, cfg)
 
@@ -45,7 +47,8 @@ func Run(cfg *config.Config) {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
-	tp, err := monitor.RegisterOtel(ctx, cfg)
+	optOtel := shared.NewOptOtel(cfg)
+	tp, err := monitor.RegisterOtel(ctx, &optOtel)
 	if err != nil {
 		log.Errorf("Error creating register otel: %v", err)
 		return

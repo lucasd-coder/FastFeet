@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	model "github.com/lucasd-coder/business-service/internal/domain/order"
-	"github.com/lucasd-coder/business-service/pkg/logger"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 )
 
 func (h *Handler) CreateOrderHandler(ctx context.Context, m []byte) error {

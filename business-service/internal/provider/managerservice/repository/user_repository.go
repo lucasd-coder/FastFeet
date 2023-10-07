@@ -6,8 +6,8 @@ import (
 
 	"github.com/lucasd-coder/business-service/config"
 	"github.com/lucasd-coder/business-service/internal/provider/managerservice"
-	"github.com/lucasd-coder/business-service/pkg/logger"
 	"github.com/lucasd-coder/business-service/pkg/pb"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 )
 
 type UserRepository struct {

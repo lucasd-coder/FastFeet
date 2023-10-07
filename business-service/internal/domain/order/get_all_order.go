@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/lucasd-coder/business-service/internal/shared"
-	"github.com/lucasd-coder/business-service/pkg/logger"
 	"github.com/lucasd-coder/business-service/pkg/pb"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 )
 
 func (s *ServiceImpl) GetAllOrder(ctx context.Context, pld *GetAllOrderRequest) (*pb.GetAllOrderResponse, error) {

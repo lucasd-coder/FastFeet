@@ -10,7 +10,7 @@ import (
 	"github.com/lucasd-coder/business-service/internal/provider/viacepservice"
 	"github.com/lucasd-coder/business-service/internal/shared"
 	"github.com/lucasd-coder/business-service/internal/shared/codec"
-	"github.com/lucasd-coder/business-service/pkg/logger"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace"
 	"go.opentelemetry.io/otel/attribute"
@@ -19,7 +19,6 @@ import (
 )
 
 const (
-	spanErrMarchal         = "Error json.Marshal"
 	spanErrRequest         = "Request Error"
 	spanErrResponseStatus  = "Response Status Error"
 	spanErrExtractResponse = "Error Extract Response"
