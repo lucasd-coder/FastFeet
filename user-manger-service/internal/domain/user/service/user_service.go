@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
+	"github.com/lucasd-coder/fast-feet/pkg/val"
 	model "github.com/lucasd-coder/user-manger-service/internal/domain/user"
 	"github.com/lucasd-coder/user-manger-service/internal/domain/user/repository"
 	pkgErrors "github.com/lucasd-coder/user-manger-service/internal/errors"
 	pb "github.com/lucasd-coder/user-manger-service/pkg/pb"
-	"github.com/lucasd-coder/user-manger-service/pkg/val"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"

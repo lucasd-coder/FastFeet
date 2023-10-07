@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/lucasd-coder/user-manger-service/pkg/val"
+	"github.com/lucasd-coder/fast-feet/pkg/val"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
