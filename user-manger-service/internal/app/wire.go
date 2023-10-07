@@ -5,10 +5,10 @@ package app
 
 import (
 	"github.com/google/wire"
+	"github.com/lucasd-coder/fast-feet/pkg/mongodb"
 	"github.com/lucasd-coder/user-manger-service/config"
 	"github.com/lucasd-coder/user-manger-service/internal/domain/user/repository"
 	"github.com/lucasd-coder/user-manger-service/internal/domain/user/service"
-	"github.com/lucasd-coder/user-manger-service/pkg/mongodb"
 )
 
 func InitializeUserRepository() *repository.UserRepository {

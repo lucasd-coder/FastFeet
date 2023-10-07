@@ -7,11 +7,12 @@ import (
 	"testing"
 
 	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/lucasd-coder/user-manger-service/config"
 	model "github.com/lucasd-coder/user-manger-service/internal/domain/user"
 	"github.com/lucasd-coder/user-manger-service/internal/domain/user/service"
 	"github.com/lucasd-coder/user-manger-service/internal/mocks"
-	"github.com/lucasd-coder/user-manger-service/pkg/logger"
+	"github.com/lucasd-coder/user-manger-service/internal/shared"
 	pb "github.com/lucasd-coder/user-manger-service/pkg/pb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -314,7 +315,8 @@ func TestFindByEmail_GetUserSuccessfully(t *testing.T) {
 
 func SetUpLog(ctx context.Context) {
 	cfg := SetUpConfig()
-	log := logger.NewLog(cfg).GetGRPCLogger()
+	optLog := shared.NewOptLogger(cfg)
+	log := logger.NewLog(optLog).GetLogger()
 	log.WithContext(ctx)
 }
 

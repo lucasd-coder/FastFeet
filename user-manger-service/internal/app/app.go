@@ -18,10 +18,11 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
+	"github.com/lucasd-coder/fast-feet/pkg/mongodb"
+	"github.com/lucasd-coder/fast-feet/pkg/monitor"
 	"github.com/lucasd-coder/user-manger-service/config"
-	"github.com/lucasd-coder/user-manger-service/pkg/logger"
-	"github.com/lucasd-coder/user-manger-service/pkg/mongodb"
-	"github.com/lucasd-coder/user-manger-service/pkg/monitor"
+	"github.com/lucasd-coder/user-manger-service/internal/shared"
 	"github.com/lucasd-coder/user-manger-service/pkg/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
@@ -30,13 +31,16 @@ import (
 )
 
 func Run(cfg *config.Config) {
-	logger := logger.NewLog(cfg)
+	optlogger := shared.NewOptLogger(cfg)
+	optOtel := shared.NewOptOtel(cfg)
+	logger := logger.NewLog(optlogger)
 
 	ctx := context.Background()
 
-	log := logger.GetGRPCLogger()
+	log := logger.GetLogger()
 
-	mongodb.SetUpMongoDB(ctx, cfg)
+	optMongo := shared.NewOptMongoDB(cfg)
+	mongodb.SetUpMongoDB(ctx, &optMongo)
 
 	defer func() {
 		if err := mongodb.CloseConnMongoDB(ctx); err != nil {
@@ -50,7 +54,7 @@ func Run(cfg *config.Config) {
 		panic(err)
 	}
 
-	tp, err := monitor.RegisterOtel(ctx, cfg)
+	tp, err := monitor.RegisterOtel(ctx, &optOtel)
 	if err != nil {
 		log.Errorf("Error creating register otel: %v", err)
 		return
