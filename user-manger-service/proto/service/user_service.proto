@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "./pkg/pb";
+
+import "request/user_request.proto";
+import "request/user_by_cpf_request.proto";
+import "request/user_by_email_request.proto";
+import "response/user_response.proto";
+
+service UserService {
+    rpc Save (UserRequest) returns (UserResponse);
+    rpc FindByEmail (UserByEmailRequest) returns (UserResponse);
+    rpc FindByCpf (UserByCpfRequest) returns (UserResponse);
+}
+
