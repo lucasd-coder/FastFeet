@@ -5,4 +5,5 @@ use .
 use (
 	./order-data-service
 	./router-service
+	./user-manger-service
 )
