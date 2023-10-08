@@ -3,6 +3,7 @@ go 1.21.0
 use .
 
 use (
+	./business-service
 	./order-data-service
 	./router-service
 	./user-manger-service
