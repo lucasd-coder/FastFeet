@@ -11,12 +11,8 @@ import (
 )
 
 var (
-	opt Option = Option{}
+	l *Log
 )
-
-func SetGlobalOption(option Option) {
-	opt = option
-}
 
 type Option struct {
 	AppName string
@@ -28,12 +24,14 @@ type Log struct {
 }
 
 func NewLog(opt Option) *Log {
-	SetGlobalOption(opt)
-	return &Log{opt: opt}
+	if l == nil {
+		l = &Log{opt: opt}
+	}
+	return l
 }
 
 func FromContext(ctx context.Context) Logger {
-	log := NewLog(opt).GetLogger()
+	log := l.GetLogger()
 
 	logger := &logger{
 		logger: log.WithContext(ctx),

@@ -23,6 +23,7 @@ require (
 )
 
 require (
+	google.golang.org/appengine v1.6.8 // indirect
 	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
