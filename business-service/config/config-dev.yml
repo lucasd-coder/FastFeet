@@ -36,10 +36,10 @@ integration:
       retry-max-wait-time: 20s
     keycloak:
       token-url: "http://local.projectcontour.io/auth/realms/fastfeet/protocol/openid-connect/token"      
-      username: business-service
-      password: "&&u1PG9OE*c8"     
-      client-id: business-service
-      client-secret: oX1fKrwL8e7av3qwvZWC1xtf3waEbPtq
+      username: ${USERNAME}
+      password: ${PASSWORD}    
+      client-id: ${CLIENT_ID}
+      client-secret: ${CLIENT_SECRET}
       request-timeout: 60s
     viacep:
       url: https://viacep.com.br
@@ -70,7 +70,7 @@ integration:
   redis:
     url: localhost:6379
     db: 1
-    password: admin123
+    password: ${REDIS_HOST_PASSWORD}
     ttl: 1h
   
   otlp:
