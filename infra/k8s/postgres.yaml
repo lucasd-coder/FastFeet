@@ -1,0 +1,101 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: server-postgres
+  labels:
+    app: server-postgres
+spec:
+  replicas: 1
+  minReadySeconds: 10
+  strategy: 
+      type: "RollingUpdate"
+      rollingUpdate: 
+        maxSurge: 1
+        maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: server-postgres
+  template:
+    metadata:
+      labels:
+        app: server-postgres
+    spec:
+      containers:
+        - name: server-postgres
+          image: postgres:14.4-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5432
+          resources:
+            requests:
+              memory: "500Mi"
+              cpu: 1
+            limits:
+              memory: "2Gi"
+              cpu: 1
+          env:
+          - name: POSTGRES_DB
+            value: "keycloak"
+          - name: POSTGRES_HOST_AUTH_METHOD
+            value: "trust"
+          - name: "POSTGRES_USER"
+            valueFrom:
+              secretKeyRef:
+                name: postgres-username
+                key: postgres-username
+          - name: "POSTGRES_PASSWORD"
+            valueFrom:
+              secretKeyRef:
+                name: postgres-password
+                key: postgres-password
+          volumeMounts:
+            - name: server-postgres-volume
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: server-postgres-volume
+          persistentVolumeClaim:
+            claimName: server-postgres-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: server-postgres
+  name: server-postgres
+spec:
+  selector:
+    app: server-postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: server-postgres-volume
+  labels:
+    app: server-postgres
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: /data/postgres
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: server-postgres-claim
+  labels:
+    app: server-postgres
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi

@@ -1,0 +1,36 @@
+apiVersion: skaffold/v4beta5
+kind: Config
+metadata:
+  name: fast-feet
+build:
+  local:
+    push: false
+  artifacts:
+    - image: lucasd-coder/user-manger-service
+      context: user-manger-service
+      docker:
+        dockerfile: user-manger-service/infra/docker/Dockerfile
+    - image: lucasd-coder/order-data-service
+      context: order-data-service
+      docker:
+        dockerfile: order-data-service/infra/docker/Dockerfile
+    - image: lucasd-coder/router-service
+      context: router-service
+      docker:
+        dockerfile: router-service/infra/docker/Dockerfile
+    - image: lucasd-coder/access-auth-service
+      context: access-auth-service
+      docker:
+        dockerfile: access-auth-service/infra/docker/Dockerfile
+    - image: lucasd-coder/business-service
+      context: business-service
+      docker:
+        dockerfile: business-service/infra/docker/Dockerfile    
+   
+manifests:
+  rawYaml:
+    - user-manger-service/infra/k8s/*.yaml
+    - order-data-service/infra/k8s/*.yaml
+    - router-service/infra/k8s/*.yaml
+    - access-auth-service/infra/k8s/*.yaml
+    - business-service/infra/k8s/*.yaml

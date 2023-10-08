@@ -1,0 +1,99 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+  labels:
+    app: keycloak
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/path: '/auth/metrics'
+    prometheus.io/port: '80'
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+  selector:
+    app: keycloak
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  labels:
+    app: keycloak
+spec:
+  replicas: 1
+  minReadySeconds: 10
+  strategy: 
+      type: "RollingUpdate"
+      rollingUpdate: 
+        maxSurge: 1
+        maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+      annotations:
+        prometheus.io/scrape: 'true'        
+        prometheus.io/path: '/auth/metrics'
+        prometheus.io/port: '80'
+    spec:
+      containers:
+      - name: keycloak
+        image: quay.io/keycloak/keycloak:22.0.1-2     
+        args: ["start", "--hostname-strict=false", 
+          "--proxy=edge"]
+        env:
+        - name: KEYCLOAK_ADMIN
+          valueFrom:
+            secretKeyRef:
+              name: keycloak-username
+              key: keycloak-username
+        - name: KEYCLOAK_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: keycloak-password
+              key: keycloak-password        
+        - name: KC_DB
+          value: "postgres"
+        - name: KC_DB_URL
+          value: jdbc:postgresql://server-postgres.default.svc.cluster.local:5432/keycloak
+        - name: "KC_DB_USERNAME"
+          valueFrom:
+            secretKeyRef:
+              name: postgres-username
+              key: postgres-username
+        - name: "KC_DB_PASSWORD"
+          valueFrom:
+            secretKeyRef:
+              name: postgres-password
+              key: postgres-password       
+        - name: KC_HEALTH_ENABLED
+          value: "true"
+        - name: KC_METRICS_ENABLED
+          value: "true"
+        - name: PROXY_ADDRESS_FORWARDING
+          value: "true"
+        - name: KC_HTTP_RELATIVE_PATH
+          value: "auth"
+        ports:       
+        - name: http        
+          containerPort: 8080
+        resources:
+            requests:
+              memory: "500Mi"
+              cpu: 1
+            limits:
+              memory: "1Gi"
+              cpu: 1
+        readinessProbe:
+          httpGet:
+            path: /auth/health/ready
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 1

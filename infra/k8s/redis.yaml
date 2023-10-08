@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-cluster
+  labels:
+    app: redis-cluster
+    component: cache
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-cluster
+  minReadySeconds: 10
+  strategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: redis-cluster
+        component: cache
+    spec:
+      containers:
+        - name: redis-cluster
+          image: redis:7.0.12
+          imagePullPolicy: IfNotPresent
+          args: ["--requirepass", "$(REDIS_HOST_PASSWORD)"]
+          ports:
+            - containerPort: 6379
+          resources:
+            requests:
+              memory: "500Mi"
+              cpu: 1
+            limits:
+              memory: "1Gi"
+              cpu: 1
+          env:
+            - name: MASTER
+              value: "true"
+            - name: REDIS_HOST_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis
+                  key: REDIS_PASSWORD
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: redis-volume-claim
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  labels:
+    app: redis-cluster
+    type: local
+  name: data
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /data/redis
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: redis-volume-claim
+  labels:
+    app: redis-cluster
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: redis-cluster
+  name: redis-cluster
+spec:
+  selector:
+    app: redis-cluster
+  ports:
+    - port: 6379
+      targetPort: 6379
+  type: ClusterIP

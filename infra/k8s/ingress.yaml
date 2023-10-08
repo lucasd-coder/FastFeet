@@ -1,0 +1,62 @@
+apiVersion: projectcontour.io/v1
+kind: HTTPProxy
+metadata:
+  name: cluster-ingress
+spec:
+  virtualhost:
+    fqdn: local.projectcontour.io
+  includes:
+    - name: cluster-ingress-monitoring
+      namespace: monitoring
+      conditions:
+        - prefix: /grafana
+  routes:
+    - conditions:
+        - prefix: /jaeger
+      services:
+        - name: tracing
+          port: 80
+      timeoutPolicy:
+        response: 120s
+        idle: 120s
+      permitInsecure: true
+      retryPolicy:
+        count: 3
+        perTryTimeout: 150ms
+    - conditions:
+        - prefix: /auth
+      services:
+       - name: keycloak
+         port: 80
+    - conditions:
+        - prefix: /rabbitmq/
+      pathRewritePolicy:
+        replacePrefix:
+        - prefix: /rabbitmq/
+          replacement: /
+      timeoutPolicy:
+        response: 120s
+        idle: 120s
+      retryPolicy:
+        count: 3
+        perTryTimeout: 150ms
+      services:
+        - name: rabbitmq
+          port: 15672
+    - conditions:
+        - prefix: /api-gateway
+      services:
+        - name: krakend
+          port: 8080
+---
+apiVersion: projectcontour.io/v1
+kind: HTTPProxy
+metadata:
+  name: cluster-ingress-monitoring
+  namespace: monitoring
+spec:
+  routes:
+    - services:
+      - name: prometheus-community-grafana
+        port: 80
+

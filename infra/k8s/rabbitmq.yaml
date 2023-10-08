@@ -1,0 +1,16 @@
+
+# extraConfiguration: |-
+#     management.path_prefix = /rabbitmq
+
+# readinessProbe:
+#   httpGet:
+#       path: "/rabbitmq"
+
+# livenessProbe:
+#   httpGet:
+#       path: "/rabbitmq"
+
+ingress:
+  enabled: true
+  hostname: local.projectcontour.io
+  ingressClassName: "contour"
