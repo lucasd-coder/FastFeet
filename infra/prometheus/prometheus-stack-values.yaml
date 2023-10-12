@@ -1,0 +1,119 @@
+alertmanager:
+  config:
+    global:
+      resolve_timeout: 5m
+    inhibit_rules:
+      - source_matchers:
+          - 'severity = critical'
+        target_matchers:
+          - 'severity =~ warning|info'
+        equal:
+          - 'namespace'
+          - 'alertname'
+      - source_matchers:
+          - 'severity = warning'
+        target_matchers:
+          - 'severity = info'
+        equal:
+          - 'namespace'
+          - 'alertname'
+      - source_matchers:
+          - 'alertname = InfoInhibitor'
+        target_matchers:
+          - 'severity = info'
+        equal:
+          - 'namespace'
+    route:
+      group_by: [ 'alertname', 'job' ]
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 12h
+      receiver: discord
+    receivers:
+      - name: discord
+        discord_configs:
+          - webhook_url: 'https://discord.com/api/webhooks/1132774770006569020/B_99ATIeMJ_kFbVYOgHPO4Ca5uyDabyq9CHUV2E_5f7NakTvnflhQ5GsAxlA-AZNCxA1'
+      - name: 'null'
+    templates:
+      - '/etc/alertmanager/config/*.tmpl'
+
+## Component scraping the kube controller manager
+##
+kubeControllerManager:
+  enabled: false
+## Component scraping kube proxy
+##
+kubeProxy:
+  enabled: false
+  service:
+    enabled: true
+    port: 10249
+    targetPort: 10249
+## Component scraping kube scheduler
+##
+kubeScheduler:
+  enabled: false
+
+kubeEtcd:
+  service:
+    port: 4001
+    targetPort: 4001
+    selector: 
+     "k8s-app": "etcd-manager-main"
+  serviceMonitor:
+    scheme: https
+    insecureSkipVerify: true
+    caFile:   /etc/prometheus/secrets/etcd-certs/ca.crt
+    certFile: /etc/prometheus/secrets/etcd-certs/client.crt
+    keyFile:  /etc/prometheus/secrets/etcd-certs/client.key
+
+prometheus:
+  prometheusSpec:
+    additionalScrapeConfigs:
+      - job_name: kubernetes-service-endpoints
+        scrape_interval: 5s
+        scrape_timeout: 2s
+        kubernetes_sd_configs:
+        - role: service
+        relabel_configs:
+
+        # annotation 'prometheus.io/scrape' must be set to 'true'
+        - action: keep
+          regex: true
+          source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
+
+        # service cannot be in kube-system or prom namespaces
+        - action: drop
+          regex: (kube-system|prom)
+          source_labels: [__meta_kubernetes_namespace]
+
+        # service port name must end with word 'metrics'
+        - action: keep
+          regex: .+
+          source_labels: [__meta_kubernetes_service_port_name]
+
+        # allow override of http scheme
+        - action: replace
+          regex: (https?)
+          source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scheme]
+          target_label: __scheme__
+
+        # allow override of default /metrics path
+        - action: replace
+          regex: (.+)
+          source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]
+          target_label: __metrics_path__
+
+        # allow override of default port
+        - action: replace
+          regex: ([^:]+)(?::\d+)?;(\d+)
+          replacement: $1:$2
+          source_labels: [__address__, __meta_kubernetes_service_annotation_prometheus_io_port]
+          target_label: __address__
+        - {action: labelmap, regex: __meta_kubernetes_service_label_(.+)}
+        - action: replace
+          source_labels: [__meta_kubernetes_namespace]
+          target_label: kubernetes_namespace
+        - action: replace
+          source_labels: [__meta_kubernetes_service_name]
+          target_label: kubernetes_name

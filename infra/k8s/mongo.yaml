@@ -1,0 +1,93 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: server-mongo
+  labels:
+    app: server-mongo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: server-mongo
+  template:
+    metadata:
+      labels:
+        app: server-mongo
+    spec:
+      containers:
+        - name: server-mongo
+          image: 'mongo:5.0.9'
+          env:
+          - name: "MONGO_INITDB_ROOT_USERNAME"
+            valueFrom:
+              secretKeyRef:
+                name: mongo-username
+                key: mongo-username
+          - name: "MONGO_INITDB_ROOT_PASSWORD"
+            valueFrom:
+              secretKeyRef:
+                name: mongo-password
+                key: mongo-password
+          ports:
+            - containerPort: 27017
+          resources:
+            requests:
+              memory: "500Mi"
+              cpu: 1
+            limits:
+              memory: "1Gi"
+              cpu: 2  
+          volumeMounts: 
+              - 
+                name: "mongodb-persistent-storage"
+                mountPath: "/data/db"
+      volumes: 
+          - 
+            name: "mongodb-persistent-storage"
+            persistentVolumeClaim: 
+              claimName: "server-mongo-claim"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: server-mongo
+  name: server-mongo
+spec:
+  selector:
+    app: server-mongo
+  ports:
+    - port: 27017
+      targetPort: 27017
+  type: ClusterIP
+
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: "mongodb-persistent-storage"
+  labels: 
+    app: "server-mongo"
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /data/mongo
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata: 
+  name: "server-mongo-claim"
+  labels: 
+    app: "server-mongo"
+spec:
+  storageClassName: manual
+  accessModes: 
+    - ReadWriteOnce
+  resources: 
+    requests: 
+      storage: 5Gi

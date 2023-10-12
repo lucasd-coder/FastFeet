@@ -1,0 +1,25 @@
+alerting_rules:
+    groups:
+    - name: Jobfailed
+      rules:
+      - alert: KubernetesJobFailed
+        annotations:
+          description: |-
+            Job {{ $labels.namespace }}/{{ $labels.exported_job }} failed to complete
+              VALUE = {{ $value }}
+              LABELS = {{ $labels }}
+          summary: Kubernetes Job failed (instance {{ $labels.instance }})
+        expr: kube_job_status_failed > 0
+        for: 0m
+        labels:
+          severity: warning
+          
+    - name: kubernetes-alerts
+      rules:
+      - alert: HighCPUPodAlert
+        expr: avg(irate(container_cpu_usage_seconds_total{container!="POD",pod!=""}, 5m)) > 0.8
+        labels:
+          severity: critical
+        annotations:
+          summary: "High CPU usage on pod {{ pod }}"
+          description: "The CPU usage on pod {{ pod }} is currently {{ avg_irate_container_cpu_usage_seconds_total }}. This is above the threshold of 80%."

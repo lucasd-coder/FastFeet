@@ -1,0 +1,40 @@
+apiVersion: skaffold/v4beta5
+kind: Config
+metadata:
+  name: fast-feet-infra
+manifests:
+  rawYaml:
+    - infra/k8s/mongo.yaml
+    - infra/k8s/postgres.yaml
+    - infra/k8s/redis.yaml
+    - infra/k8s/keycloak.yaml
+    - infra/k8s/otel.yaml
+    - infra/k8s/jaeger.yaml
+    - infra/k8s/krakend.yaml
+    - infra/k8s/ingress.yaml
+deploy:
+  kubectl: {}
+  helm:
+    releases:
+    - name: rabbitmq
+      repo: https://charts.bitnami.com/bitnami
+      remoteChart: rabbitmq
+      setValues:   
+        resources:
+            requests:
+              memory: "500Mi"
+              cpu: 1
+            limits:
+              memory: "1Gi"
+              cpu: 2
+      valuesFiles:
+        - infra/k8s/rabbitmq.yaml
+    - name: prometheus-community
+      repo: https://prometheus-community.github.io/helm-charts
+      remoteChart: kube-prometheus-stack
+      namespace: 'monitoring'
+      createNamespace: true
+      valuesFiles:
+        - infra/prometheus/alerting-rules.yaml
+        - infra/grafana/grafana_values.yaml
+        - infra/prometheus/prometheus-stack-values.yaml

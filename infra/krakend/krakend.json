@@ -1,0 +1,128 @@
+{
+    "$schema": "https://www.krakend.io/schema/v3.json",
+    "version": 3,
+    "name": "KrakenD Enterprise API Gateway",
+    "port": 8585,    
+    "timeout": "3000ms",
+    "endpoints": [
+      {
+        "@comment": "Feature: User Manager",
+        "endpoint": "/api-gateway/users",
+        "method": "POST",
+        "backend": [
+          {  
+            "host": ["http://router-service:8085"],
+            "url_pattern": "/users",
+            "extra_config": {
+              "backend/http": {
+                "return_error_code": true              
+              }              
+            }
+          }
+        ]
+      },
+      {
+        "@comment": "Feature: Create Order",
+        "endpoint": "/api-gateway/orders",
+        "method": "POST",
+        "output_encoding": "json",
+        "input_headers": [
+          "Authorization"
+        ],
+        "extra_config": {
+          "auth/validator": {
+            "cache": true,
+            "cache_duration": 600,
+            "alg": "RS256",
+            "jwk_url": "http://keycloak:8080/realms/fastfeet/protocol/openid-connect/certs",
+            "disable_jwk_security": true,
+            "roles_key_is_nested": true,
+            "roles_key": "realm_access.roles",
+            "roles": ["admin"],
+            "operation_debug": true
+          }
+        },
+        "backend": [
+          {
+            "host": ["http://router-service:8085"],
+            "url_pattern": "/orders/{JWT.sub}",
+            "method": "POST",
+            "extra_config": {
+              "backend/http": {
+                "return_error_code": true              
+              }  
+            }
+          }
+        ]
+      },
+      {
+        "@comment": "Feature: Get all Order",
+        "endpoint": "/api-gateway/all/orders",
+        "method": "GET",
+        "output_encoding": "json",
+        "input_headers": [
+          "Authorization"
+        ],
+        "extra_config": {
+          "auth/validator": {
+            "cache": true,
+            "cache_duration": 600,
+            "alg": "RS256",
+            "jwk_url": "http://keycloak:8080/realms/fastfeet/protocol/openid-connect/certs",
+            "disable_jwk_security": true,
+            "roles_key_is_nested": true,
+            "roles_key": "realm_access.roles",
+            "roles": ["admin", "user"],
+            "operation_debug": true
+          }
+        },
+        "backend": [
+          {
+            "host": ["http://router-service:8085"],
+            "url_pattern": "/orders/{JWT.sub}",
+            "method": "GET",
+            "extra_config": {
+              "backend/http": {
+                "return_error_code": true              
+              }  
+            }
+          }
+        ]
+      }
+    ],
+    "extra_config": {
+      "router": {
+        "return_error_msg": true
+      },
+      "telemetry/logging": {
+        "level": "DEBUG",
+        "prefix": "[KRAKEND]",
+        "syslog": false,
+        "stdout": true
+      },
+      "telemetry/opencensus": {
+        "sample_rate": 100,
+        "reporting_period": 1,
+        "enabled_layers": {
+          "backend": true,
+          "router": true,
+          "pipe": true
+        },
+        "exporters": {
+          "jaeger": {
+            "endpoint": "http://jaeger:14268/api/traces",
+            "service_name": "krakend",
+            "buffer_max_count": 1000
+          },
+          "prometheus": {
+            "port": 9091,
+            "namespace": "krakend",
+            "tag_host": true,
+            "tag_path": true,
+            "tag_method": true,
+            "tag_statuscode": true
+          }
+        }
+      }     
+    }
+  }
