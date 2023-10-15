@@ -23,7 +23,7 @@ data:
               "url_pattern": "/users",
               "extra_config": {
                 "backend/http": {
-                  "return_error_code": true              
+                  "return_error_code": true            
                 }              
               }
             }
@@ -57,7 +57,7 @@ data:
               "method": "POST",
               "extra_config": {
                 "backend/http": {
-                  "return_error_code": true              
+                  "return_error_code": true             
                 }  
               }
             }
@@ -109,7 +109,7 @@ data:
               "method": "GET",
               "extra_config": {
                 "backend/http": {
-                  "return_error_code": true              
+                  "return_error_code": true         
                 }  
               }
             }
@@ -143,7 +143,7 @@ data:
               "method": "GET",
               "extra_config": {
                 "backend/http": {
-                  "return_error_code": true              
+                  "return_error_code": true           
                 }  
               }
             }

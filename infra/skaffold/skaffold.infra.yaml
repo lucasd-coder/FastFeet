@@ -32,9 +32,16 @@ deploy:
     - name: prometheus-community
       repo: https://prometheus-community.github.io/helm-charts
       remoteChart: kube-prometheus-stack
+      setValues:   
+        resources:
+            requests:
+              memory: "500Mi"
+              cpu: 1
+            limits:
+              memory: "1Gi"
+              cpu: 2
       namespace: 'monitoring'
       createNamespace: true
       valuesFiles:
-        - infra/prometheus/alerting-rules.yaml
         - infra/grafana/grafana_values.yaml
         - infra/prometheus/prometheus-stack-values.yaml
