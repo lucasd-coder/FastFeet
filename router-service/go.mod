@@ -1,4 +1,4 @@
-module github.com/lucasd-coder/router-service
+module github.com/lucasd-coder/fast-feet/router-service
 
 go 1.21.0
 

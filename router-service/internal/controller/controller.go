@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
-	appError "github.com/lucasd-coder/router-service/internal/shared/errors"
+	appError "github.com/lucasd-coder/fast-feet/router-service/internal/shared/errors"
 )
 
 var (

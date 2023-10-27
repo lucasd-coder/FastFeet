@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/ilyakaznacheev/cleanenv"
-	"github.com/lucasd-coder/router-service/config"
-	"github.com/lucasd-coder/router-service/internal/app"
+	"github.com/lucasd-coder/fast-feet/router-service/config"
+	"github.com/lucasd-coder/fast-feet/router-service/internal/app"
 )
 
 var cfg config.Config

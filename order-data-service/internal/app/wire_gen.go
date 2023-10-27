@@ -7,11 +7,11 @@
 package app
 
 import (
+	"github.com/lucasd-coder/fast-feet/order-data-service/config"
+	"github.com/lucasd-coder/fast-feet/order-data-service/internal/domain/order/repository"
+	"github.com/lucasd-coder/fast-feet/order-data-service/internal/domain/order/service"
+	"github.com/lucasd-coder/fast-feet/order-data-service/internal/provider/validator"
 	"github.com/lucasd-coder/fast-feet/pkg/mongodb"
-	"github.com/lucasd-coder/order-data-service/config"
-	"github.com/lucasd-coder/order-data-service/internal/domain/order/repository"
-	"github.com/lucasd-coder/order-data-service/internal/domain/order/service"
-	"github.com/lucasd-coder/order-data-service/internal/provider/validator"
 )
 
 // Injectors from wire.go:

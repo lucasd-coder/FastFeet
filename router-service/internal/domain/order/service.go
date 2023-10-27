@@ -4,10 +4,10 @@ import (
 	"time"
 
 	"github.com/google/wire"
-	"github.com/lucasd-coder/router-service/config"
-	"github.com/lucasd-coder/router-service/internal/provider/publish"
-	"github.com/lucasd-coder/router-service/internal/provider/validator"
-	"github.com/lucasd-coder/router-service/internal/shared"
+	"github.com/lucasd-coder/fast-feet/router-service/config"
+	"github.com/lucasd-coder/fast-feet/router-service/internal/provider/publish"
+	"github.com/lucasd-coder/fast-feet/router-service/internal/provider/validator"
+	"github.com/lucasd-coder/fast-feet/router-service/internal/shared"
 )
 
 var InitializeService = wire.NewSet(

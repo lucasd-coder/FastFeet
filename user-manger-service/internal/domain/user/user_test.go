@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	model "github.com/lucasd-coder/user-manger-service/internal/domain/user"
+	model "github.com/lucasd-coder/fast-feet/user-manger-service/internal/domain/user"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

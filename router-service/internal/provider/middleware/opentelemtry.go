@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	tracerName = "github.com/lucasd-coder/router-service"
+	tracerName = "github.com/lucasd-coder/fast-feet/router-service"
 )
 
 type config struct {

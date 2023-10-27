@@ -1,4 +1,4 @@
-module github.com/lucasd-coder/user-manger-service
+module github.com/lucasd-coder/fast-feet/user-manger-service
 
 go 1.21.0
 

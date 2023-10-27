@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/ilyakaznacheev/cleanenv"
-	"github.com/lucasd-coder/order-data-service/config"
-	"github.com/lucasd-coder/order-data-service/internal/app"
+	"github.com/lucasd-coder/fast-feet/order-data-service/config"
+	"github.com/lucasd-coder/fast-feet/order-data-service/internal/app"
 )
 
 var cfg config.Config

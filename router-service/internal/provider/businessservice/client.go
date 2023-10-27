@@ -13,8 +13,8 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
-	"github.com/lucasd-coder/router-service/config"
-	"github.com/lucasd-coder/router-service/internal/shared"
+	"github.com/lucasd-coder/fast-feet/router-service/config"
+	"github.com/lucasd-coder/fast-feet/router-service/internal/shared"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"

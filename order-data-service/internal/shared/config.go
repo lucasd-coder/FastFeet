@@ -4,7 +4,7 @@ import (
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/lucasd-coder/fast-feet/pkg/mongodb"
 	"github.com/lucasd-coder/fast-feet/pkg/monitor"
-	"github.com/lucasd-coder/order-data-service/config"
+	"github.com/lucasd-coder/fast-feet/order-data-service/config"
 )
 
 func NewOptLogger(cfg *config.Config) logger.Option {

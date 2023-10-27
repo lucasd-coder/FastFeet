@@ -5,12 +5,12 @@ import (
 	"fmt"
 
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
-	model "github.com/lucasd-coder/order-data-service/internal/domain/order"
-	"github.com/lucasd-coder/order-data-service/internal/domain/order/repository"
-	pkgErrors "github.com/lucasd-coder/order-data-service/internal/errors"
-	"github.com/lucasd-coder/order-data-service/internal/provider/validator"
-	"github.com/lucasd-coder/order-data-service/internal/shared"
-	"github.com/lucasd-coder/order-data-service/pkg/pb"
+	model "github.com/lucasd-coder/fast-feet/order-data-service/internal/domain/order"
+	"github.com/lucasd-coder/fast-feet/order-data-service/internal/domain/order/repository"
+	pkgErrors "github.com/lucasd-coder/fast-feet/order-data-service/internal/errors"
+	"github.com/lucasd-coder/fast-feet/order-data-service/internal/provider/validator"
+	"github.com/lucasd-coder/fast-feet/order-data-service/internal/shared"
+	"github.com/lucasd-coder/fast-feet/order-data-service/pkg/pb"
 )
 
 type OrderService struct {

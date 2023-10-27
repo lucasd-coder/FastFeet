@@ -1,7 +1,7 @@
 package order
 
 import (
-	"github.com/lucasd-coder/router-service/internal/shared"
+	"github.com/lucasd-coder/fast-feet/router-service/internal/shared"
 )
 
 type Payload struct {

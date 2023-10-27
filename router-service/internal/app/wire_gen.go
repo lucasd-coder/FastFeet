@@ -8,14 +8,14 @@ package app
 
 import (
 	"github.com/google/wire"
-	"github.com/lucasd-coder/router-service/config"
-	"github.com/lucasd-coder/router-service/internal/controller"
-	"github.com/lucasd-coder/router-service/internal/domain/order"
-	"github.com/lucasd-coder/router-service/internal/domain/user"
-	"github.com/lucasd-coder/router-service/internal/provider/businessservice/repository"
-	"github.com/lucasd-coder/router-service/internal/provider/publish"
-	"github.com/lucasd-coder/router-service/internal/provider/validator"
-	"github.com/lucasd-coder/router-service/internal/shared"
+	"github.com/lucasd-coder/fast-feet/router-service/config"
+	"github.com/lucasd-coder/fast-feet/router-service/internal/controller"
+	"github.com/lucasd-coder/fast-feet/router-service/internal/domain/order"
+	"github.com/lucasd-coder/fast-feet/router-service/internal/domain/user"
+	"github.com/lucasd-coder/fast-feet/router-service/internal/provider/businessservice/repository"
+	"github.com/lucasd-coder/fast-feet/router-service/internal/provider/publish"
+	"github.com/lucasd-coder/fast-feet/router-service/internal/provider/validator"
+	"github.com/lucasd-coder/fast-feet/router-service/internal/shared"
 )
 
 // Injectors from wire.go:

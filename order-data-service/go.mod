@@ -1,4 +1,4 @@
-module github.com/lucasd-coder/order-data-service
+module github.com/lucasd-coder/fast-feet/order-data-service
 
 go 1.21.0
 
