@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/lucasd-coder/user-manger-service/config"
-	model "github.com/lucasd-coder/user-manger-service/internal/domain/user"
+	"github.com/lucasd-coder/fast-feet/user-manger-service/config"
+	model "github.com/lucasd-coder/fast-feet/user-manger-service/internal/domain/user"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
-	"github.com/lucasd-coder/router-service/internal/shared"
+	"github.com/lucasd-coder/fast-feet/router-service/internal/shared"
 	octrace "go.opencensus.io/trace"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"

@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
-	"github.com/lucasd-coder/router-service/internal/shared"
+	"github.com/lucasd-coder/fast-feet/router-service/internal/shared"
 )
 
 func (s *ServiceImpl) Save(ctx context.Context, order *Order) error {

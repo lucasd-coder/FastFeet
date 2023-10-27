@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/lucasd-coder/order-data-service/config"
-	model "github.com/lucasd-coder/order-data-service/internal/domain/order"
+	"github.com/lucasd-coder/fast-feet/order-data-service/config"
+	model "github.com/lucasd-coder/fast-feet/order-data-service/internal/domain/order"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"

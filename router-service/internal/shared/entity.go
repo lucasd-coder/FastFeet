@@ -5,7 +5,7 @@ import (
 
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/lucasd-coder/fast-feet/pkg/monitor"
-	"github.com/lucasd-coder/router-service/config"
+	"github.com/lucasd-coder/fast-feet/router-service/config"
 )
 
 type Message struct {

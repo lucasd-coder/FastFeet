@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
-	"github.com/lucasd-coder/router-service/internal/shared"
-	"github.com/lucasd-coder/router-service/internal/shared/ciphers"
-	"github.com/lucasd-coder/router-service/internal/shared/codec"
+	"github.com/lucasd-coder/fast-feet/router-service/internal/shared"
+	"github.com/lucasd-coder/fast-feet/router-service/internal/shared/ciphers"
+	"github.com/lucasd-coder/fast-feet/router-service/internal/shared/codec"
 )
 
 func (s *ServiceImpl) Save(ctx context.Context, user *User) error {

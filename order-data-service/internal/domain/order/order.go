@@ -3,7 +3,7 @@ package model
 import (
 	"time"
 
-	"github.com/lucasd-coder/order-data-service/internal/shared"
+	"github.com/lucasd-coder/fast-feet/order-data-service/internal/shared"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

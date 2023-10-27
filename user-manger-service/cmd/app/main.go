@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/ilyakaznacheev/cleanenv"
-	"github.com/lucasd-coder/user-manger-service/config"
-	"github.com/lucasd-coder/user-manger-service/internal/app"
+	"github.com/lucasd-coder/fast-feet/user-manger-service/config"
+	"github.com/lucasd-coder/fast-feet/user-manger-service/internal/app"
 )
 
 var cfg config.Config

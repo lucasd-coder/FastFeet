@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/lucasd-coder/router-service/internal/shared/ciphers"
+	"github.com/lucasd-coder/fast-feet/router-service/internal/shared/ciphers"
 )
 
 func TestDecrypt(t *testing.T) {

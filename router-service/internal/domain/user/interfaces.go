@@ -3,7 +3,7 @@ package user
 import (
 	"context"
 
-	"github.com/lucasd-coder/router-service/pkg/pb"
+	"github.com/lucasd-coder/fast-feet/router-service/pkg/pb"
 )
 
 type (
