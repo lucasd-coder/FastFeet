@@ -64,9 +64,15 @@ application:
     native:
       additional-build-args:
         - --no-fallback        
+        - --initialize-at-build-time=com.fasterxml.jackson,io.vertx.core.json,com.fasterxml.jackson.databind.ObjectMapper
+        - --trace-object-instantiation=com.fasterxml.jackson.core.io.SerializedString
+        - --trace-object-instantiation=com.fasterxml.jackson.databind.ObjectMapper
+        - -H:ReflectionConfigurationFiles=../resources/main/native-image/reflect-config.json,
+        - -H:ResourceConfigurationFiles=../resources/main/native-image/resource-config.json,
         - -H:+ReportUnsupportedElementsAtRuntime
         - --link-at-build-time
         - -H:+ReportExceptionStackTraces
+
 
 "%prod":
    quarkus:    
@@ -129,7 +135,7 @@ application:
           path: metrics/prometheus
     
     native:
-      additional-build-args:
+      additional-build-args:        
         - --no-fallback        
         - --initialize-at-build-time=com.fasterxml.jackson,io.vertx.core.json,com.fasterxml.jackson.databind.ObjectMapper
         - --trace-object-instantiation=com.fasterxml.jackson.core.io.SerializedString

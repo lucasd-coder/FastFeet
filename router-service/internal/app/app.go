@@ -53,6 +53,7 @@ func Run(cfg *config.Config) {
 	controller := controller.NewRouter(userController, orderController)
 
 	r.Mount("/", controller)
+	r.Mount("/debug", chiMiddleware.Profiler())
 
 	r.Handle("/metrics", promhttp.HandlerFor(
 		prometheus.DefaultGatherer,

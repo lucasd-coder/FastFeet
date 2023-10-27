@@ -21,7 +21,7 @@ type Product struct {
 }
 
 type Address struct {
-	PostalCode string `json:"postalCode,omitempty" validate:"min=8,max=8,pattern"`
+	PostalCode string `json:"postalCode,omitempty" validate:"min=8,max=9,pattern"`
 	Number     int32  `json:"number,omitempty" validate:"numeric=integer,min=1"`
 }
 

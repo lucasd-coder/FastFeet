@@ -4,6 +4,9 @@ import (
 	"context"
 	"net"
 	"net/http"
+
+	// revive
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"regexp"
@@ -21,6 +24,7 @@ import (
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/lucasd-coder/fast-feet/pkg/mongodb"
 	"github.com/lucasd-coder/fast-feet/pkg/monitor"
+	"github.com/lucasd-coder/fast-feet/pkg/profiler"
 	"github.com/lucasd-coder/fast-feet/user-manger-service/config"
 	"github.com/lucasd-coder/fast-feet/user-manger-service/internal/shared"
 	"github.com/lucasd-coder/fast-feet/user-manger-service/pkg/pb"
@@ -140,6 +144,8 @@ func newHTTPServer(ctx context.Context, cfg *config.Config, reg prometheus.Gathe
 	m.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("ok"))
 	})
+
+	profiler.StartProfiling(m)
 
 	httpSrv := &http.Server{
 		Addr:        ":" + cfg.HTTP.Port,
