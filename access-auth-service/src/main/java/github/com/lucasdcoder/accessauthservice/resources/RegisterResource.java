@@ -1,5 +1,9 @@
 package github.com.lucasdcoder.accessauthservice.resources;
 
+import github.com.lucasdcoder.accessauthservice.domain.User;
+import github.com.lucasdcoder.accessauthservice.services.UserService;
+import io.quarkus.logging.Log;
+import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
@@ -9,22 +13,8 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import jakarta.annotation.security.PermitAll;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.keycloak.admin.client.Keycloak;
-
-import github.com.lucasdcoder.accessauthservice.domain.User;
-import github.com.lucasdcoder.accessauthservice.services.UserService;
-import io.quarkus.logging.Log;
-
 @Path("/api/register")
 public class RegisterResource {
-
-    @ConfigProperty(name = "application.realm")
-    String realm;
-
-    @Inject
-    Keycloak keycloak;
 
     @Inject
     UserService userService;

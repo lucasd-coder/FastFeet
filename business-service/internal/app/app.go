@@ -9,6 +9,9 @@ import (
 	"regexp"
 	"syscall"
 
+	// revive
+	_ "net/http/pprof"
+
 	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
 	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/lucasd-coder/fast-feet/business-service/config"
@@ -22,6 +25,7 @@ import (
 	"github.com/lucasd-coder/fast-feet/business-service/pkg/pb"
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/lucasd-coder/fast-feet/pkg/monitor"
+	"github.com/lucasd-coder/fast-feet/pkg/profiler"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -138,6 +142,8 @@ func newHTTPServer(ctx context.Context, cfg *config.Config, reg prometheus.Gathe
 	m.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("ok"))
 	})
+
+	profiler.StartProfiling(m)
 
 	httpSrv := &http.Server{
 		Addr:        ":" + cfg.HTTP.Port,
