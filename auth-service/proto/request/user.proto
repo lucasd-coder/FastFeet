@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "./pkg/pb";
+
+service UserHandler {
+    rpc FindUserByEmail(EmptyRequest) returns (GetUserResponse);
+    rpc GetRoles (EmptyRequest) returns (GetRolesResponse);
+    rpc IsActiveUser (EmptyRequest) returns (IsActiveUserResponse);
+}
+
+message EmptyRequest {}
+
+message GetUserResponse {
+    string id = 1;
+    string username = 2;
+    bool enabled = 3;
+    string email = 4;
+}
+
+message GetRolesResponse {
+    repeated string roles = 1;
+}
+
+message IsActiveUserResponse {
+    bool active = 1;
+}
