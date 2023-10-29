@@ -162,6 +162,7 @@ func newHTTPServer(ctx context.Context, cfg *config.Config, reg prometheus.Gathe
 		return
 	}
 }
+
 func registerServices(grpcServer *grpc.Server) {
 	orderService := InitializeOrderService()
 	pb.RegisterOrderServiceServer(grpcServer, orderService)

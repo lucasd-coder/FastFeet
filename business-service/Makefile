@@ -1,4 +1,3 @@
-
 FIND ?= $(shell find proto/ -iname "*.proto")
 
 GOPATH ?= go env GOPATH
