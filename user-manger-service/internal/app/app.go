@@ -39,7 +39,8 @@ func Run(cfg *config.Config) {
 	optOtel := shared.NewOptOtel(cfg)
 	logger := logger.NewLog(optlogger)
 
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	log := logger.GetLogger()
 
@@ -55,7 +56,7 @@ func Run(cfg *config.Config) {
 
 	lis, err := net.Listen("tcp", ":"+cfg.GRPC.Port)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	tp, err := monitor.RegisterOtel(ctx, &optOtel)

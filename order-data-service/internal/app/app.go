@@ -41,12 +41,13 @@ func Run(cfg *config.Config) {
 
 	log := logger.GetLogger()
 
-	ctx := context.Background()
-
 	lis, err := net.Listen("tcp", ":"+cfg.GRPC.Port)
 	if err != nil {
 		log.Fatalf("Could not connect: %v", err)
 	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	optMongo := shared.NewOptMongoDB(cfg)
 	mongodb.SetUpMongoDB(ctx, &optMongo)

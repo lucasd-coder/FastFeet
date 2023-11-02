@@ -22,6 +22,12 @@ func SetUpRedis(ctx context.Context, cfg *config.Config) {
 
 	client = redisClient
 
+	_, err := redisClient.Ping(ctx).Result()
+	if err != nil {
+		log.Errorf("Error Redis connection: %+v", err.Error())
+		return
+	}
+
 	if err := redisotel.InstrumentTracing(redisClient); err != nil {
 		log.Errorf("Error Redis InstrumentTracing: %v", err)
 		return

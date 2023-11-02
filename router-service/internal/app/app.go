@@ -20,7 +20,8 @@ import (
 func Run(cfg *config.Config) {
 	optlogger := shared.NewOptLogger(cfg)
 	optOtel := shared.NewOptOtel(cfg)
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	logger := logger.NewLog(optlogger)
 	log := logger.GetLogger()
@@ -47,14 +48,11 @@ func Run(cfg *config.Config) {
 	log.Infof("Started listening... address[:%s]", cfg.Port)
 
 	userController := InitializeUserController()
-
 	orderController := InitializeOrderController()
-
 	controller := controller.NewRouter(userController, orderController)
 
 	r.Mount("/", controller)
 	r.Mount("/debug", chiMiddleware.Profiler())
-
 	r.Handle("/metrics", promhttp.HandlerFor(
 		prometheus.DefaultGatherer,
 		promhttp.HandlerOpts{

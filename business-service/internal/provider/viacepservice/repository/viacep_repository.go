@@ -61,7 +61,7 @@ func (r *ViaCepRepository) getAddress(ctx context.Context, cep string) (*shared.
 
 	client := viacepservice.NewClient(r.cfg)
 
-	request := client.R().SetContext(ctx)
+	request := client.R().SetContext(ctx).SetLogger(log)
 
 	response, err := request.
 		SetPathParam("cep", cep).

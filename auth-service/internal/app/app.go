@@ -34,7 +34,6 @@ import (
 )
 
 func Run(cfg *config.Config) {
-	ctx := context.Background()
 	optlogger := shared.NewOptLogger(cfg)
 	logger := logger.NewLog(optlogger)
 	log := logger.GetLogger()
@@ -44,6 +43,9 @@ func Run(cfg *config.Config) {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	optOtel := shared.NewOptOtel(cfg)
 	tp, err := monitor.RegisterOtel(ctx, &optOtel)
 	if err != nil {
@@ -52,7 +54,7 @@ func Run(cfg *config.Config) {
 	}
 	defer func() {
 		if err := tp.Shutdown(ctx); err != nil {
-			log.Errorf("Error shutting down tracer server provider: %v", err)
+			log.Fatalf("Error shutting down tracer server provider: %v", err)
 		}
 	}()
 	reg := prometheus.NewRegistry()
