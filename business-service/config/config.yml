@@ -19,28 +19,19 @@ integration:
     user-manager-service:
       url: ${USER_MANAGER_URL}
       max-retry: 3
+      retry-wait-time: 5s
+      retry-max-wait-time: 20s
     order-data-service:
       url: ${ORDER_DATA_URL}
       max-retry: 3
-  http:
-    access-auth-service:
-      url: ${ACCESS_AUTH_URL}
-      max-conn: 20
-      max-routes: 20
-      read-timeout: 10s
-      conn-timeout: 10s
-      debug: true
-      request-timeout: 60s
+      retry-wait-time: 5s
+      retry-max-wait-time: 20s
+    auth-service:
+      url: ${AUTH_URL}
       max-retry: 3
       retry-wait-time: 5s
       retry-max-wait-time: 20s
-    keycloak:
-      token-url: ${KEYCLOAK_URL}      
-      username: ${USERNAME}
-      password: ${PASSWORD}   
-      client-id: ${CLIENT_ID}
-      client-secret: ${CLIENT_SECRET}
-      request-timeout: 60s
+  http:
     viacep:
       url: ${VIA_CEP_URL}
       max-conn: 20

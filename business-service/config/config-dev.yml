@@ -32,13 +32,6 @@ integration:
       retry-wait-time: 5s
       retry-max-wait-time: 20s
   http:
-    keycloak:
-      token-url: "http://local.projectcontour.io/auth/realms/fastfeet/protocol/openid-connect/token"      
-      username: ${USERNAME}
-      password: ${PASSWORD}    
-      client-id: ${CLIENT_ID}
-      client-secret: ${CLIENT_SECRET}
-      request-timeout: 60s
     viacep:
       url: https://viacep.com.br
       max-conn: 20

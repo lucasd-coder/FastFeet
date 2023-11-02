@@ -47,8 +47,6 @@ type (
 		KeyCloakPassword       string        `env-required:"true" yaml:"password" env:"KEYCLOAK_PASSWORD"`
 		KeyCloakRealm          string        `env-required:"true" yaml:"realm" env:"KEYCLOAK_REALM"`
 		KeyCloakRequestTimeout time.Duration `env-required:"true" yaml:"request-timeout"`
-		KeyCloakClientID       string        `env-required:"true" yaml:"client-id" env:"CLIENT_ID"`
-		KeyCloakClientSecret   string        `env-required:"true" yaml:"client-secret" env:"CLIENT_SECRET"`
 		KeyCloakDebug          bool          `yaml:"debug" env-default:"true"`
 	}
 

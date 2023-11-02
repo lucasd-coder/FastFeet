@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: business-service
+  name: auth-service
   labels:
-    app: business-service
+    app: auth-service
 spec:
   replicas: 1
   minReadySeconds: 10
@@ -14,19 +14,19 @@ spec:
       maxSurge: 1
   selector:
     matchLabels:
-      app: business-service
+      app: auth-service
   template:
     metadata:
       labels:
-        app: business-service
+        app: auth-service
       annotations:
         prometheus.io/scrape: 'true'        
         prometheus.io/path: '/metrics'
         prometheus.io/port: '8080'
     spec:
       containers:
-        - name: business-service
-          image: lucasd-coder/business-service:latest      
+        - name: auth-service
+          image: lucasd-coder/auth-service:latest      
           resources:
             requests:
               memory: "500Mi"
@@ -43,38 +43,22 @@ spec:
               value: "8080"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "opentelemetry-collector.default.svc.cluster.local:4317"
-            - name: USER_MANAGER_URL
-              value: "user-manger-service.default.svc.cluster.local:50051"
-            - name: ORDER_DATA_URL
-              value: "order-data-service.default.svc.cluster.local:50051"
             - name: AUTH_URL
               value: "auth-service.default.svc.cluster.local:8080"
-            - name: VIA_CEP_URL
-              value: "https://viacep.com.br"
-            - name: AES_KEY
+            - name: KEYCLOAK_URL
+              value: "http://keycloak.default.svc.cluster.local:80/auth"
+            - name: KEYCLOAK_REALM
+              value: "fastfeet"
+            - name: KEYCLOAK_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: business-service-aes-key
-                  key: aes-key-config
-            - name: REDIS_URL
-              value: "redis-cluster.default.svc.cluster.local:6379"         
-            - name: REDIS_HOST_PASSWORD
+                  name: auth-service-keycloak-username
+                  key: keycloak-username
+            - name: KEYCLOAK_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: business-service-redis-password
-                  key: REDIS_PASSWORD
-            - name: RABBITMQ_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: business-service-rabbitmq-username
-                  key: rabbitmq-username
-            - name: RABBITMQ_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: business-service-rabbitmq-password
-                  key: rabbitmq-password
-            - name: RABBIT_SERVER_URL
-              value: "amqp://$(RABBITMQ_USERNAME):$(RABBITMQ_PASSWORD)@rabbitmq.default.svc.cluster.local:5672/fastfeet"          
+                  name: auth-service-keycloak-password
+                  key: keycloak-password
           ports:
             - containerPort: 50051
               protocol: TCP  
@@ -101,8 +85,8 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: business-service
-  name: business-service
+    app: auth-service
+  name: auth-service
   annotations:
     prometheus.io/scrape: 'true'
     prometheus.io/port: '8080'
@@ -117,5 +101,5 @@ spec:
     protocol: TCP
     targetPort: 8080
   selector:
-    app: business-service
+    app: auth-service
 

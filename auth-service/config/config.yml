@@ -1,7 +1,6 @@
 app:
-  name: business-service
+  name: auth-service
   version: 1.0.0
-  aes-key: ${AES_KEY}
 
 logger:
   log_level: ${LOG_LEVEL}
@@ -15,36 +14,14 @@ http:
   timeout: 20s
 
 integration:
-  grpc:
-    user-manager-service:
-      url: ${USER_MANAGER_URL}
-      max-retry: 3
-    order-data-service:
-      url: ${ORDER_DATA_URL}
-      max-retry: 3
   http:
-    access-auth-service:
-      url: ${ACCESS_AUTH_URL}
-      max-conn: 20
-      max-routes: 20
-      read-timeout: 10s
-      conn-timeout: 10s
-      debug: true
-      request-timeout: 60s
-      max-retry: 3
-      retry-wait-time: 5s
-      retry-max-wait-time: 20s
     keycloak:
       token-url: ${KEYCLOAK_URL}      
-      username: ${USERNAME}
-      password: ${PASSWORD}
+      username: ${KEYCLOAK_USERNAME}
+      password: ${KEYCLOAK_PASSWORD}
+      realm: ${KEYCLOAK_REALM}
       request-timeout: 60s
-  
-  redis:
-    url: ${REDIS_URL}
-    db: 1
-    password: ${REDIS_HOST_PASSWORD}
-    ttl: 1h
+      debug: true
   
   otlp:
     url: ${OTEL_EXPORTER_OTLP_ENDPOINT}

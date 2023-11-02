@@ -79,8 +79,7 @@ type (
 	}
 
 	HTTPClint struct {
-		KeyCloak `env-required:"true" yaml:"keycloak"`
-		ViaCep   `env-required:"true" yaml:"viacep"`
+		ViaCep `env-required:"true" yaml:"viacep"`
 	}
 
 	QueueUserEvents struct {
@@ -101,15 +100,6 @@ type (
 		NumberOfMessageReceivers int           `yaml:"number-of-message-receivers" env-default:"2"`
 		PollDelay                time.Duration `yaml:"poll-delay-in-milliseconds" env-default:"100ms"`
 		WaitingTime              time.Duration `yaml:"waiting-time" env-default:"2s"`
-	}
-
-	KeyCloak struct {
-		KeyCloakTokenURL       string        `env-required:"true" yaml:"token-url" env:"KEYCLOAK_URL"`
-		KeyCloakUsername       string        `env-required:"true" yaml:"username" env:"USERNAME"`
-		KeyCloakPassword       string        `env-required:"true" yaml:"password" env:"PASSWORD"`
-		KeyCloakRequestTimeout time.Duration `env-required:"true" yaml:"request-timeout"`
-		KeyCloakClientID       string        `env-required:"true" yaml:"client-id" env:"CLIENT_ID"`
-		KeyCloakClientSecret   string        `env-required:"true" yaml:"client-secret" env:"CLIENT_SECRET"`
 	}
 
 	ViaCep struct {

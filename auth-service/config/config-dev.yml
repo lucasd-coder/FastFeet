@@ -19,8 +19,6 @@ integration:
       base-url: "http://local.projectcontour.io/auth"      
       username: ${KEYCLOAK_USERNAME}
       password: ${KEYCLOAK_PASSWORD}    
-      client-id: ${CLIENT_ID}
-      client-secret: ${CLIENT_SECRET}
       realm: ${KEYCLOAK_REALM}
       request-timeout: 60s
       debug: true
