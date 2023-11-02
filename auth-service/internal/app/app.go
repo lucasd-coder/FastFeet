@@ -15,7 +15,7 @@ import (
 	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
 	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/lucasd-coder/fast-feet/auth-service/config"
-	userHandler "github.com/lucasd-coder/fast-feet/auth-service/internal/domain/user/handler"
+	authHandler "github.com/lucasd-coder/fast-feet/auth-service/internal/domain/auth/handler"
 	"github.com/lucasd-coder/fast-feet/auth-service/internal/shared"
 	"github.com/lucasd-coder/fast-feet/auth-service/pkg/pb"
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
@@ -72,7 +72,6 @@ func Run(cfg *config.Config) {
 
 	signal.Notify(stopChan, syscall.SIGTERM, syscall.SIGINT)
 	<-stopChan
-	close(stopChan)
 
 	grpcServer.GracefulStop()
 }
@@ -151,12 +150,12 @@ func newHTTPServer(ctx context.Context, cfg *config.Config, reg prometheus.Gathe
 }
 
 func registerServices(grpcServer *grpc.Server) {
-	initializeUser := InitializeUserHandler()
+	initializeAuth := InitializeAuthHandler()
 
-	user := userHandler.NewUserHandler(*initializeUser)
+	auth := authHandler.NewAuthHandler(*initializeAuth)
 
-	pb.RegisterRegisterHandlerServer(grpcServer, user)
-	pb.RegisterUserHandlerServer(grpcServer, user)
+	pb.RegisterRegisterHandlerServer(grpcServer, auth)
+	pb.RegisterAuthHandlerServer(grpcServer, auth)
 
 	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
 	reflection.Register(grpcServer)

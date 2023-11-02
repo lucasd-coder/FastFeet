@@ -20,23 +20,19 @@ func SetUpRedis(ctx context.Context, cfg *config.Config) {
 		Password: cfg.RedisPassword,
 	})
 
-	_, err := redisClient.Ping(ctx).Result()
-	if err != nil {
-		log.Errorf("Error Redis connection: %+v", err.Error())
-		return
-	}
+	client = redisClient
 
 	if err := redisotel.InstrumentTracing(redisClient); err != nil {
 		log.Errorf("Error Redis InstrumentTracing: %v", err)
+		return
 	}
 
 	if err := redisotel.InstrumentMetrics(redisClient); err != nil {
 		log.Errorf("Error Redis InstrumentMetrics: %v", err)
+		return
 	}
 
 	log.Info("Redis Connected")
-
-	client = redisClient
 }
 
 func GetClient() *redis.Client {

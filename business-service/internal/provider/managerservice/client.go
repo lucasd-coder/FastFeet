@@ -2,7 +2,6 @@ package managerservice
 
 import (
 	"context"
-	"time"
 
 	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
@@ -21,6 +20,9 @@ import (
 func NewClient(_ context.Context, cfg *config.Config) (*grpc.ClientConn, error) {
 	url := cfg.Integration.UserManagerService.URL
 	maxRetry := cfg.Integration.UserManagerService.MaxRetry
+	retryWaitTime := cfg.UserManagerService.UserManagerServiceRetryWaitTime
+	retryMaxWaitTime := cfg.UserManagerService.UserManagerServiceRetryMaxWaitTime
+
 	optlogger := shared.NewOptLogger(cfg)
 
 	logger := logger.NewLog(optlogger)
@@ -40,9 +42,9 @@ func NewClient(_ context.Context, cfg *config.Config) (*grpc.ClientConn, error) 
 	}
 
 	opts := []grpc_retry.CallOption{
-		grpc_retry.WithBackoff(grpc_retry.BackoffExponential(100 * time.Millisecond)),
+		grpc_retry.WithBackoff(grpc_retry.BackoffExponential(retryMaxWaitTime)),
 		grpc_retry.WithMax(maxRetry),
-		grpc_retry.WithPerRetryTimeout(1 * time.Second),
+		grpc_retry.WithPerRetryTimeout(retryWaitTime),
 		grpc_retry.WithCodes(codes.Unavailable, codes.DeadlineExceeded),
 	}
 

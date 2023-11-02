@@ -19,21 +19,19 @@ integration:
     user-manager-service:
       url: localhost:50052
       max-retry: 3
+      retry-wait-time: 5s
+      retry-max-wait-time: 20s
     order-data-service:
       url: localhost:50054
       max-retry: 3
-  http:
-    access-auth-service:
-      url: http://localhost:8081/access-auth-service
-      max-conn: 20
-      max-routes: 20
-      read-timeout: 10s
-      conn-timeout: 10s
-      debug: true
-      request-timeout: 60s
+      retry-wait-time: 5s
+      retry-max-wait-time: 20s
+    auth-service:
+      url: localhost:50055
       max-retry: 3
       retry-wait-time: 5s
       retry-max-wait-time: 20s
+  http:
     keycloak:
       token-url: "http://local.projectcontour.io/auth/realms/fastfeet/protocol/openid-connect/token"      
       username: ${USERNAME}

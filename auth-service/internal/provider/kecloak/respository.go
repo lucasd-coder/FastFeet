@@ -8,7 +8,7 @@ import (
 	"github.com/Nerzal/gocloak/v13"
 	"github.com/go-resty/resty/v2"
 	"github.com/lucasd-coder/fast-feet/auth-service/config"
-	"github.com/lucasd-coder/fast-feet/auth-service/internal/domain/user"
+	"github.com/lucasd-coder/fast-feet/auth-service/internal/domain/auth"
 	"github.com/lucasd-coder/fast-feet/auth-service/internal/shared"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -29,7 +29,7 @@ func NewRepository(cfg *config.Config) *Repository {
 	}
 }
 
-func (r *Repository) Register(ctx context.Context, pld *user.Register) (string, error) {
+func (r *Repository) Register(ctx context.Context, pld *auth.Register) (string, error) {
 	client := NewClient(ctx, r.Config)
 
 	token, err := client.LoginAdmin(ctx, r.Config.KeyCloakUsername, r.Config.KeyCloakPassword, r.Config.KeyCloakRealm)
@@ -37,7 +37,7 @@ func (r *Repository) Register(ctx context.Context, pld *user.Register) (string, 
 		return "", err
 	}
 
-	roles := rolesIdentity(user.GetRolesFromString(pld.Roles))
+	roles := rolesIdentity(auth.GetRolesFromString(pld.Roles))
 	user := gocloak.User{
 		Username:  gocloak.StringP(pld.Username),
 		FirstName: gocloak.StringP(pld.FirstName),
@@ -66,20 +66,20 @@ func (r *Repository) Register(ctx context.Context, pld *user.Register) (string, 
 	return id, nil
 }
 
-func rolesIdentity(r user.RolesEnum) *[]string {
+func rolesIdentity(r auth.RolesEnum) *[]string {
 	roles := []string{}
 	switch r {
-	case user.Admin:
-		roles = append(roles, user.Admin.String(), user.User.String())
-	case user.User:
-		roles = append(roles, user.User.String())
+	case auth.Admin:
+		roles = append(roles, auth.Admin.String(), auth.User.String())
+	case auth.User:
+		roles = append(roles, auth.User.String())
 	default:
-		roles = append(roles, user.Unknown.String())
+		roles = append(roles, auth.Unknown.String())
 	}
 	return &roles
 }
 
-func (r *Repository) FindUserByEmail(ctx context.Context, pld *user.FindUserByEmail) (*user.UserRepresentation, error) {
+func (r *Repository) FindUserByEmail(ctx context.Context, pld *auth.FindUserByEmail) (*auth.UserRepresentation, error) {
 	client := NewClient(ctx, r.Config)
 	span := trace.SpanFromContext(ctx)
 	token, err := client.LoginAdmin(ctx, r.Config.KeyCloakUsername, r.Config.KeyCloakPassword, r.Config.KeyCloakRealm)
@@ -92,13 +92,13 @@ func (r *Repository) FindUserByEmail(ctx context.Context, pld *user.FindUserByEm
 			"email": pld.Email,
 			"exact": "true",
 		}).
-		SetResult(&[]user.UserRepresentation{}).
+		SetResult(&[]auth.UserRepresentation{}).
 		Get(r.getURL("users"))
 	if err := checkForError(resp, err); err != nil {
 		return nil, err
 	}
 
-	result, ok := resp.Result().(*[]user.UserRepresentation)
+	result, ok := resp.Result().(*[]auth.UserRepresentation)
 	if !ok {
 		errMsg := fmt.Errorf("%w. Service: FindUserByEmail", shared.ErrExtractResponse)
 		r.createSpanError(ctx, err, spanErrExtractResponse)
@@ -112,7 +112,7 @@ func (r *Repository) FindUserByEmail(ctx context.Context, pld *user.FindUserByEm
 	return extractUserRepresentation(result)
 }
 
-func (r *Repository) GetRoles(ctx context.Context, pld *user.GetUserID) ([]string, error) {
+func (r *Repository) GetRoles(ctx context.Context, pld *auth.GetUserID) ([]string, error) {
 	client := NewClient(ctx, r.Config)
 	token, err := client.LoginAdmin(ctx, r.Config.KeyCloakUsername, r.Config.KeyCloakPassword, r.Config.KeyCloakRealm)
 	if err != nil {
@@ -128,7 +128,7 @@ func (r *Repository) GetRoles(ctx context.Context, pld *user.GetUserID) ([]strin
 	return extractRoles(resp)
 }
 
-func (r *Repository) IsActiveUser(ctx context.Context, pld *user.GetUserID) (bool, error) {
+func (r *Repository) IsActiveUser(ctx context.Context, pld *auth.GetUserID) (bool, error) {
 	user, err := r.findUserByID(ctx, pld.ID)
 	if err != nil {
 		return false, err
@@ -219,7 +219,7 @@ func checkForError(resp *resty.Response, err error) error {
 	return nil
 }
 
-func extractUserRepresentation(result *[]user.UserRepresentation) (*user.UserRepresentation, error) {
+func extractUserRepresentation(result *[]auth.UserRepresentation) (*auth.UserRepresentation, error) {
 	if len(*result) == 0 {
 		return nil, shared.ErrUserNotFound
 	}

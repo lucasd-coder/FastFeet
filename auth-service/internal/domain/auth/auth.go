@@ -1,4 +1,4 @@
-package user
+package auth
 
 import "github.com/lucasd-coder/fast-feet/auth-service/internal/shared"
 

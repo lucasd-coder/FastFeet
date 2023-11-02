@@ -44,16 +44,28 @@ type (
 	GrpcClient struct {
 		UserManagerService `env-required:"true" yaml:"user-manager-service"`
 		OrderDataService   `env-required:"true" yaml:"order-data-service"`
+		AuthService        `env-required:"true" yaml:"auth-service"`
 	}
 
 	UserManagerService struct {
-		URL      string `env-required:"true" yaml:"url" env:"USER_MANAGER_URL"`
-		MaxRetry uint   `env-required:"true" yaml:"max-retry"`
+		URL                                string        `env-required:"true" yaml:"url" env:"USER_MANAGER_URL"`
+		MaxRetry                           uint          `env-required:"true" yaml:"max-retry"`
+		UserManagerServiceRetryWaitTime    time.Duration `env-required:"true" yaml:"retry-wait-time"`
+		UserManagerServiceRetryMaxWaitTime time.Duration `env-required:"true" yaml:"retry-max-wait-time"`
 	}
 
 	OrderDataService struct {
-		URL      string `env-required:"true" yaml:"url" env:"ORDER_DATA_URL"`
-		MaxRetry uint   `env-required:"true" yaml:"max-retry"`
+		URL                              string        `env-required:"true" yaml:"url" env:"ORDER_DATA_URL"`
+		MaxRetry                         uint          `env-required:"true" yaml:"max-retry"`
+		OrderDataServiceRetryWaitTime    time.Duration `env-required:"true" yaml:"retry-wait-time"`
+		OrderDataServiceRetryMaxWaitTime time.Duration `env-required:"true" yaml:"retry-max-wait-time"`
+	}
+
+	AuthService struct {
+		URL                         string        `env-required:"true" yaml:"url" env:"AUTH_URL"`
+		MaxRetry                    uint          `env-required:"true" yaml:"max-retry"`
+		AuthServiceRetryWaitTime    time.Duration `env-required:"true" yaml:"retry-wait-time"`
+		AuthServiceRetryMaxWaitTime time.Duration `env-required:"true" yaml:"retry-max-wait-time"`
 	}
 
 	RabbitMQ struct {
@@ -67,9 +79,8 @@ type (
 	}
 
 	HTTPClint struct {
-		AccessAuthService `env-required:"true" yaml:"access-auth-service"`
-		KeyCloak          `env-required:"true" yaml:"keycloak"`
-		ViaCep            `env-required:"true" yaml:"viacep"`
+		KeyCloak `env-required:"true" yaml:"keycloak"`
+		ViaCep   `env-required:"true" yaml:"viacep"`
 	}
 
 	QueueUserEvents struct {
@@ -90,19 +101,6 @@ type (
 		NumberOfMessageReceivers int           `yaml:"number-of-message-receivers" env-default:"2"`
 		PollDelay                time.Duration `yaml:"poll-delay-in-milliseconds" env-default:"100ms"`
 		WaitingTime              time.Duration `yaml:"waiting-time" env-default:"2s"`
-	}
-
-	AccessAuthService struct {
-		AuthServiceURL              string        `env-required:"true" yaml:"url" env:"ACCESS_AUTH_URL"`
-		AuthServiceMaxConn          int           `env-required:"true" yaml:"max-conn"`
-		AuthServiceMaxRoutes        int           `env-required:"true" yaml:"max-routes"`
-		AuthServiceReadTimeout      time.Duration `yaml:"read-timeout" env-default:"60s"`
-		AuthServiceConnTimeout      time.Duration `yaml:"conn-timeout" env-default:"60s"`
-		AuthServiceDebug            bool          `yaml:"debug" env-default:"true"`
-		AuthServiceRequestTimeout   time.Duration `env-required:"true" yaml:"request-timeout"`
-		AuthServiceMaxRetries       int           `env-required:"true" yaml:"max-retry"`
-		AuthServiceRetryWaitTime    time.Duration `env-required:"true" yaml:"retry-wait-time"`
-		AuthServiceRetryMaxWaitTime time.Duration `env-required:"true" yaml:"retry-max-wait-time"`
 	}
 
 	KeyCloak struct {

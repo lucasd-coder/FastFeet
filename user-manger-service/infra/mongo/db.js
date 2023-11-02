@@ -1,6 +1,6 @@
 
 rs.status();
-db = db.getSiblingDB('user-manger-service');
+db = db.getSiblingDB('fast-feet');
 db.createUser({user: 'admin', pwd: 'admin123', roles: [ { role: 'root', db: 'admin' } ]});
 db.getCollection("users").createIndex(
 	{ email: 1},

@@ -9,8 +9,8 @@ package app
 import (
 	"github.com/google/wire"
 	"github.com/lucasd-coder/fast-feet/auth-service/config"
-	"github.com/lucasd-coder/fast-feet/auth-service/internal/domain/user"
-	"github.com/lucasd-coder/fast-feet/auth-service/internal/domain/user/handler"
+	"github.com/lucasd-coder/fast-feet/auth-service/internal/domain/auth"
+	"github.com/lucasd-coder/fast-feet/auth-service/internal/domain/auth/handler"
 	"github.com/lucasd-coder/fast-feet/auth-service/internal/provider/kecloak"
 	"github.com/lucasd-coder/fast-feet/auth-service/internal/provider/validator"
 	"github.com/lucasd-coder/fast-feet/auth-service/internal/shared"
@@ -22,11 +22,11 @@ import (
 
 // Injectors from wire.go:
 
-func InitializeUserHandler() *handler.Handler {
+func InitializeAuthHandler() *handler.Handler {
 	validation := &validator.Validation{}
 	configConfig := config.GetConfig()
 	repository := kecloak.NewRepository(configConfig)
-	serviceImpl := user.NewService(validation, repository)
+	serviceImpl := auth.NewService(validation, repository)
 	handlerHandler := handler.NewHandler(serviceImpl, configConfig)
 	return handlerHandler
 }
@@ -35,4 +35,4 @@ func InitializeUserHandler() *handler.Handler {
 
 var initializeValidator = wire.NewSet(wire.Struct(new(validator.Validation)), wire.Bind(new(shared.Validator), new(*validator.Validation)))
 
-var initializeRepository = wire.NewSet(wire.Bind(new(user.Repository), new(*kecloak.Repository)), kecloak.NewRepository)
+var initializeRepository = wire.NewSet(wire.Bind(new(auth.Repository), new(*kecloak.Repository)), kecloak.NewRepository)

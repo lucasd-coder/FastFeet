@@ -2,13 +2,14 @@ package order
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/google/wire"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/shared"
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var InitializeService = wire.NewSet(
@@ -44,7 +45,7 @@ func (s *ServiceImpl) hasActiveUser(ctx context.Context, id string) error {
 
 	isActiveUser, err := s.authRepository.IsActiveUser(ctx, id)
 	if err != nil {
-		if errors.Is(err, shared.ErrUserNotFound) {
+		if status.Code(err) == codes.NotFound {
 			return shared.NotFoundError(shared.ErrUserNotFound)
 		}
 		return err

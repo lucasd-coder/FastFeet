@@ -4,7 +4,7 @@ package pb;
 
 option go_package = "./pkg/pb";
 
-service UserHandler {
+service AuthHandler {
     rpc FindUserByEmail(EmptyRequest) returns (GetUserResponse);
     rpc GetRoles (EmptyRequest) returns (GetRolesResponse);
     rpc IsActiveUser (EmptyRequest) returns (IsActiveUserResponse);

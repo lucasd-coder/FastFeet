@@ -2,90 +2,70 @@ package authservice
 
 import (
 	"context"
-	"net/http"
-	"time"
 
-	"github.com/go-resty/resty/v2"
+	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
+	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
+
 	"github.com/lucasd-coder/fast-feet/business-service/config"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"golang.org/x/oauth2"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/shared"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
+	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
-type options struct {
-	transport        *http.Transport
-	requestTimeout   time.Duration
-	retryWaitTime    time.Duration
-	retryMaxWaitTime time.Duration
-	maxRetries       int
-	url              string
-	debug            bool
-}
+func NewClient(_ context.Context, cfg *config.Config) (*grpc.ClientConn, error) {
+	url := cfg.AuthService.URL
+	maxRetry := cfg.AuthService.MaxRetry
+	retryWaitTime := cfg.AuthService.AuthServiceRetryWaitTime
+	retryMaxWaitTime := cfg.AuthService.AuthServiceRetryMaxWaitTime
+	optlogger := shared.NewOptLogger(cfg)
 
-func NewClient(cfg *config.Config) *resty.Client {
-	client := resty.New()
+	logger := logger.NewLog(optlogger)
 
-	opt := newOptions(cfg)
-
-	client.EnableTrace().
-		SetBaseURL(opt.url).
-		SetRetryCount(cfg.AuthServiceMaxRetries).
-		SetTransport(otelhttp.NewTransport(opt.transport)).
-		SetDebug(opt.debug).
-		SetTimeout(opt.requestTimeout).
-		SetRetryCount(opt.maxRetries).
-		SetRetryMaxWaitTime(opt.retryMaxWaitTime).
-		SetRetryWaitTime(opt.retryWaitTime)
-
-	return client
-}
-
-func NewClientWithAuth(ctx context.Context, cfg *config.Config) (*resty.Client, error) {
-	conf := &oauth2.Config{
-		ClientID:     cfg.KeyCloakClientID,
-		ClientSecret: cfg.KeyCloakClientSecret,
-		Endpoint: oauth2.Endpoint{
-			TokenURL:  cfg.KeyCloakTokenURL,
-			AuthStyle: oauth2.AuthStyleAutoDetect,
-		},
+	reg := prometheus.NewRegistry()
+	clMetrics := grpcprom.NewClientMetrics(
+		grpcprom.WithClientHandlingTimeHistogram(
+			grpcprom.WithHistogramBuckets([]float64{0.001, 0.01, 0.1, 0.3, 0.6, 1, 3, 6, 9, 20, 30, 60, 90, 120}),
+		),
+	)
+	reg.MustRegister(clMetrics)
+	exemplarFromContext := func(ctx context.Context) prometheus.Labels {
+		if span := trace.SpanContextFromContext(ctx); span.IsSampled() {
+			return prometheus.Labels{"traceID": span.TraceID().String()}
+		}
+		return nil
 	}
 
-	token, err := conf.PasswordCredentialsToken(ctx, cfg.KeyCloakUsername, cfg.KeyCloakPassword)
+	opts := []grpc_retry.CallOption{
+		grpc_retry.WithBackoff(grpc_retry.BackoffExponential(retryMaxWaitTime)),
+		grpc_retry.WithMax(maxRetry),
+		grpc_retry.WithPerRetryTimeout(retryWaitTime),
+		grpc_retry.WithCodes(codes.Unavailable, codes.DeadlineExceeded),
+	}
+
+	interceptorOpt := otelgrpc.WithTracerProvider(otel.GetTracerProvider())
+	conn, err := grpc.Dial(url,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithChainUnaryInterceptor(
+			otelgrpc.UnaryClientInterceptor(interceptorOpt),
+			clMetrics.UnaryClientInterceptor(grpcprom.WithExemplarFromContext(exemplarFromContext)),
+			grpc_retry.UnaryClientInterceptor(opts...),
+			logger.GetGRPCUnaryClientInterceptor(),
+		),
+		grpc.WithChainStreamInterceptor(
+			otelgrpc.StreamClientInterceptor(interceptorOpt),
+			clMetrics.StreamClientInterceptor(grpcprom.WithExemplarFromContext(exemplarFromContext)),
+			grpc_retry.StreamClientInterceptor(opts...),
+			logger.GetGRPCStreamClientInterceptor(),
+		),
+	)
 	if err != nil {
 		return nil, err
 	}
-
-	clientConf := conf.Client(ctx, token)
-
-	client := resty.NewWithClient(clientConf)
-
-	opt := newOptions(cfg)
-
-	client.EnableTrace().
-		SetBaseURL(opt.url).
-		SetDebug(opt.debug).
-		SetTimeout(opt.requestTimeout).
-		SetTransport(otelhttp.NewTransport(clientConf.Transport))
-
-	return client, err
-}
-
-func newOptions(cfg *config.Config) *options {
-	transport := &http.Transport{
-		MaxIdleConns:          cfg.AuthServiceMaxConn,
-		IdleConnTimeout:       cfg.AuthServiceConnTimeout,
-		MaxConnsPerHost:       cfg.AuthServiceMaxRoutes,
-		ResponseHeaderTimeout: cfg.AuthServiceReadTimeout,
-	}
-
-	opt := &options{
-		transport:        transport,
-		requestTimeout:   cfg.AuthServiceRequestTimeout,
-		retryWaitTime:    cfg.AuthServiceRetryWaitTime,
-		retryMaxWaitTime: cfg.AuthServiceRetryMaxWaitTime,
-		url:              cfg.AuthServiceURL,
-		debug:            cfg.AuthServiceDebug,
-		maxRetries:       cfg.AuthServiceMaxRetries,
-	}
-
-	return opt
+	return conn, nil
 }

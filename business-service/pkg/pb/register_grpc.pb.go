@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v3.21.12
-// source: request/register.proto
+// source: client/auth-service/register.proto
 
 package pb
 
@@ -105,5 +105,5 @@ var RegisterHandler_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "request/register.proto",
+	Metadata: "client/auth-service/register.proto",
 }

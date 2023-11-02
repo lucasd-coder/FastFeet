@@ -7,10 +7,10 @@ logger:
   report-caller: false
 
 grpc:
-  port: 50053
+  port: 50055
 
 http:
-  port: 8089
+  port: 8090
   timeout: 20s
 
 integration:

@@ -85,7 +85,6 @@ func Run(cfg *config.Config) {
 
 	signal.Notify(stopChan, syscall.SIGTERM, syscall.SIGINT)
 	<-stopChan
-	close(stopChan)
 
 	grpcServer.GracefulStop()
 }
