@@ -178,7 +178,7 @@ func (r *Repository) findUserByID(ctx context.Context, userID string) (*gocloak.
 }
 
 func (r *Repository) getURL(path ...string) string {
-	path = append([]string{r.Config.KeyCloakBaseURL, "/admin/realms/", r.Config.KeyCloakRealm}, path...)
+	path = append([]string{r.Config.KeyCloakBaseURL, "admin/realms", r.Config.KeyCloakRealm}, path...)
 	return makeURL(path...)
 }
 

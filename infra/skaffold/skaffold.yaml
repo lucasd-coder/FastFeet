@@ -18,10 +18,10 @@ build:
       context: router-service
       docker:
         dockerfile: router-service/infra/docker/Dockerfile
-    - image: lucasd-coder/access-auth-service
-      context: access-auth-service
+    - image: lucasd-coder/auth-service
+      context: auth-service
       docker:
-        dockerfile: access-auth-service/infra/docker/Dockerfile
+        dockerfile: auth-service/infra/docker/Dockerfile
     - image: lucasd-coder/business-service
       context: business-service
       docker:
@@ -32,5 +32,5 @@ manifests:
     - user-manger-service/infra/k8s/*.yaml
     - order-data-service/infra/k8s/*.yaml
     - router-service/infra/k8s/*.yaml
-    - access-auth-service/infra/k8s/*.yaml
+    - auth-service/infra/k8s/*.yaml
     - business-service/infra/k8s/*.yaml

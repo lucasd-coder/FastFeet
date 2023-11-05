@@ -48,7 +48,7 @@ spec:
             - name: ORDER_DATA_URL
               value: "order-data-service.default.svc.cluster.local:50051"
             - name: AUTH_URL
-              value: "auth-service.default.svc.cluster.local:8080"
+              value: "auth-service.default.svc.cluster.local:50051"
             - name: VIA_CEP_URL
               value: "https://viacep.com.br"
             - name: AES_KEY

@@ -51,7 +51,6 @@ k8s_create_infra:
 
 k8s_setup:
 	./infra/script/create-secrets.sh
-	./infra/script/setup.sh
 
 .PHONY: k8s_del_app
 
@@ -62,3 +61,8 @@ k8s_del_app:
 
 k8s_del_infra:
 	@skaffold -f $(SKAFFOLD_INFRA_PATH) delete
+
+.PHONY: k8s_del_secret
+
+k8s_del_secret:
+	./infra/script/delete-secrets.sh

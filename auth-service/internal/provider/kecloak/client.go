@@ -11,7 +11,9 @@ import (
 
 func NewClient(ctx context.Context, cfg *config.Config) *gocloak.GoCloak {
 	log := logger.FromContext(ctx)
-	client := gocloak.NewClient(cfg.KeyCloakBaseURL)
+	client := gocloak.NewClient(cfg.KeyCloakBaseURL,
+		gocloak.SetAuthAdminRealms("admin/realms"),
+		gocloak.SetAuthRealms("realms"))
 	client.RestyClient().
 		SetDebug(cfg.KeyCloakDebug).
 		SetTimeout(cfg.KeyCloakRequestTimeout).

@@ -1,6 +1,6 @@
 module github.com/lucasd-coder/fast-feet
 
-go 1.21.0
+go 1.21.2
 
 require (
 	github.com/go-playground/validator/v10 v10.15.5
