@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: router-service
 spec:
-  replicas: 1
+  replicas: 2
   minReadySeconds: 10
   strategy:
     type: RollingUpdate
@@ -119,3 +119,10 @@ spec:
       target:
         type: Utilization
         averageUtilization: 50
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 30
+
