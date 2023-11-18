@@ -9,7 +9,7 @@ require (
 	github.com/google/wire v0.5.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/ilyakaznacheev/cleanenv v1.5.0
-	github.com/lucasd-coder/fast-feet v0.0.9
+	github.com/lucasd-coder/fast-feet v0.0.10
 	github.com/prometheus/client_golang v1.17.0
 	github.com/stretchr/testify v1.8.4
 	go.opentelemetry.io/contrib v1.21.0
