@@ -1,11 +1,10 @@
 package validator
 
 import (
-	"context"
+	"log"
 	"sync"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/lucasd-coder/fast-feet/pkg/val"
 )
 
@@ -19,10 +18,6 @@ func NewValidation() *Validation {
 }
 
 func (v *Validation) ValidateStruct(s interface{}) error {
-	ctx := context.Background()
-
-	log := logger.FromContext(ctx)
-
 	v.lazyInit()
 
 	if err := v.validate.RegisterValidation("pattern", val.Pattern); err != nil {

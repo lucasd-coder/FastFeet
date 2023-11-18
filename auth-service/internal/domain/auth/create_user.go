@@ -19,7 +19,7 @@ func (s *ServiceImpl) CreateUser(ctx context.Context, pld *Register) (*pb.Regist
 
 	id, err := s.repository.Register(ctx, pld)
 	if err != nil {
-		log.Error(err)
+		log.Error("error called repository.register", "error", err)
 		return nil, shared.CheckError(err)
 	}
 

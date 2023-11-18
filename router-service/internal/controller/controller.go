@@ -3,7 +3,6 @@ package controller
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -61,13 +60,11 @@ func (c *controller) Response(ctx context.Context, w http.ResponseWriter, body i
 
 	content, err := json.MarshalIndent(body, "", "  ")
 	if err != nil {
-		msg := fmt.Errorf("err during json.Marchal: %w", err)
-		log.Error(msg)
+		log.Error("err during json.Marchal", err)
 	}
 
 	if _, err := w.Write(content); err != nil {
-		msg := fmt.Errorf("err during http.ResponseWriter: %w", err)
-		log.Error(msg)
+		log.Error("err during http.ResponseWriter", err)
 	}
 }
 

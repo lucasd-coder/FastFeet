@@ -2,6 +2,9 @@ package app
 
 import (
 	"context"
+	"fmt"
+	"log"
+	"log/slog"
 	"net"
 	"net/http"
 
@@ -18,7 +21,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
@@ -36,20 +38,19 @@ import (
 
 func Run(cfg *config.Config) {
 	optlogger := shared.NewOptLogger(cfg)
-	optOtel := shared.NewOptOtel(cfg)
-	logger := logger.NewLog(optlogger)
+	logger := logger.NewLogger(optlogger)
+	logDefault := logger.GetLog()
+	slog.SetDefault(logDefault)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
-	log := logger.GetLogger()
 
 	optMongo := shared.NewOptMongoDB(cfg)
 	mongodb.SetUpMongoDB(ctx, &optMongo)
 
 	defer func() {
 		if err := mongodb.CloseConnMongoDB(ctx); err != nil {
-			log.Errorf("Unable to disconnect: %v", err)
+			logDefault.Error("Unable to disconnect: ", err)
 			panic(err)
 		}
 	}()
@@ -59,21 +60,22 @@ func Run(cfg *config.Config) {
 		log.Panic(err)
 	}
 
+	optOtel := shared.NewOptOtel(cfg)
 	tp, err := monitor.RegisterOtel(ctx, &optOtel)
 	if err != nil {
-		log.Errorf("Error creating register otel: %v", err)
+		logDefault.Error("Error creating register otel: ", err)
 		return
 	}
 	defer func() {
 		if err := tp.Shutdown(ctx); err != nil {
-			log.Errorf("Error shutting down tracer server provider: %v", err)
+			logDefault.Error("Error shutting down tracer server provider: ", err)
 		}
 	}()
 	reg := prometheus.NewRegistry()
 	grpcServer := newGrpcServer(ctx, logger, reg)
 	registerServices(grpcServer)
 
-	log.Infof("Started listening... address[:%s]", cfg.GRPC.Port)
+	slog.Info(fmt.Sprintf("Started listening... address[:%s]", cfg.GRPC.Port))
 
 	go func() {
 		if err := grpcServer.Serve(lis); err != nil {
@@ -109,21 +111,18 @@ func newGrpcServer(ctx context.Context, logger *logger.Log, reg *prometheus.Regi
 
 	grpcPanicRecoveryHandler := monitor.RegisterGrpcPanicRecoveryHandler(ctx, reg)
 
-	interceptorOpt := otelgrpc.WithTracerProvider(otel.GetTracerProvider())
-
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
-			logger.GetGRPCUnaryServerInterceptor(),
-			otelgrpc.UnaryServerInterceptor(interceptorOpt),
 			srvMetrics.UnaryServerInterceptor(grpcprom.WithExemplarFromContext(exemplarFromContext)),
+			logger.GetLogUnaryServerInterceptor(),
 			grpcrecovery.UnaryServerInterceptor(grpcrecovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
 		),
 		grpc.ChainStreamInterceptor(
-			logger.GetGRPCStreamServerInterceptor(),
-			otelgrpc.StreamServerInterceptor(interceptorOpt),
 			srvMetrics.StreamServerInterceptor(grpcprom.WithExemplarFromContext(exemplarFromContext)),
+			logger.GetLogStreamServerInterceptor(),
 			grpcrecovery.StreamServerInterceptor(grpcrecovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
 		),
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 	)
 	srvMetrics.InitializeMetrics(grpcServer)
 	return grpcServer
@@ -154,12 +153,12 @@ func newHTTPServer(ctx context.Context, cfg *config.Config, reg prometheus.Gathe
 	}
 	log.Infof("starting HTTP server addr: %s", httpSrv.Addr)
 	if err := httpSrv.ListenAndServe(); err != nil {
-		log.Error(err)
+		log.Error(err.Error())
 		return
 	}
 
 	if err := httpSrv.Close(); err != nil {
-		log.Error(err)
+		log.Error(err.Error())
 		return
 	}
 }

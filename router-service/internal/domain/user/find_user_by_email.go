@@ -16,7 +16,7 @@ func (s *ServiceImpl) FindUserByEmail(ctx context.Context, pld *FindByEmailReque
 
 	if err := pld.Validate(s.validate); err != nil {
 		msg := fmt.Errorf("err validating payload: %w", err)
-		log.Error(msg)
+		log.Error(msg.Error())
 		return nil, msg
 	}
 

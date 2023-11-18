@@ -3,6 +3,7 @@ package order
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/lucasd-coder/fast-feet/router-service/internal/shared/errors"
@@ -14,13 +15,11 @@ import (
 func (s *ServiceImpl) GetAllOrder(ctx context.Context, pld *GetAllOrderPayload) (*pb.GetAllOrderResponse, error) {
 	log := logger.FromContext(ctx)
 
-	log.WithFields(map[string]interface{}{
-		"payload": pld,
-	}).Info("received request")
+	slog.With("payload", pld).Info("received request")
 
 	if err := pld.Validate(s.validate); err != nil {
 		msg := fmt.Errorf("err validating payload: %w", err)
-		log.Error(msg)
+		log.Error(msg.Error())
 		return nil, msg
 	}
 

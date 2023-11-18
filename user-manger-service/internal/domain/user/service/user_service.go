@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/mail"
 	"time"
 
@@ -13,7 +14,6 @@ import (
 	"github.com/lucasd-coder/fast-feet/user-manger-service/internal/domain/user/repository"
 	pkgErrors "github.com/lucasd-coder/fast-feet/user-manger-service/internal/errors"
 	pb "github.com/lucasd-coder/fast-feet/user-manger-service/pkg/pb"
-	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 )
@@ -30,11 +30,8 @@ func NewUserService(userRepo *repository.UserRepository) *UserService {
 }
 
 func (service *UserService) Save(ctx context.Context, req *pb.UserRequest) (*pb.UserResponse, error) {
-	log := logger.FromContext(ctx)
-
-	log.WithFields(logrus.Fields{
-		"payload": req,
-	}).Info("received request")
+	slog.With("payload", req).
+		Info("received request")
 
 	pld := model.User{
 		UserID:     req.GetUserId(),

@@ -10,7 +10,6 @@ import (
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -25,7 +24,7 @@ func NewClient(_ context.Context, cfg *config.Config) (*grpc.ClientConn, error) 
 
 	optlogger := shared.NewOptLogger(cfg)
 
-	logger := logger.NewLog(optlogger)
+	logger := logger.NewLogger(optlogger)
 
 	reg := prometheus.NewRegistry()
 	clMetrics := grpcprom.NewClientMetrics(
@@ -48,21 +47,19 @@ func NewClient(_ context.Context, cfg *config.Config) (*grpc.ClientConn, error) 
 		grpc_retry.WithCodes(codes.Unavailable, codes.DeadlineExceeded),
 	}
 
-	interceptorOpt := otelgrpc.WithTracerProvider(otel.GetTracerProvider())
 	conn, err := grpc.Dial(url,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithChainUnaryInterceptor(
-			otelgrpc.UnaryClientInterceptor(interceptorOpt),
 			clMetrics.UnaryClientInterceptor(grpcprom.WithExemplarFromContext(exemplarFromContext)),
 			grpc_retry.UnaryClientInterceptor(opts...),
-			logger.GetGRPCUnaryClientInterceptor(),
+			logger.GetLogUnaryClientInterceptor(),
 		),
 		grpc.WithChainStreamInterceptor(
-			otelgrpc.StreamClientInterceptor(interceptorOpt),
 			clMetrics.StreamClientInterceptor(grpcprom.WithExemplarFromContext(exemplarFromContext)),
 			grpc_retry.StreamClientInterceptor(opts...),
-			logger.GetGRPCStreamClientInterceptor(),
+			logger.GetLogStreamClientInterceptor(),
 		),
+		grpc.WithStatsHandler(otelgrpc.NewClientHandler()),
 	)
 	if err != nil {
 		return nil, err

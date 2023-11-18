@@ -50,7 +50,7 @@ require (
 	github.com/rabbitmq/amqp091-go v1.9.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/stretchr/objx v0.5.1 // indirect
-	go.opencensus.io v0.24.0
+	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.46.0
 	go.opentelemetry.io/otel/bridge/opencensus v0.43.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.20.0 // indirect

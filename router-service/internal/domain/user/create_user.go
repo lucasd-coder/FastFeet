@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/lucasd-coder/fast-feet/router-service/internal/shared"
@@ -15,7 +16,7 @@ func (s *ServiceImpl) Save(ctx context.Context, user *User) error {
 
 	if err := user.Validate(s.validate); err != nil {
 		msg := fmt.Errorf("err validating payload: %w", err)
-		log.Error(msg)
+		log.Error(msg.Error())
 		return msg
 	}
 
@@ -31,14 +32,14 @@ func (s *ServiceImpl) Save(ctx context.Context, user *User) error {
 	enc, err := codec.Encode(pld)
 	if err != nil {
 		msg := fmt.Errorf("err encoding payload: %w", err)
-		log.Error(msg)
+		log.Error(msg.Error())
 		return msg
 	}
 
 	encrypt, err := ciphers.Encrypt(ciphers.ExtractKey([]byte(s.cfg.AesKey)), enc)
 	if err != nil {
 		msg := fmt.Errorf("err encrypting payload: %w", err)
-		log.Error(msg)
+		log.Error(msg.Error())
 		return msg
 	}
 
@@ -52,18 +53,14 @@ func (s *ServiceImpl) Save(ctx context.Context, user *User) error {
 
 	if err := s.publish.Send(ctx, &msg); err != nil {
 		msg := fmt.Errorf("error publishing payload in queue: %w", err)
-		log.Error(msg)
+		log.Error(msg.Error())
 		return msg
 	}
 
-	fields := map[string]interface{}{
-		"payload": map[string]string{
-			"name":      pld.Data.Name,
-			"eventDate": eventDate,
-		},
-	}
-
-	log.WithFields(fields).Info("payload successfully processed")
+	slog.With("payload",
+		slog.String("name", pld.Data.Name),
+		slog.String("eventDate", eventDate),
+	).Info("payload successfully processed")
 
 	return nil
 }

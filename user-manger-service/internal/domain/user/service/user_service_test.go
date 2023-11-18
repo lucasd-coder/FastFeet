@@ -3,6 +3,7 @@ package service_test
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"testing"
 
@@ -315,9 +316,10 @@ func TestFindByEmail_GetUserSuccessfully(t *testing.T) {
 
 func SetUpLog(ctx context.Context) {
 	cfg := SetUpConfig()
-	optLog := shared.NewOptLogger(cfg)
-	log := logger.NewLog(optLog).GetLogger()
-	log.WithContext(ctx)
+	optlogger := shared.NewOptLogger(cfg)
+	logger := logger.NewLogger(optlogger)
+	logDefault := logger.GetLog()
+	slog.SetDefault(logDefault)
 }
 
 func SetUpConfig() *config.Config {

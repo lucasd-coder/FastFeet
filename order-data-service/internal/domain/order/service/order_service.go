@@ -3,14 +3,15 @@ package service
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
-	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	model "github.com/lucasd-coder/fast-feet/order-data-service/internal/domain/order"
 	"github.com/lucasd-coder/fast-feet/order-data-service/internal/domain/order/repository"
 	pkgErrors "github.com/lucasd-coder/fast-feet/order-data-service/internal/errors"
 	"github.com/lucasd-coder/fast-feet/order-data-service/internal/provider/validator"
 	"github.com/lucasd-coder/fast-feet/order-data-service/internal/shared"
 	"github.com/lucasd-coder/fast-feet/order-data-service/pkg/pb"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 )
 
 type OrderService struct {
@@ -28,9 +29,7 @@ func NewOrderService(
 func (s *OrderService) Save(ctx context.Context, req *pb.OrderRequest) (*pb.OrderResponse, error) {
 	log := logger.FromContext(ctx)
 
-	log.WithFields(map[string]interface{}{
-		"payload": req,
-	}).Info("received request")
+	slog.With("payload", req).Info("received request")
 
 	pld := model.CreateOrder{
 		DeliverymanID: req.GetDeliverymanId(),
@@ -71,9 +70,7 @@ func (s *OrderService) newAddress(req *pb.OrderRequest) model.Address {
 func (s *OrderService) GetAllOrder(ctx context.Context, req *pb.GetAllOrderRequest) (*pb.GetAllOrderResponse, error) {
 	log := logger.FromContext(ctx)
 
-	log.WithFields(map[string]interface{}{
-		"payload": req,
-	}).Info("received request")
+	slog.With("payload", req).Info("received request")
 
 	pld := &model.GetAllOrderRequest{
 		ID:            req.GetId(),

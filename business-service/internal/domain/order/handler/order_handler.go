@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/lucasd-coder/fast-feet/business-service/internal/domain/order"
 	"github.com/lucasd-coder/fast-feet/business-service/pkg/pb"
@@ -23,9 +24,7 @@ func (g *OrderHandler) GetAllOrder(ctx context.Context, req *pb.GetAllOrderReque
 	*pb.GetAllOrderResponse, error) {
 	log := logger.FromContext(ctx)
 
-	log.WithFields(map[string]interface{}{
-		"payload": req,
-	}).Info("received request")
+	slog.With("payload", req).Info("received request")
 
 	pld := g.newGetAllOrderRequest(req)
 

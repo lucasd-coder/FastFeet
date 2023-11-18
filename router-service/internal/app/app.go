@@ -2,10 +2,15 @@ package app
 
 import (
 	"context"
+	"fmt"
+	"log/slog"
 	"net/http"
+
+	"log"
 
 	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
+
 	"github.com/lucasd-coder/fast-feet/router-service/config"
 	"github.com/lucasd-coder/fast-feet/router-service/internal/controller"
 	"github.com/lucasd-coder/fast-feet/router-service/internal/provider/middleware"
@@ -23,17 +28,18 @@ func Run(cfg *config.Config) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	logger := logger.NewLog(optlogger)
-	log := logger.GetLogger()
+	logger := logger.NewLogger(optlogger)
+	logDefault := logger.GetLog()
+	slog.SetDefault(logDefault)
 
 	tp, err := monitor.RegisterOtel(ctx, &optOtel)
 	if err != nil {
-		log.Errorf("Error creating register otel: %v", err)
+		logDefault.Error("Error creating register otel ", err)
 		return
 	}
 	defer func() {
 		if err := tp.Shutdown(ctx); err != nil {
-			log.Errorf("Error shutting down tracer server provider: %v", err)
+			logDefault.Error("Error shutting down tracer server provider ", err)
 		}
 	}()
 
@@ -45,7 +51,7 @@ func Run(cfg *config.Config) {
 	r.Use(middleware.LoggerMiddleware)
 	r.Use(middleware.PromMiddleware)
 
-	log.Infof("Started listening... address[:%s]", cfg.Port)
+	logDefault.Info(fmt.Sprintf("Started listening... address[:%s]", cfg.Port))
 
 	userController := InitializeUserController()
 	orderController := InitializeOrderController()
@@ -74,7 +80,7 @@ func Run(cfg *config.Config) {
 	}
 
 	if err := s.Close(); err != nil {
-		log.Error(err)
+		logDefault.Error(err.Error())
 		return
 	}
 }

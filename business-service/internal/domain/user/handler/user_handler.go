@@ -2,10 +2,10 @@ package handler
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/lucasd-coder/fast-feet/business-service/internal/domain/user"
 	"github.com/lucasd-coder/fast-feet/business-service/pkg/pb"
-	"github.com/lucasd-coder/fast-feet/pkg/logger"
 )
 
 type UserHandler struct {
@@ -20,11 +20,8 @@ func NewUserHandler(h Handler) *UserHandler {
 }
 
 func (h *UserHandler) FindByEmail(ctx context.Context, req *pb.UserByEmailRequest) (*pb.UserResponse, error) {
-	log := logger.FromContext(ctx)
-
-	log.WithFields(map[string]interface{}{
-		"payload": req,
-	}).Info("received request")
+	slog.With("payload", req).
+		Info("received request")
 
 	pld := user.FindByEmailRequest{
 		Email: req.GetEmail(),
