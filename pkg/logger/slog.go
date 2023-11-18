@@ -56,7 +56,7 @@ func (l *Log) GetLog() *slog.Logger {
 
 	logger := slog.New(handler)
 
-	logger.With(slog.String("application", l.opt.AppName))
+	logger = logger.With(slog.String("application", l.opt.AppName))
 
 	return logger
 }

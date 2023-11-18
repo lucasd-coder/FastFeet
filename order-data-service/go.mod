@@ -6,7 +6,7 @@ require (
 	github.com/go-playground/validator/v10 v10.16.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/ilyakaznacheev/cleanenv v1.5.0
-	github.com/lucasd-coder/fast-feet v0.0.8
+	github.com/lucasd-coder/fast-feet v0.0.9
 	github.com/prometheus/client_golang v1.17.0
 	go.mongodb.org/mongo-driver v1.13.0
 	go.opentelemetry.io/otel/trace v1.20.0
