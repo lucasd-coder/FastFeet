@@ -7,12 +7,21 @@ import (
 	"os"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 )
 
 var opts = []logging.Option{
 	logging.WithLogOnEvents(logging.StartCall, logging.FinishCall),
 	logging.WithLogOnEvents(logging.PayloadReceived, logging.PayloadSent),
+	logging.WithFieldsFromContext(logTraceID),
+}
+
+var logTraceID = func(ctx context.Context) logging.Fields {
+	if span := trace.SpanContextFromContext(ctx); span.IsSampled() {
+		return logging.Fields{"traceID", span.TraceID().String()}
+	}
+	return nil
 }
 
 var (

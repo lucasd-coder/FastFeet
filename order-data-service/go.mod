@@ -6,7 +6,7 @@ require (
 	github.com/go-playground/validator/v10 v10.16.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/ilyakaznacheev/cleanenv v1.5.0
-	github.com/lucasd-coder/fast-feet v0.0.7
+	github.com/lucasd-coder/fast-feet v0.0.8
 	github.com/prometheus/client_golang v1.17.0
 	go.mongodb.org/mongo-driver v1.13.0
 	go.opentelemetry.io/otel/trace v1.20.0
@@ -29,7 +29,6 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/wire v0.5.0
-	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.0.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.18.1 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
@@ -40,7 +39,6 @@ require (
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/common v0.45.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
-	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
