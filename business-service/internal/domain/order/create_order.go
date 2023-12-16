@@ -40,7 +40,7 @@ func (s *ServiceImpl) CreateOrder(ctx context.Context, pld Payload) (*pb.OrderRe
 	}
 
 	if address.GetPostalCode() == "" {
-		log.Errorf("error validating address invalid to payload: %v", pld)
+		log.Error("error validating address invalid to", "payload", pld)
 		return nil, err
 	}
 

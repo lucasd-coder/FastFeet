@@ -1,0 +1,70 @@
+app:
+  name: business-service
+  version: 1.0.0
+  aes-key: 46cf5df2-d530-4532-92c4-fc3bd562dbee
+
+logger:
+  log-level: info
+  report-caller: false
+
+grpc:
+  port: 50053
+
+http:
+  port: 8089
+  timeout: 20s
+
+integration:
+  grpc:
+    user-manager-service:
+      url: localhost:50052
+      max-retry: 3
+      retry-wait-time: 5s
+      retry-max-wait-time: 20s
+    order-data-service:
+      url: localhost:50054
+      max-retry: 3
+      retry-wait-time: 5s
+      retry-max-wait-time: 20s
+    auth-service:
+      url: localhost:50055
+      max-retry: 3
+      retry-wait-time: 5s
+      retry-max-wait-time: 20s
+  http:
+    viacep:
+      url: https://viacep.com.br
+      max-conn: 20
+      max-routes: 20
+      read-timeout: 10s
+      conn-timeout: 10s
+      debug: true
+      request-timeout: 60s
+      max-retry: 3
+      retry-wait-time: 5s
+      retry-max-wait-time: 20s
+
+  rabbit-mq:
+    queue:
+      user-events:
+        url: rabbit://business-service-user-events
+        max-retry: 5
+        poll-delay-in-milliseconds: 100ms
+        max-concurrent-messages: 10
+        number-of-message-receivers: 1
+      order-events:
+        url: rabbit://business-service-order-events
+        max-retry: 5
+        poll-delay-in-milliseconds: 100ms
+        max-concurrent-messages: 10
+        number-of-message-receivers: 1
+  redis:
+    url: localhost:6379
+    db: 1
+    password: ${REDIS_HOST_PASSWORD}
+    ttl: 1h
+  
+  otlp:
+    url: localhost:4317
+    protocol: grpc
+    timeout: 20s
