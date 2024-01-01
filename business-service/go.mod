@@ -4,21 +4,21 @@ go 1.21.2
 
 require (
 	github.com/go-playground/validator/v10 v10.16.0
-	github.com/go-resty/resty/v2 v2.10.0
+	github.com/go-resty/resty/v2 v2.11.0
 	github.com/google/wire v0.5.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/lucasd-coder/fast-feet v0.0.10
-	github.com/prometheus/client_golang v1.17.0
-	github.com/redis/go-redis/v9 v9.3.0
+	github.com/prometheus/client_golang v1.18.0
+	github.com/redis/go-redis/v9 v9.3.1
 	github.com/stretchr/testify v1.8.4
-	go.opentelemetry.io/otel/trace v1.20.0
-	gocloud.dev v0.34.0
-	gocloud.dev/pubsub/rabbitpubsub v0.34.0
-	golang.org/x/crypto v0.15.0
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20231106174013-bbf56f31fb17
-	google.golang.org/grpc v1.59.0
-	google.golang.org/protobuf v1.31.0
+	go.opentelemetry.io/otel/trace v1.21.0
+	gocloud.dev v0.36.0
+	gocloud.dev/pubsub/rabbitpubsub v0.36.0
+	golang.org/x/crypto v0.17.0
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20231212172506-995d672761c0
+	google.golang.org/grpc v1.60.1
+	google.golang.org/protobuf v1.32.0
 )
 
 require (
@@ -31,7 +31,7 @@ require (
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
-	github.com/go-logr/logr v1.3.0 // indirect
+	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
@@ -52,26 +52,26 @@ require (
 	github.com/redis/go-redis/extra/redisotel/v9 v9.0.5
 	github.com/stretchr/objx v0.5.1 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.46.0
-	go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace v0.46.0
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.46.0
-	go.opentelemetry.io/otel v1.20.0
-	go.opentelemetry.io/otel/bridge/opencensus v0.43.0
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.20.0 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.20.0 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.20.0 // indirect
-	go.opentelemetry.io/otel/metric v1.20.0 // indirect
-	go.opentelemetry.io/otel/sdk v1.20.0 // indirect
-	go.opentelemetry.io/otel/sdk/metric v1.20.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.46.1
+	go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace v0.46.1
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.46.1
+	go.opentelemetry.io/otel v1.21.0
+	go.opentelemetry.io/otel/bridge/opencensus v0.44.0
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.21.0 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.21.0 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.21.0 // indirect
+	go.opentelemetry.io/otel/metric v1.21.0 // indirect
+	go.opentelemetry.io/otel/sdk v1.21.0 // indirect
+	go.opentelemetry.io/otel/sdk/metric v1.21.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.0.0 // indirect
-	golang.org/x/net v0.18.0 // indirect
+	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/sync v0.5.0 // indirect
-	golang.org/x/sys v0.14.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
-	google.golang.org/api v0.150.0 // indirect
+	google.golang.org/api v0.154.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20231106174013-bbf56f31fb17 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20231212172506-995d672761c0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	olympos.io/encoding/edn v0.0.0-20201019073823-d3554ca0b0a3 // indirect
 )

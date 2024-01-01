@@ -6,13 +6,22 @@ import (
 	"time"
 
 	model "github.com/lucasd-coder/fast-feet/business-service/internal/domain/user"
-	val "github.com/lucasd-coder/fast-feet/business-service/internal/provider/validator"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/provider/validator"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/shared"
+	"github.com/stretchr/testify/suite"
 )
 
-func TestPayloadValidate(t *testing.T) {
-	validation := val.NewValidation()
+type UserSuite struct {
+	suite.Suite
+	val shared.Validator
+}
 
+func (suite *UserSuite) SetupSuite() {
+	val := validator.NewValidation()
+	suite.val = val
+}
+
+func (suite *UserSuite) TestPayloadValidate() {
 	type fields struct {
 		Name       string
 		Email      string
@@ -58,7 +67,7 @@ func TestPayloadValidate(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		suite.Run(tt.name, func() {
 			payload := &model.Payload{
 				Data: model.Data{
 					Name:       tt.fields.Name,
@@ -70,14 +79,15 @@ func TestPayloadValidate(t *testing.T) {
 				},
 				EventDate: time.Now().Format(time.RFC3339),
 			}
-			if err := payload.Validate(validation); (err != nil) != tt.wantErr {
-				t.Errorf("Payload.Validate() error = %v, wantErr %v", err, tt.wantErr)
+
+			if err := payload.Validate(suite.val); (err != nil) != tt.wantErr {
+				suite.T().Errorf("Payload.Validate() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
 }
 
-func TestPayloadToRegister(t *testing.T) {
+func (suite *UserSuite) TestPayloadToRegister() {
 	type fields struct {
 		Name       string
 		Email      string
@@ -109,8 +119,9 @@ func TestPayloadToRegister(t *testing.T) {
 			},
 		},
 	}
+
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		suite.Run(tt.name, func() {
 			payload := &model.Payload{
 				Data: model.Data{
 					Name:       tt.fields.Name,
@@ -123,13 +134,13 @@ func TestPayloadToRegister(t *testing.T) {
 				EventDate: time.Now().Format(time.RFC3339),
 			}
 			if got := payload.ToRegister(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Payload.ToRegister() = %v, want %v", got, tt.want)
+				suite.T().Errorf("Payload.ToRegister() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestPayloadToUser(t *testing.T) {
+func (suite *UserSuite) TestPayloadToUser() {
 	type fields struct {
 		Name       string
 		Email      string
@@ -169,8 +180,9 @@ func TestPayloadToUser(t *testing.T) {
 			},
 		},
 	}
+
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		suite.Run(tt.name, func() {
 			payload := &model.Payload{
 				Data: model.Data{
 					Name:       tt.fields.Name,
@@ -183,8 +195,49 @@ func TestPayloadToUser(t *testing.T) {
 				EventDate: time.Now().Format(time.RFC3339),
 			}
 			if got := payload.ToUser(tt.args.userID); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Payload.ToUser() = %v, want %v", got, tt.want)
+				suite.T().Errorf("Payload.ToUser() = %v, want %v", got, tt.want)
 			}
 		})
 	}
+}
+
+func (suite *UserSuite) TestFindByEmailRequest() {
+	type fields struct {
+		Email string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{
+			name:    "should validate email invalid",
+			fields:  fields{"12345678"},
+			wantErr: true,
+		},
+		{
+			name:    "should validate email valid",
+			fields:  fields{"maria@gmail.com"},
+			wantErr: false,
+		},
+		{
+			name:    "should validate poorly formatted email",
+			fields:  fields{"maria@gmail.com "},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		payload := &model.FindByEmailRequest{
+			Email: tt.fields.Email,
+		}
+
+		if err := payload.Validate(suite.val); (err != nil) != tt.wantErr {
+			suite.T().Errorf("Payload.Validate() error = %v, wantErr %v", err, tt.wantErr)
+		}
+	}
+}
+
+func TestUserSuite(t *testing.T) {
+	suite.Run(t, new(UserSuite))
 }
