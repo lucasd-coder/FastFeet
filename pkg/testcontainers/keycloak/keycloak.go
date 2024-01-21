@@ -1,4 +1,4 @@
-package testcontainers
+package keycloak
 
 import (
 	"context"

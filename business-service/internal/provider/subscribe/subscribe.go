@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"runtime"
 	"sync"
 	"time"
 
@@ -14,7 +15,6 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/bridge/opencensus"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 	"gocloud.dev/pubsub"
@@ -99,6 +99,7 @@ func (s *Subscription) start(ctx context.Context, client *pubsub.Subscription, w
 				defer func() {
 					<-sem
 					wg.Done()
+					currentMsg.Ack()
 				}()
 
 				if err := s.processMessage(ctx, currentMsg.Body); err != nil {
@@ -108,7 +109,7 @@ func (s *Subscription) start(ctx context.Context, client *pubsub.Subscription, w
 					}
 					return
 				}
-				defer currentMsg.Ack()
+				runtime.Goexit()
 			}(ctx, msg)
 		}
 	}
@@ -235,7 +236,6 @@ func (s *Subscription) createMetrics(status string, queueName string, observeTim
 func (s *Subscription) initializeTracer() trace.Tracer {
 	traceName := "gocloud.dev/pubsub/Subscription.Receive"
 	tracer := otel.GetTracerProvider().Tracer(traceName)
-	opencensus.InstallTraceBridge()
 
 	return tracer
 }

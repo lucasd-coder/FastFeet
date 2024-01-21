@@ -51,6 +51,7 @@ k8s_create_infra:
 
 k8s_setup:
 	./infra/script/create-secrets.sh
+	./infra/script/setup.sh
 
 .PHONY: k8s_del_app
 

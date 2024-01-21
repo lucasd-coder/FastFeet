@@ -9,7 +9,6 @@ import (
 	"github.com/lucasd-coder/fast-feet/router-service/internal/shared"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/bridge/opencensus"
 	"go.opentelemetry.io/otel/trace"
 	"gocloud.dev/pubsub"
 )
@@ -29,7 +28,6 @@ func (p *Published) Send(ctx context.Context, msg *shared.Message) error {
 
 	traceName := "gocloud.dev/pubsub/Topic.Send"
 	tracer := otel.GetTracerProvider().Tracer(traceName)
-	opencensus.InstallTraceBridge()
 
 	commonAttrs := []attribute.KeyValue{
 		attribute.String("queueURL", p.opt.TopicURL),

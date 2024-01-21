@@ -33,6 +33,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.opentelemetry.io/otel/bridge/opencensus"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
@@ -66,6 +67,8 @@ func Run(cfg *config.Config) {
 			log.Fatalf("Error shutting down tracer server provider: %v", err)
 		}
 	}()
+
+	opencensus.InstallTraceBridge()
 	reg := prometheus.NewRegistry()
 
 	grpcServer := newGrpcServer(ctx, logger, reg)

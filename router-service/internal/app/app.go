@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
+	"go.opentelemetry.io/otel/bridge/opencensus"
 
 	"github.com/lucasd-coder/fast-feet/router-service/config"
 	"github.com/lucasd-coder/fast-feet/router-service/internal/controller"
@@ -42,7 +43,7 @@ func Run(cfg *config.Config) {
 			logDefault.Error("Error shutting down tracer server provider ", err)
 		}
 	}()
-
+	opencensus.InstallTraceBridge()
 	r := chi.NewRouter()
 	r.Use(middleware.OpenTelemetryMiddleware(cfg.Name))
 	r.Use(chiMiddleware.Recoverer)
