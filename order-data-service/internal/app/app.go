@@ -24,6 +24,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/lucasd-coder/fast-feet/order-data-service/config"
+	"github.com/lucasd-coder/fast-feet/order-data-service/internal/domain/order/service"
 	"github.com/lucasd-coder/fast-feet/order-data-service/internal/shared"
 	"github.com/lucasd-coder/fast-feet/order-data-service/pkg/pb"
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
@@ -164,7 +165,7 @@ func newHTTPServer(ctx context.Context, cfg *config.Config, reg prometheus.Gathe
 }
 
 func registerServices(grpcServer *grpc.Server) {
-	orderService := InitializeOrderService()
+	orderService := service.NewOrderService(InitializeValidator(), InitializeOrderRepository())
 	pb.RegisterOrderServiceServer(grpcServer, orderService)
 	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
 	reflection.Register(grpcServer)

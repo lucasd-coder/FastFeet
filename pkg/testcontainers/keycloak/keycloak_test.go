@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	pkgkeycloak "github.com/lucasd-coder/fast-feet/pkg/testcontainers/keycloak"
 	keycloak "github.com/stillya/testcontainers-keycloak"
 )
 
@@ -41,7 +42,7 @@ func TestMain(m *testing.M) {
 func setup() {
 	var err error
 	ctx := context.Background()
-	keycloakContainer, err = keycloak.RunContainer(ctx)
+	keycloakContainer, err = pkgkeycloak.RunContainer(ctx)
 	if err != nil {
 		panic(err)
 	}

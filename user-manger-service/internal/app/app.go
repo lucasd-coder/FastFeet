@@ -28,6 +28,7 @@ import (
 	"github.com/lucasd-coder/fast-feet/pkg/monitor"
 	"github.com/lucasd-coder/fast-feet/pkg/profiler"
 	"github.com/lucasd-coder/fast-feet/user-manger-service/config"
+	"github.com/lucasd-coder/fast-feet/user-manger-service/internal/domain/user/service"
 	"github.com/lucasd-coder/fast-feet/user-manger-service/internal/shared"
 	"github.com/lucasd-coder/fast-feet/user-manger-service/pkg/pb"
 	"google.golang.org/grpc"
@@ -164,7 +165,7 @@ func newHTTPServer(ctx context.Context, cfg *config.Config, reg prometheus.Gathe
 }
 
 func registerServices(grpcServer *grpc.Server) {
-	userService := InitializeUserService()
+	userService := service.NewUserService(InitializeUserRepository(), InitializeValidator())
 	pb.RegisterUserServiceServer(grpcServer, userService)
 	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
 	reflection.Register(grpcServer)

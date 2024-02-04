@@ -23,7 +23,7 @@ func TestPattern(t *testing.T) {
 	invalidCases := []testStruct{
 		{Field: "abcd!@#$"},
 		{Field: "abc@&%%%$&&def"},
-		{Field: "A B C"},
+		{Field: "A B C *&&&$$##@"},
 	}
 
 	valInst = validator.New()

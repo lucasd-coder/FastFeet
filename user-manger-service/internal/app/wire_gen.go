@@ -11,6 +11,11 @@ import (
 	"github.com/lucasd-coder/fast-feet/user-manger-service/config"
 	"github.com/lucasd-coder/fast-feet/user-manger-service/internal/domain/user/repository"
 	"github.com/lucasd-coder/fast-feet/user-manger-service/internal/domain/user/service"
+	"github.com/lucasd-coder/fast-feet/user-manger-service/internal/provider/validator"
+)
+
+import (
+	_ "net/http/pprof"
 )
 
 // Injectors from wire.go:
@@ -22,8 +27,14 @@ func InitializeUserRepository() *repository.UserRepository {
 	return userRepository
 }
 
+func InitializeValidator() *validator.Validation {
+	validation := validator.NewValidation()
+	return validation
+}
+
 func InitializeUserService() *service.UserService {
 	userRepository := InitializeUserRepository()
-	userService := service.NewUserService(userRepository)
+	validation := InitializeValidator()
+	userService := service.NewUserService(userRepository, validation)
 	return userService
 }

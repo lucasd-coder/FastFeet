@@ -11,8 +11,9 @@ import (
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/lucasd-coder/fast-feet/pkg/val"
 	model "github.com/lucasd-coder/fast-feet/user-manger-service/internal/domain/user"
-	"github.com/lucasd-coder/fast-feet/user-manger-service/internal/domain/user/repository"
 	pkgErrors "github.com/lucasd-coder/fast-feet/user-manger-service/internal/errors"
+	"github.com/lucasd-coder/fast-feet/user-manger-service/internal/provider/validator"
+	"github.com/lucasd-coder/fast-feet/user-manger-service/internal/shared"
 	pb "github.com/lucasd-coder/fast-feet/user-manger-service/pkg/pb"
 	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
@@ -21,11 +22,15 @@ import (
 type UserService struct {
 	pb.UnimplementedUserServiceServer
 	UserRepository model.UserRepository
+	validate       shared.Validator
 }
 
-func NewUserService(userRepo *repository.UserRepository) *UserService {
+func NewUserService(userRepo model.UserRepository,
+	val *validator.Validation,
+) *UserService {
 	return &UserService{
 		UserRepository: userRepo,
+		validate:       val,
 	}
 }
 
@@ -42,7 +47,7 @@ func (service *UserService) Save(ctx context.Context, req *pb.UserRequest) (*pb.
 		CreatedAt:  time.Now(),
 	}
 
-	if err := pld.Validate(); err != nil {
+	if err := pld.Validate(service.validate); err != nil {
 		return nil, pkgErrors.ValidationErrors(err)
 	}
 

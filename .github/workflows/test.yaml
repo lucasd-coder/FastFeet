@@ -15,7 +15,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@master
     - name: Test
-      run: go mod tidy && go test ./... -coverprofile=coverage.out
+      run: make test
 
     - name: Upload coverage report
       uses: codecov/codecov-action@v3

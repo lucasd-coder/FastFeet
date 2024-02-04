@@ -67,3 +67,8 @@ k8s_del_infra:
 
 k8s_del_secret:
 	./infra/script/delete-secrets.sh
+
+.PHONY: test
+
+test:
+	find . -name go.mod -execdir go test -timeout 60s -race  -coverprofile=coverage.out -tags=integration ./... \;
