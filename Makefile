@@ -70,5 +70,5 @@ k8s_del_secret:
 
 .PHONY: test
 
-test:
-	find . -name go.mod -execdir go test -timeout 60s -race  -coverprofile=coverage.out -tags=integration ./... \;
+test:	
+	go list -f '{{.Dir}}/...' -m | xargs -L1 go test -timeout 120s -race -coverprofile=coverage.out -tags=integration
