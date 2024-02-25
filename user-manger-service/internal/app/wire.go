@@ -8,7 +8,7 @@ import (
 	"github.com/lucasd-coder/fast-feet/pkg/mongodb"
 	"github.com/lucasd-coder/fast-feet/user-manger-service/config"
 	"github.com/lucasd-coder/fast-feet/user-manger-service/internal/domain/user/repository"
-	"github.com/lucasd-coder/fast-feet/user-manger-service/internal/domain/user/service"
+	val "github.com/lucasd-coder/fast-feet/user-manger-service/internal/provider/validator"
 )
 
 func InitializeUserRepository() *repository.UserRepository {
@@ -16,7 +16,7 @@ func InitializeUserRepository() *repository.UserRepository {
 	return &repository.UserRepository{}
 }
 
-func InitializeUserService() *service.UserService {
-	wire.Build(InitializeUserRepository, service.NewUserService)
-	return &service.UserService{}
+func InitializeValidator() *val.Validation {
+	wire.Build(val.NewValidation)
+	return nil
 }

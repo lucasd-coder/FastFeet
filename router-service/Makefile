@@ -3,7 +3,7 @@ FIND ?= $(shell find proto/ -iname "*.proto")
 
 GOPATH ?= go env GOPATH
 
-.PHONY: proto-gen generate-mocks wire-gen wire-check run-application test coverage
+.PHONY: proto-gen generate-mocks wire-gen wire-check run-application test coverage go-tidy
 
 proto-gen:	
 	protoc --proto_path=proto/ $(FIND) \
@@ -28,4 +28,7 @@ test:
 coverage:
 	GO111MODULE=on go test -coverprofile coverage.out ./...
 	GO111MODULE=on go tool cover -html=coverage.out
+
+go-tidy:
+	go mod tidy -go=1.21.2
 

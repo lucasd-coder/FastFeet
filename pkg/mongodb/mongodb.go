@@ -2,9 +2,10 @@ package mongodb
 
 import (
 	"context"
+	"log"
+	"log/slog"
 	"time"
 
-	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo"
@@ -18,8 +19,6 @@ type Option struct {
 }
 
 func SetUpMongoDB(ctx context.Context, opt *Option) {
-	log := logger.FromContext(ctx)
-
 	opts := options.Client().ApplyURI(opt.URL)
 	opts.Monitor = otelmongo.NewMonitor()
 	opts.SetConnectTimeout(opt.ConnTimeout)
@@ -35,7 +34,7 @@ func SetUpMongoDB(ctx context.Context, opt *Option) {
 		return
 	}
 
-	log.Info("MongoDB Connected")
+	slog.Info("MongoDB Connected")
 
 	client = mongoClient
 }

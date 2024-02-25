@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 
 	model "github.com/lucasd-coder/fast-feet/business-service/internal/domain/order"
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
@@ -18,11 +19,7 @@ func (h *Handler) CreateOrderHandler(ctx context.Context, m []byte) error {
 		return fmt.Errorf("err Unmarshal: %w", err)
 	}
 
-	fields := map[string]interface{}{
-		"payload": pld,
-	}
-
-	log.WithFields(fields).Info("received payload")
+	slog.With("payload", pld).Info("received payload")
 
 	resp, err := h.service.CreateOrder(ctx, pld)
 	if err != nil {

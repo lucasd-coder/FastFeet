@@ -33,9 +33,9 @@ func (s *ServiceImpl) GetAllOrder(ctx context.Context, pld *GetAllOrderRequest) 
 		}
 	}
 
-	reqOrderService := s.newGetOrderServiceAllOrderRequest(pld)
+	reqData := s.newGetOrderServiceAllOrderRequest(pld)
 
-	resp, err := s.orderRepository.GetAllOrder(ctx, reqOrderService)
+	resp, err := s.orderRepository.GetAllOrder(ctx, reqData)
 	if err != nil {
 		return nil, fmt.Errorf("error when call order-data err: %w", err)
 	}

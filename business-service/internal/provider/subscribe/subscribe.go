@@ -3,6 +3,8 @@ package subscribe
 import (
 	"context"
 	"fmt"
+	"log"
+	"runtime"
 	"sync"
 	"time"
 
@@ -11,10 +13,8 @@ import (
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/lucasd-coder/fast-feet/pkg/monitor"
 
-	octrace "go.opencensus.io/trace"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/bridge/opencensus"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 	"gocloud.dev/pubsub"
@@ -45,9 +45,9 @@ func (s *Subscription) Start(ctx context.Context) {
 	mutex.Lock()
 	tracer := s.initializeTracer()
 	mutex.Unlock()
-	log := logger.FromContext(ctx)
+	logDefault := logger.FromContext(ctx)
 
-	log.Infof("Subscription has been started.... for queueURL: %s", s.opt.QueueURL)
+	logDefault.Infof("Subscription has been started.... for queueURL: %s", s.opt.QueueURL)
 
 	commonAttrs := []attribute.KeyValue{
 		attribute.String("queueURL", s.opt.QueueURL),
@@ -62,7 +62,7 @@ func (s *Subscription) Start(ctx context.Context) {
 	client, err := NewClient(ctx, s.opt)
 	if err != nil {
 		span.RecordError(err)
-		log.Errorf("error creating subscription client: %v, for queueURL", err, s.opt.QueueURL)
+		logDefault.Errorf("error creating subscription client: %v, for queueURL", err, s.opt.QueueURL)
 	}
 
 	defer func() {
@@ -99,6 +99,7 @@ func (s *Subscription) start(ctx context.Context, client *pubsub.Subscription, w
 				defer func() {
 					<-sem
 					wg.Done()
+					currentMsg.Ack()
 				}()
 
 				if err := s.processMessage(ctx, currentMsg.Body); err != nil {
@@ -108,7 +109,7 @@ func (s *Subscription) start(ctx context.Context, client *pubsub.Subscription, w
 					}
 					return
 				}
-				defer currentMsg.Ack()
+				runtime.Goexit()
 			}(ctx, msg)
 		}
 	}
@@ -235,7 +236,6 @@ func (s *Subscription) createMetrics(status string, queueName string, observeTim
 func (s *Subscription) initializeTracer() trace.Tracer {
 	traceName := "gocloud.dev/pubsub/Subscription.Receive"
 	tracer := otel.GetTracerProvider().Tracer(traceName)
-	octrace.DefaultTracer = opencensus.NewTracer(tracer)
 
 	return tracer
 }

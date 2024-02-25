@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "./pkg/pb";
+
+service RegisterHandler {
+    rpc CreateUser (RegisterRequest) returns (RegisterResponse) ;
+}
+
+enum Roles {
+    UNKNOWN = 0;
+    ADMIN = 1;
+    USER = 2;
+}
+
+message RegisterRequest {
+    string firstName = 1;
+    string lastName = 2;
+    string username = 3;
+    string password = 4;
+    Roles authority = 5;
+}
+
+message RegisterResponse {
+    string id = 1;
+}

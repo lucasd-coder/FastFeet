@@ -1,278 +1,160 @@
 package handler_test
 
-// func TestHandler_InvalidPayload(t *testing.T) {
-// 	model := &model.Payload{
-// 		Data: model.Data{
-// 			Name:       "",
-// 			Email:      "test validate email",
-// 			CPF:        "",
-// 			Password:   "",
-// 			Authority:  "",
-// 			Attributes: map[string]string{},
-// 		},
-// 	}
+import (
+	"context"
+	"log/slog"
+	"net"
+	"os"
+	"path/filepath"
+	"testing"
+	"time"
 
-// 	pld, err := encode(model)
-// 	require.NoError(t, err)
+	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/lucasd-coder/fast-feet/business-service/config"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/domain/user"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/domain/user/handler"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/mocks"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/provider/validator"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/shared"
+	"github.com/lucasd-coder/fast-feet/business-service/pkg/pb"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
+	"google.golang.org/grpc/test/bufconn"
+)
 
-// 	ctx := context.Background()
+type UserHandlerSuite struct {
+	suite.Suite
+	cfg         config.Config
+	userHandler *handler.UserHandler
+	ctx         context.Context
+	conn        *grpc.ClientConn
+	repoUser    *mocks.UserRepository_internal_domain_user
+	repoAuth    *mocks.AuthRepository_internal_shared
+}
 
-// 	SetUpLog(ctx)
+func (suite *UserHandlerSuite) SetupSuite() {
+	suite.ctx = context.Background()
+	baseDir, err := os.Getwd()
+	if err != nil {
+		suite.T().Errorf("os.Getwd() error = %v", err)
+		return
+	}
+	os.Setenv("REDIS_HOST_PASSWORD", "123456")
+	os.Setenv("RABBIT_SERVER_URL", "amqp://localhost:5672/fastfeet")
 
-// 	cfg := SetUpConfig()
+	staticDir := filepath.Join(baseDir, "..", "..", "..", "..", "/config/config-test.yml")
 
-// 	userRepoMock := new(mocks.UserRepository_internal_domain_user)
-// 	authRepoMock := new(mocks.AuthRepository_internal_shared)
-// 	valMock := new(mocks.Validator_internal_shared)
+	slog.Info("config lod", "dir", staticDir)
+	err = cleanenv.ReadConfig(staticDir, &suite.cfg)
+	if err != nil {
+		suite.T().Errorf("cleanenv.ReadConfig() error = %v", err)
+		return
+	}
+	config.ExportConfig(&suite.cfg)
+}
 
-// 	handler := handler.NewUserHandler(userRepoMock, authRepoMock, cfg, valMock)
-// 	err = handler.Handler(ctx, pld)
-// 	assert.NotNil(t, err)
-// }
+func (suite *UserHandlerSuite) SetupTest() {
+	lis := bufconn.Listen(1024 * 1024)
+	suite.T().Cleanup(func() {
+		lis.Close()
+	})
 
-// func TestHandler_UserWithEmailAlreadyExist(t *testing.T) {
-// 	model := &model.Payload{
-// 		Data: model.Data{
-// 			Name:       "maria",
-// 			Email:      "maria@gmail.com",
-// 			CPF:        "080.705.460-77",
-// 			Password:   "123456",
-// 			Authority:  "USER",
-// 			Attributes: map[string]string{},
-// 		},
-// 		EventDate: time.Now().Format(time.RFC3339),
-// 	}
+	srv := grpc.NewServer()
+	suite.T().Cleanup(func() {
+		srv.Stop()
+	})
 
-// 	userByEmailRequest := &pb.UserByEmailRequest{
-// 		Email: model.Data.Email,
-// 	}
+	val := validator.NewValidation()
+	repoAuth := new(mocks.AuthRepository_internal_shared)
+	repoUser := new(mocks.UserRepository_internal_domain_user)
 
-// 	userResp := &pb.UserResponse{
-// 		Id:         "46c77402-ba50-4b48-9bd9-1c4f97e36565",
-// 		Name:       model.Data.Name,
-// 		Email:      model.Data.Email,
-// 		Attributes: model.Data.Attributes,
-// 	}
+	suite.repoAuth = repoAuth
+	suite.repoUser = repoUser
+	svc := user.NewService(repoUser, repoAuth, val)
+	hdler := handler.NewHandler(svc, &suite.cfg)
+	suite.userHandler = handler.NewUserHandler(*hdler)
 
-// 	pld, err := encode(model)
-// 	require.NoError(t, err)
+	pb.RegisterUserHandlerServer(srv, suite.userHandler)
 
-// 	ctx := context.Background()
+	go func() {
+		if err := srv.Serve(lis); err != nil {
+			suite.T().Error(err)
+		}
+	}()
 
-// 	SetUpLog(ctx)
+	dialer := func(context.Context, string) (net.Conn, error) {
+		return lis.Dial()
+	}
 
-// 	cfg := SetUpConfig()
+	ctx, cancel := context.WithTimeout(suite.ctx, 3*time.Second)
+	suite.T().Cleanup(func() {
+		cancel()
+	})
 
-// 	userRepoMock := new(mocks.UserRepository_internal_domain_user)
-// 	authRepoMock := new(mocks.AuthRepository_internal_shared)
-// 	valMock := new(mocks.Validator_internal_shared)
+	conn, err := grpc.DialContext(ctx, "",
+		grpc.WithContextDialer(dialer),
+		grpc.WithTransportCredentials(insecure.NewCredentials()))
+	suite.T().Cleanup(func() {
+		conn.Close()
+	})
+	if err != nil {
+		suite.T().Fatalf("grpc.DialContext %v", err)
+	}
+	suite.conn = conn
+}
 
-// 	userRepoMock.On("FindByEmail", ctx, userByEmailRequest).Return(userResp, nil)
+func (suite *UserHandlerSuite) TestFindByEmail() {
+	client := pb.NewUserHandlerClient(suite.conn)
 
-// 	handler := handler.NewUserHandler(userRepoMock, authRepoMock, cfg, valMock)
-// 	err = handler.Handler(ctx, pld)
-// 	assert.ErrorIs(t, err, shared.ErrUserAlreadyExist)
-// }
+	in := &pb.UserByEmailRequest{
+		Email: "maria12@gmail.com",
+	}
 
-// func TestHandler_UserWithCPFAlreadyExist(t *testing.T) {
-// 	model := &model.Payload{
-// 		Data: model.Data{
-// 			Name:       "maria",
-// 			Email:      "maria@gmail.com",
-// 			CPF:        "080.705.460-77",
-// 			Password:   "123456",
-// 			Authority:  "USER",
-// 			Attributes: map[string]string{},
-// 		},
-// 		EventDate: time.Now().Format(time.RFC3339),
-// 	}
+	user := &pb.UserResponse{
+		Id:    "1c42d3bf-6f10-40b6-94d6-e412c6287e5a",
+		Name:  "maria",
+		Email: "maria12@gmail.com",
+	}
 
-// 	userByCpfRequest := &pb.UserByCpfRequest{
-// 		Cpf: model.Data.CPF,
-// 	}
+	suite.repoUser.On("FindByEmail", mock.Anything, mock.Anything).Return(user, nil)
 
-// 	userByEmailRequest := &pb.UserByEmailRequest{
-// 		Email: model.Data.Email,
-// 	}
+	resp, err := client.FindByEmail(suite.ctx, in)
+	suite.NoError(err)
+	suite.Equal(resp.GetEmail(), user.GetEmail())
+	suite.Equal(resp.GetId(), user.GetId())
+}
 
-// 	userResp := &pb.UserResponse{
-// 		Id:         "46c77402-ba50-4b48-9bd9-1c4f97e36565",
-// 		Name:       model.Data.Name,
-// 		Email:      model.Data.Email,
-// 		Attributes: model.Data.Attributes,
-// 	}
+func (suite *UserHandlerSuite) TestFindByEmail_ValidateFailure() {
+	client := pb.NewUserHandlerClient(suite.conn)
 
-// 	pld, err := encode(model)
-// 	require.NoError(t, err)
+	in := &pb.UserByEmailRequest{
+		Email: "email invalid",
+	}
 
-// 	ctx := context.Background()
+	_, err := client.FindByEmail(suite.ctx, in)
+	suite.Error(err)
+	suite.Equal(status.Code(err), codes.InvalidArgument)
+}
 
-// 	SetUpLog(ctx)
+func (suite *UserHandlerSuite) TestFindByEmail_UserNotFound() {
+	client := pb.NewUserHandlerClient(suite.conn)
 
-// 	cfg := SetUpConfig()
+	in := &pb.UserByEmailRequest{
+		Email: "maria12@gmail.com",
+	}
 
-// 	userRepoMock := new(mocks.UserRepository_internal_domain_user)
-// 	authRepoMock := new(mocks.AuthRepository_internal_shared)
-// 	valMock := new(mocks.Validator_internal_shared)
+	suite.repoUser.On("FindByEmail", mock.Anything, mock.Anything).Return(nil, shared.NotFoundError(shared.ErrUserNotFound))
 
-// 	userRepoMock.On("FindByEmail", ctx, userByEmailRequest).Return(&pb.UserResponse{}, nil)
+	_, err := client.FindByEmail(suite.ctx, in)
+	st, ok := status.FromError(err)
+	suite.True(ok)
+	suite.Equal(st.Code(), codes.NotFound)
+}
 
-// 	userRepoMock.On("FindByCpf", ctx, userByCpfRequest).Return(userResp, nil)
-
-// 	handler := handler.NewUserHandler(userRepoMock, authRepoMock, cfg, valMock)
-// 	err = handler.Handler(ctx, pld)
-// 	assert.ErrorIs(t, err, shared.ErrUserAlreadyExist)
-// }
-
-// func TestHandler_AuthAlreadyExist(t *testing.T) {
-// 	payload := &model.Payload{
-// 		Data: model.Data{
-// 			Name:       "maria",
-// 			Email:      "maria@gmail.com",
-// 			CPF:        "080.705.460-77",
-// 			Password:   "123456",
-// 			Authority:  "USER",
-// 			Attributes: map[string]string{},
-// 		},
-// 		EventDate: time.Now().Format(time.RFC3339),
-// 	}
-// 	userResp := &pb.UserResponse{
-// 		Id:         "46c77402-ba50-4b48-9bd9-1c4f97e36565",
-// 		Name:       payload.Data.Name,
-// 		Email:      payload.Data.Email,
-// 		Attributes: payload.Data.Attributes,
-// 	}
-// 	userByCpfRequest := &pb.UserByCpfRequest{
-// 		Cpf: payload.Data.CPF,
-// 	}
-// 	userByEmailRequest := &pb.UserByEmailRequest{
-// 		Email: payload.Data.Email,
-// 	}
-
-// 	getUserResp := &shared.GetUserResponse{
-// 		ID:       "46c77402-ba50-4b48-9bd9-1c4f97e36565",
-// 		Email:    payload.Data.Email,
-// 		Username: payload.Data.Email,
-// 		Enabled:  true,
-// 	}
-
-// 	pld, err := encode(payload)
-// 	require.NoError(t, err)
-
-// 	ctx := context.Background()
-// 	SetUpLog(ctx)
-
-// 	cfg := SetUpConfig()
-
-// 	userRepoMock := new(mocks.UserRepository_internal_domain_user)
-// 	authRepoMock := new(mocks.AuthRepository_internal_shared)
-// 	valMock := new(mocks.Validator_internal_shared)
-
-// 	userRepoMock.On("FindByEmail", ctx, userByEmailRequest).Return(&pb.UserResponse{}, nil)
-
-// 	userRepoMock.On("FindByCpf", ctx, userByCpfRequest).Return(&pb.UserResponse{}, nil)
-
-// 	authRepoMock.On("FindByEmail", ctx, payload.Data.Email).Return(getUserResp, nil)
-
-// 	userRepoMock.On("Save", ctx, mock.Anything).Return(userResp, nil)
-
-// 	handler := handler.NewUserHandler(userRepoMock, authRepoMock, cfg, valMock)
-// 	err = handler.Handler(ctx, pld)
-// 	assert.Nil(t, err)
-// }
-
-// func TestHandler_CreatedUserSuccessfully(t *testing.T) {
-// 	payload := &model.Payload{
-// 		Data: model.Data{
-// 			Name:       "maria",
-// 			Email:      "maria@gmail.com",
-// 			CPF:        "080.705.460-77",
-// 			Password:   "123456",
-// 			Authority:  "USER",
-// 			Attributes: map[string]string{},
-// 		},
-// 		EventDate: time.Now().Format(time.RFC3339),
-// 	}
-// 	userResp := &pb.UserResponse{
-// 		Id:         "46c77402-ba50-4b48-9bd9-1c4f97e36565",
-// 		Name:       payload.Data.Name,
-// 		Email:      payload.Data.Email,
-// 		Attributes: payload.Data.Attributes,
-// 	}
-// 	userByCpfRequest := &pb.UserByCpfRequest{
-// 		Cpf: payload.Data.CPF,
-// 	}
-// 	userByEmailRequest := &pb.UserByEmailRequest{
-// 		Email: payload.Data.Email,
-// 	}
-// 	register := &shared.RegisterUserResponse{
-// 		ID: userResp.Id,
-// 	}
-
-// 	pld, err := encode(payload)
-// 	require.NoError(t, err)
-
-// 	ctx := context.Background()
-// 	SetUpLog(ctx)
-
-// 	cfg := SetUpConfig()
-
-// 	userRepoMock := new(mocks.UserRepository_internal_domain_user)
-// 	authRepoMock := new(mocks.AuthRepository_internal_shared)
-// 	valMock := new(mocks.Validator_internal_shared)
-
-// 	userRepoMock.On("FindByEmail", ctx, userByEmailRequest).Return(&pb.UserResponse{}, nil)
-
-// 	userRepoMock.On("FindByCpf", ctx, userByCpfRequest).Return(&pb.UserResponse{}, nil)
-
-// 	authRepoMock.On("FindByEmail", ctx, payload.Data.Email).Return(&shared.GetUserResponse{}, nil)
-
-// 	authRepoMock.On("Register", ctx, payload.ToRegister()).Return(register, nil)
-
-// 	userRepoMock.On("Save", ctx, mock.Anything).Return(userResp, nil)
-
-// 	handler := handler.NewUserHandler(userRepoMock, authRepoMock, cfg, valMock)
-// 	err = handler.Handler(ctx, pld)
-// 	assert.Nil(t, err)
-// }
-
-// func encode(pld *model.Payload) ([]byte, error) {
-// 	codec := codec.New[model.Payload]()
-
-// 	enc, err := codec.Encode(*pld)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	cfg := SetUpConfig()
-// 	result, err := ciphers.Encrypt(ciphers.ExtractKey([]byte(cfg.AesKey)), enc)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	return result, nil
-// }
-
-// func SetUpLog(ctx context.Context) {
-// 	cfg := SetUpConfig()
-// 	log := logger.NewLog(cfg).GetGRPCLogger()
-// 	log.WithContext(ctx)
-// }
-
-// func SetUpConfig() *config.Config {
-// 	relativePath := "../../../../config/config-dev.yml"
-
-// 	absPath, err := filepath.Abs(relativePath)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	var cfg config.Config
-// 	err = cleanenv.ReadConfig(absPath, &cfg)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	config.ExportConfig(&cfg)
-
-// 	return &cfg
-// }
+func TestUserHandlerSuite(t *testing.T) {
+	suite.Run(t, new(UserHandlerSuite))
+}

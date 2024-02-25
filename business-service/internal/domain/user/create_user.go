@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/lucasd-coder/fast-feet/business-service/internal/shared"
@@ -98,7 +97,7 @@ func (s *ServiceImpl) registerAndReturn(ctx context.Context, pld *Payload) (*sha
 
 	user, err := s.authRepository.FindByEmail(ctx, pld.Data.Email)
 	if err != nil {
-		if !errors.Is(err, shared.ErrUserNotFound) {
+		if status.Code(err) != codes.NotFound {
 			log.Errorf("err while call auth-service FindByEmail: %v", err)
 			return nil, err
 		}

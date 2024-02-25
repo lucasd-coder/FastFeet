@@ -1,0 +1,29 @@
+app:
+  name: auth-service
+  version: 1.0.0
+
+logger:
+  log-level: info
+  report-caller: false
+
+grpc:
+  port: 50055
+
+http:
+  port: 8090
+  timeout: 20s
+
+integration:
+  http:
+    keycloak:
+      base-url: "http://local.projectcontour.io/auth"      
+      username: ${KEYCLOAK_USERNAME}
+      password: ${KEYCLOAK_PASSWORD}    
+      realm: ${KEYCLOAK_REALM}
+      request-timeout: 60s
+      debug: true
+  
+  otlp:
+    url: localhost:4317
+    protocol: grpc
+    timeout: 20s

@@ -31,7 +31,7 @@ func (h *OrderController) Save(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(r.Body).Decode(pld); err != nil {
 		msg := fmt.Errorf("error when doing decoder payload: %w", err)
-		log.Error(msg)
+		log.Error(msg.Error())
 		h.SendError(ctx, w, msg)
 		return
 	}
@@ -68,7 +68,7 @@ func (h *OrderController) GetAllOrder(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.orderService.GetAllOrder(ctx, pldGetAllPayload)
 	if err != nil {
-		log.Error(err)
+		log.Error(err.Error())
 		h.SendError(ctx, w, err)
 		return
 	}

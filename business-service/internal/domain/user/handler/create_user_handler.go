@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	model "github.com/lucasd-coder/fast-feet/business-service/internal/domain/user"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/shared/ciphers"
@@ -25,12 +26,9 @@ func (h *Handler) CreateUser(ctx context.Context, m []byte) error {
 		return fmt.Errorf("err Decode: %w", err)
 	}
 
-	fields := map[string]interface{}{
-		"payload": map[string]string{
-			"name": pld.Data.Name,
-		},
-	}
-	log.WithFields(fields).Info("received payload")
+	slog.With("payload",
+		slog.String("name", pld.Data.Name)).
+		Info("received payload")
 
 	user, err := h.service.Save(ctx, &pld)
 	if err != nil {

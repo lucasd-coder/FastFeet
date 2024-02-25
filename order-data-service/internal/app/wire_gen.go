@@ -9,9 +9,12 @@ package app
 import (
 	"github.com/lucasd-coder/fast-feet/order-data-service/config"
 	"github.com/lucasd-coder/fast-feet/order-data-service/internal/domain/order/repository"
-	"github.com/lucasd-coder/fast-feet/order-data-service/internal/domain/order/service"
 	"github.com/lucasd-coder/fast-feet/order-data-service/internal/provider/validator"
 	"github.com/lucasd-coder/fast-feet/pkg/mongodb"
+)
+
+import (
+	_ "net/http/pprof"
 )
 
 // Injectors from wire.go:
@@ -26,11 +29,4 @@ func InitializeOrderRepository() *repository.OrderRepository {
 	client := mongodb.GetClientMongoDB()
 	orderRepository := repository.NewOrderRepository(configConfig, client)
 	return orderRepository
-}
-
-func InitializeOrderService() *service.OrderService {
-	validation := InitializeValidator()
-	orderRepository := InitializeOrderRepository()
-	orderService := service.NewOrderService(validation, orderRepository)
-	return orderService
 }

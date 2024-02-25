@@ -1,6 +1,6 @@
 
 rs.status();
-db = db.getSiblingDB('order-data-service');
+db = db.getSiblingDB('fast-feet');
 db.createUser({user: 'admin', pwd: 'admin123', roles: [ { role: 'root', db: 'admin' } ]});
 db.getCollection("orders").createIndex(
 	{ deliverymanId: 1}

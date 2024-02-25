@@ -17,6 +17,6 @@ type CacheRepository[T any] interface {
 type AuthRepository interface {
 	Register(ctx context.Context, pld *Register) (*RegisterUserResponse, error)
 	FindByEmail(ctx context.Context, email string) (*GetUserResponse, error)
-	FindRolesByID(ctx context.Context, ID string) (*GetRolesResponse, error)
-	IsActiveUser(ctx context.Context, ID string) (*IsActiveUser, error)
+	FindRolesByID(ctx context.Context, id string) (*GetRolesResponse, error)
+	IsActiveUser(ctx context.Context, id string) (*IsActiveUser, error)
 }

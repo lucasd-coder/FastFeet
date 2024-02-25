@@ -2,12 +2,12 @@ package middleware
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"runtime/debug"
 	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/lucasd-coder/fast-feet/pkg/logger"
 )
 
 func LoggerMiddleware(next http.Handler) http.Handler {
@@ -16,30 +16,29 @@ func LoggerMiddleware(next http.Handler) http.Handler {
 		t1 := time.Now()
 		reqID := middleware.GetReqID(ctx)
 
-		preReqContent := map[string]interface{}{
-			"requestTime": t1.Format(time.RFC3339),
-			"requestId":   reqID,
-			"method":      r.Method,
-			"endpoint":    r.RequestURI,
-			"protocol":    r.Proto,
-		}
+		preReqContent := slog.With(
+			slog.String("requestTime", t1.Format(time.RFC3339)),
+			slog.String("requestId", reqID),
+			slog.String("method", r.Method),
+			slog.String("endpoint", r.RequestURI),
+			slog.String("protocol", r.Proto),
+		)
 
 		if r.RemoteAddr != "" {
-			preReqContent["ip"] = r.RemoteAddr
+			preReqContent.With(slog.String("ip", r.RequestURI))
 		}
 
-		log := logger.FromContext(ctx).WithFields(preReqContent)
-		log.Info("request started")
+		preReqContent.Info("request started")
 
 		defer func() {
 			statusCode := 500
 			if err := recover(); err != nil {
-				log.WithFields(logger.Fields{
-					"requestId":  reqID,
-					"duration":   time.Since(t1).String(),
-					"status":     statusCode,
-					"stacktrace": string(debug.Stack()),
-				}).Error("request finished with panic")
+				slog.With(
+					slog.String("requestId", reqID),
+					slog.String("duration", time.Since(t1).String()),
+					slog.Int("status", statusCode),
+					slog.String("stacktrace", string(debug.Stack())),
+				).Error("request finished with panic")
 				panic(err)
 			}
 		}()
@@ -49,13 +48,12 @@ func LoggerMiddleware(next http.Handler) http.Handler {
 
 		status := ww.Status()
 
-		postReqContent := map[string]interface{}{
-			"requestId":     reqID,
-			"duration":      time.Since(t1).String(),
-			"contentLength": ww.BytesWritten(),
-			"status":        status,
-		}
-		log = logger.FromContext(ctx).WithFields(postReqContent)
+		log := slog.With(
+			slog.String("requestId", reqID),
+			slog.String("duration", time.Since(t1).String()),
+			slog.Int("contentLength", ww.BytesWritten()),
+			slog.Int("status", status),
+		)
 
 		statusCode := 400
 		message := "request finished"

@@ -18,7 +18,7 @@ services:
   mongodb:
     image: bitnami/mongodb:latest
     environment:
-      MONGODB_DATABASE: user-manger-service
+      MONGODB_DATABASE: fast-feet
       MONGODB_ROOT_USER: admin
       MONGODB_ROOT_PASSWORD: admin123  
       MONGODB_REPLICA_SET_MODE: primary

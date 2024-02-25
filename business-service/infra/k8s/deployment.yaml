@@ -47,32 +47,10 @@ spec:
               value: "user-manger-service.default.svc.cluster.local:50051"
             - name: ORDER_DATA_URL
               value: "order-data-service.default.svc.cluster.local:50051"
-            - name: ACCESS_AUTH_URL
-              value: "http://access-auth-service.default.svc.cluster.local:8080"
-            - name: KEYCLOAK_URL
-              value: "http://keycloak.default.svc.cluster.local:80/auth/realms/fastfeet/protocol/openid-connect/token"
+            - name: AUTH_URL
+              value: "auth-service.default.svc.cluster.local:50051"
             - name: VIA_CEP_URL
               value: "https://viacep.com.br"
-            - name: USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: business-service-keycloak-username
-                  key: keycloak-username
-            - name: PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: business-service-keycloak-password
-                  key: keycloak-password
-            - name: CLIENT_ID
-              valueFrom:
-                secretKeyRef:
-                  name: business-service-keycloak-client-id
-                  key: keycloak-client-id
-            - name: CLIENT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: business-service-keycloak-client-secret
-                  key: keycloak-client-secret
             - name: AES_KEY
               valueFrom:
                 secretKeyRef:

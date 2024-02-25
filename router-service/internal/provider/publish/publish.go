@@ -2,14 +2,13 @@ package publish
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/lucasd-coder/fast-feet/router-service/internal/shared"
-	octrace "go.opencensus.io/trace"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/bridge/opencensus"
 	"go.opentelemetry.io/otel/trace"
 	"gocloud.dev/pubsub"
 )
@@ -25,11 +24,10 @@ func NewPublished(opt *shared.Options) *Published {
 }
 
 func (p *Published) Send(ctx context.Context, msg *shared.Message) error {
-	log := logger.FromContext(ctx)
+	logDefault := logger.FromContext(ctx)
 
 	traceName := "gocloud.dev/pubsub/Topic.Send"
 	tracer := otel.GetTracerProvider().Tracer(traceName)
-	octrace.DefaultTracer = opencensus.NewTracer(tracer)
 
 	commonAttrs := []attribute.KeyValue{
 		attribute.String("queueURL", p.opt.TopicURL),
@@ -43,7 +41,7 @@ func (p *Published) Send(ctx context.Context, msg *shared.Message) error {
 	client, err := NewClient(ctx, p.opt.TopicURL)
 	if err != nil {
 		span.RecordError(err)
-		log.Errorf("error creating Publish client: %v", err)
+		logDefault.Errorf("error creating Publish client: %v", err)
 	}
 
 	defer func() {
@@ -64,14 +62,14 @@ func (p *Published) Send(ctx context.Context, msg *shared.Message) error {
 		if er == nil {
 			break
 		}
-		log.Errorf("error when trying to publish to queue with err: %v", er)
+		logDefault.Errorf("error when trying to publish to queue with err: %v", er)
 
 		if i == p.opt.MaxRetries-1 {
-			log.Errorf("max retries exceeded, not publishing message anymore: %v", er)
+			logDefault.Errorf("max retries exceeded, not publishing message anymore: %v", er)
 			break
 		}
 		backOffTime := time.Duration(1+i) * p.opt.WaitingTime
-		log.Infof("waiting %v before retrying", backOffTime)
+		logDefault.Infof("waiting %v before retrying", backOffTime)
 		span.RecordError(err)
 		time.Sleep(backOffTime)
 	}

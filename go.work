@@ -1,8 +1,9 @@
-go 1.21.0
+go 1.21.2
 
 use .
 
 use (
+	./auth-service
 	./business-service
 	./order-data-service
 	./router-service

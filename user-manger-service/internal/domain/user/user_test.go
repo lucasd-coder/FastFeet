@@ -5,7 +5,12 @@ import (
 	"time"
 
 	model "github.com/lucasd-coder/fast-feet/user-manger-service/internal/domain/user"
+	"github.com/lucasd-coder/fast-feet/user-manger-service/internal/provider/validator"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+var (
+	val = validator.NewValidation()
 )
 
 func TestUser_Validate(t *testing.T) {
@@ -74,7 +79,7 @@ func TestUser_Validate(t *testing.T) {
 				CreatedAt:  tt.fields.CreatedAt,
 				UpdatedAt:  tt.fields.UpdatedAt,
 			}
-			if err := user.Validate(); (err != nil) != tt.wantErr {
+			if err := user.Validate(val); (err != nil) != tt.wantErr {
 				t.Errorf("User.Validate() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -117,7 +122,7 @@ func TestUser_ValidatePattern(t *testing.T) {
 				CreatedAt:  tt.fields.CreatedAt,
 				UpdatedAt:  tt.fields.UpdatedAt,
 			}
-			if err := user.Validate(); (err != nil) != tt.wantErr {
+			if err := user.Validate(val); (err != nil) != tt.wantErr {
 				t.Errorf("User.Validate() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

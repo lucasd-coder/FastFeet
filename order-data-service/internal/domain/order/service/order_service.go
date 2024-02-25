@@ -3,38 +3,36 @@ package service
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
-	"github.com/lucasd-coder/fast-feet/pkg/logger"
-	model "github.com/lucasd-coder/fast-feet/order-data-service/internal/domain/order"
-	"github.com/lucasd-coder/fast-feet/order-data-service/internal/domain/order/repository"
+	"github.com/lucasd-coder/fast-feet/order-data-service/internal/domain/order"
 	pkgErrors "github.com/lucasd-coder/fast-feet/order-data-service/internal/errors"
 	"github.com/lucasd-coder/fast-feet/order-data-service/internal/provider/validator"
 	"github.com/lucasd-coder/fast-feet/order-data-service/internal/shared"
 	"github.com/lucasd-coder/fast-feet/order-data-service/pkg/pb"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 )
 
 type OrderService struct {
 	pb.UnimplementedOrderServiceServer
 	validate        shared.Validator
-	orderRepository model.OrderRepository
+	orderRepository order.OrderRepository
 }
 
 func NewOrderService(
 	validate *validator.Validation,
-	orderRepo *repository.OrderRepository) *OrderService {
+	orderRepo order.OrderRepository) *OrderService {
 	return &OrderService{validate: validate, orderRepository: orderRepo}
 }
 
 func (s *OrderService) Save(ctx context.Context, req *pb.OrderRequest) (*pb.OrderResponse, error) {
 	log := logger.FromContext(ctx)
 
-	log.WithFields(map[string]interface{}{
-		"payload": req,
-	}).Info("received request")
+	slog.With("payload", req).Info("received request")
 
-	pld := model.CreateOrder{
+	pld := order.CreateOrder{
 		DeliverymanID: req.GetDeliverymanId(),
-		Product:       model.NewProduct(req.GetProduct().GetName()),
+		Product:       order.NewProduct(req.GetProduct().GetName()),
 		Address:       s.newAddress(req),
 	}
 
@@ -42,7 +40,7 @@ func (s *OrderService) Save(ctx context.Context, req *pb.OrderRequest) (*pb.Orde
 		return nil, pkgErrors.ValidationErrors(err)
 	}
 
-	order := model.NewOrder(pld)
+	order := order.NewOrder(pld)
 
 	newOrder, err := s.orderRepository.Save(ctx, order)
 	if err != nil {
@@ -57,8 +55,8 @@ func (s *OrderService) Save(ctx context.Context, req *pb.OrderRequest) (*pb.Orde
 	}, nil
 }
 
-func (s *OrderService) newAddress(req *pb.OrderRequest) model.Address {
-	return model.Address{
+func (s *OrderService) newAddress(req *pb.OrderRequest) order.Address {
+	return order.Address{
 		Address:      req.GetAddresses().GetAddress(),
 		Number:       req.GetAddresses().GetNumber(),
 		PostalCode:   req.GetAddresses().GetPostalCode(),
@@ -71,11 +69,9 @@ func (s *OrderService) newAddress(req *pb.OrderRequest) model.Address {
 func (s *OrderService) GetAllOrder(ctx context.Context, req *pb.GetAllOrderRequest) (*pb.GetAllOrderResponse, error) {
 	log := logger.FromContext(ctx)
 
-	log.WithFields(map[string]interface{}{
-		"payload": req,
-	}).Info("received request")
+	slog.With("payload", req).Info("received request")
 
-	pld := &model.GetAllOrderRequest{
+	pld := &order.GetAllOrderRequest{
 		ID:            req.GetId(),
 		DeliverymanID: req.GetDeliverymanId(),
 		StartDate:     req.GetStartDate(),
@@ -85,7 +81,7 @@ func (s *OrderService) GetAllOrder(ctx context.Context, req *pb.GetAllOrderReque
 		CanceledAt:    req.GetCanceledAt(),
 		Limit:         req.GetLimit(),
 		Offset:        req.GetOffset(),
-		Product:       model.GetProduct{Name: req.GetProduct().GetName()},
+		Product:       order.GetProduct{Name: req.GetProduct().GetName()},
 		Address:       s.newGetAddress(req),
 	}
 
@@ -103,8 +99,8 @@ func (s *OrderService) GetAllOrder(ctx context.Context, req *pb.GetAllOrderReque
 	return s.extractGetAllOrderResponse(pld, orders), nil
 }
 
-func (s *OrderService) newGetAddress(req *pb.GetAllOrderRequest) model.GetAddress {
-	return model.GetAddress{
+func (s *OrderService) newGetAddress(req *pb.GetAllOrderRequest) order.GetAddress {
+	return order.GetAddress{
 		Address:      req.GetAddresses().GetAddress(),
 		Number:       req.GetAddresses().GetNumber(),
 		PostalCode:   req.GetAddresses().GetPostalCode(),
@@ -114,7 +110,7 @@ func (s *OrderService) newGetAddress(req *pb.GetAllOrderRequest) model.GetAddres
 	}
 }
 
-func (s *OrderService) extractGetAllOrderResponse(pld *model.GetAllOrderRequest, orders []model.Order) *pb.GetAllOrderResponse {
+func (s *OrderService) extractGetAllOrderResponse(pld *order.GetAllOrderRequest, orders []order.Order) *pb.GetAllOrderResponse {
 	if len(orders) == 0 {
 		return &pb.GetAllOrderResponse{}
 	}
@@ -133,7 +129,7 @@ func (s *OrderService) extractGetAllOrderResponse(pld *model.GetAllOrderRequest,
 	}
 }
 
-func (s *OrderService) extractPbOrder(order model.Order) *pb.Order {
+func (s *OrderService) extractPbOrder(order order.Order) *pb.Order {
 	return &pb.Order{
 		Id:            order.ID.Hex(),
 		DeliverymanId: order.DeliverymanID,

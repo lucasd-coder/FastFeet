@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/lucasd-coder/fast-feet/router-service/internal/shared"
@@ -14,7 +15,7 @@ func (s *ServiceImpl) Save(ctx context.Context, order *Order) error {
 
 	if err := order.Validate(s.validate); err != nil {
 		msg := fmt.Errorf("err validating payload: %w", err)
-		log.Error(msg)
+		log.Error(msg.Error())
 		return msg
 	}
 
@@ -40,15 +41,11 @@ func (s *ServiceImpl) Save(ctx context.Context, order *Order) error {
 
 	if err := s.publish.Send(ctx, &msg); err != nil {
 		msg := fmt.Errorf("error publishing payload in queue: %w", err)
-		log.Error(msg)
+		log.Error(msg.Error())
 		return msg
 	}
 
-	fields := map[string]interface{}{
-		"payload": pld,
-	}
-
-	log.WithFields(fields).Info("payload successfully processed")
+	slog.With("payload", pld).Info("payload successfully processed")
 
 	return nil
 }

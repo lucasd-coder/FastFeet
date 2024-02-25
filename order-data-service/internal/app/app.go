@@ -2,6 +2,9 @@ package app
 
 import (
 	"context"
+	"fmt"
+	"log"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
@@ -18,10 +21,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/lucasd-coder/fast-feet/order-data-service/config"
+	"github.com/lucasd-coder/fast-feet/order-data-service/internal/domain/order/service"
 	"github.com/lucasd-coder/fast-feet/order-data-service/internal/shared"
 	"github.com/lucasd-coder/fast-feet/order-data-service/pkg/pb"
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
@@ -36,17 +39,18 @@ import (
 
 func Run(cfg *config.Config) {
 	optlogger := shared.NewOptLogger(cfg)
-	optOtel := shared.NewOptOtel(cfg)
-	logger := logger.NewLog(optlogger)
-
-	log := logger.GetLogger()
-
-	ctx := context.Background()
+	logger := logger.NewLogger(optlogger)
+	logDefault := logger.GetLog()
+	slog.SetDefault(logDefault)
 
 	lis, err := net.Listen("tcp", ":"+cfg.GRPC.Port)
 	if err != nil {
 		log.Fatalf("Could not connect: %v", err)
+		return
 	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	optMongo := shared.NewOptMongoDB(cfg)
 	mongodb.SetUpMongoDB(ctx, &optMongo)
@@ -57,21 +61,22 @@ func Run(cfg *config.Config) {
 		}
 	}()
 
+	optOtel := shared.NewOptOtel(cfg)
 	tp, err := monitor.RegisterOtel(ctx, &optOtel)
 	if err != nil {
-		log.Errorf("Error creating register otel: %v", err)
+		logDefault.Error("Error creating register otel", err)
 		return
 	}
 	defer func() {
 		if err := tp.Shutdown(ctx); err != nil {
-			log.Errorf("Error shutting down tracer server provider: %v", err)
+			logDefault.Error("Error shutting down tracer server provider ", err)
 		}
 	}()
 
 	reg := prometheus.NewRegistry()
 	grpcServer := newGrpcServer(ctx, logger, reg)
 	registerServices(grpcServer)
-	log.Infof("Started listening... address[:%s]", cfg.GRPC.Port)
+	slog.Info(fmt.Sprintf("Started listening... address[:%s]", cfg.GRPC.Port))
 
 	go func() {
 		if err := grpcServer.Serve(lis); err != nil {
@@ -85,7 +90,6 @@ func Run(cfg *config.Config) {
 
 	signal.Notify(stopChan, syscall.SIGTERM, syscall.SIGINT)
 	<-stopChan
-	close(stopChan)
 
 	grpcServer.GracefulStop()
 }
@@ -108,21 +112,18 @@ func newGrpcServer(ctx context.Context, logger *logger.Log, reg *prometheus.Regi
 
 	grpcPanicRecoveryHandler := monitor.RegisterGrpcPanicRecoveryHandler(ctx, reg)
 
-	interceptorOpt := otelgrpc.WithTracerProvider(otel.GetTracerProvider())
-
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
-			otelgrpc.UnaryServerInterceptor(interceptorOpt),
 			srvMetrics.UnaryServerInterceptor(grpcprom.WithExemplarFromContext(exemplarFromContext)),
-			logger.GetGRPCUnaryServerInterceptor(),
+			logger.GetLogUnaryServerInterceptor(),
 			grpcrecovery.UnaryServerInterceptor(grpcrecovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
 		),
 		grpc.ChainStreamInterceptor(
-			otelgrpc.StreamServerInterceptor(interceptorOpt),
 			srvMetrics.StreamServerInterceptor(grpcprom.WithExemplarFromContext(exemplarFromContext)),
-			logger.GetGRPCStreamServerInterceptor(),
+			logger.GetLogStreamServerInterceptor(),
 			grpcrecovery.StreamServerInterceptor(grpcrecovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
 		),
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 	)
 	srvMetrics.InitializeMetrics(grpcServer)
 	return grpcServer
@@ -153,17 +154,18 @@ func newHTTPServer(ctx context.Context, cfg *config.Config, reg prometheus.Gathe
 	}
 	log.Infof("starting HTTP server addr: %s", httpSrv.Addr)
 	if err := httpSrv.ListenAndServe(); err != nil {
-		log.Error(err)
+		log.Error(err.Error())
 		return
 	}
 
 	if err := httpSrv.Close(); err != nil {
-		log.Error(err)
+		log.Error(err.Error())
 		return
 	}
 }
+
 func registerServices(grpcServer *grpc.Server) {
-	orderService := InitializeOrderService()
+	orderService := service.NewOrderService(InitializeValidator(), InitializeOrderRepository())
 	pb.RegisterOrderServiceServer(grpcServer, orderService)
 	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
 	reflection.Register(grpcServer)

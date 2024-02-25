@@ -3,12 +3,9 @@ package model
 import (
 	"time"
 
-	"github.com/go-playground/validator/v10"
-	"github.com/lucasd-coder/fast-feet/pkg/val"
+	"github.com/lucasd-coder/fast-feet/user-manger-service/internal/shared"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
-
-var validate *validator.Validate
 
 type User struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
@@ -21,18 +18,8 @@ type User struct {
 	UpdatedAt  time.Time          `bson:"updatedAt,omitempty"`
 }
 
-func (user *User) Validate() error {
-	validate = validator.New()
-
-	if err := validate.RegisterValidation("pattern", val.Pattern); err != nil {
-		return err
-	}
-
-	if err := validate.RegisterValidation("isCPF", val.TagIsCPF); err != nil {
-		return err
-	}
-
-	return validate.Struct(user)
+func (user *User) Validate(val shared.Validator) error {
+	return val.ValidateStruct(user)
 }
 
 func (user *User) GetCreatedAt() string {

@@ -7,6 +7,7 @@ coverage
 temp/
 ormconfig.json
 
+infra/profile/*
 tmp/*
 !tmp/.gitkeep
 *.scannerwork

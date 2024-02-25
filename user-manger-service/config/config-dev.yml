@@ -19,6 +19,7 @@ mongodb:
   collections:
     user:
       collection: "users"
+
 integration:
   otlp:
       url: localhost:4317

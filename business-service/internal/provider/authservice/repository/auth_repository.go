@@ -2,30 +2,14 @@ package repository
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
-	"net/http/httptrace"
-	"net/url"
-	"strings"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/lucasd-coder/fast-feet/business-service/config"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/provider/authservice"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/shared"
+	"github.com/lucasd-coder/fast-feet/business-service/pkg/pb"
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace"
-	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/trace"
-)
-
-const (
-	spanErrMarchal         = "Error json.Marshal"
-	spanErrRequest         = "Request Error"
-	spanErrResponseStatus  = "Response Status Error"
-	spanErrExtractUserID   = "Error ExtractUserID"
-	spanErrNewClient       = "Error NewClientWithAuth"
-	spanErrExtractResponse = "Error Extract Response"
+	"google.golang.org/grpc/metadata"
 )
 
 type AuthRepository struct {
@@ -33,231 +17,124 @@ type AuthRepository struct {
 }
 
 func NewAuthRepository(cfg *config.Config) *AuthRepository {
-	return &AuthRepository{cfg}
+	return &AuthRepository{
+		cfg: cfg,
+	}
 }
 
-func (r *AuthRepository) Register(ctx context.Context, pld *shared.Register) (*shared.RegisterUserResponse, error) {
+func (r *AuthRepository) Register(ctx context.Context,
+	pld *shared.Register) (*shared.RegisterUserResponse, error) {
 	log := logger.FromContext(ctx)
-	span := trace.SpanFromContext(ctx)
-	ctx = httptrace.WithClientTrace(ctx, otelhttptrace.NewClientTrace(ctx))
 
-	client := authservice.NewClient(r.cfg)
-
-	request := client.R().SetContext(ctx)
-
-	body, err := json.Marshal(pld)
+	conn, err := authservice.NewClient(ctx, r.cfg)
 	if err != nil {
-		errMsg := fmt.Errorf("err while marshalling payload register: %w", err)
-		r.createSpanError(ctx, err, spanErrMarchal)
-		return nil, errMsg
+		log.Errorf("err while integration register: %+v", err)
+		return nil, fmt.Errorf("err while integration register: %w", err)
 	}
+	defer conn.Close()
 
-	response, err := request.SetBody(body).
-		SetHeader("Content-Type", "application/json").
-		SetError(&shared.HTTPError{}).
-		SetResult(&shared.RegisterUserResponse{}).
-		Post("/api/register")
-
+	client := pb.NewRegisterHandlerClient(conn)
+	req := buildRegisterRequest(pld)
+	resp, err := client.CreateUser(ctx, req)
 	if err != nil {
-		r.createSpanError(ctx, err, spanErrRequest)
-		return nil, err
+		return nil, fmt.Errorf("err while integration createUser: %w", err)
 	}
 
-	if response.IsError() {
-		errMsg := fmt.Errorf(
-			"err while execute request auth-service with statusCode: %s. Endpoint: /api/register, Method: POST", response.Status())
-		r.createSpanError(ctx, err, spanErrResponseStatus)
-		return nil, errMsg
-	}
-
-	res, err := r.extractUserID(response)
-	if err != nil {
-		r.createSpanError(ctx, err, spanErrExtractUserID)
-		return nil, err
-	}
-
-	msg := fmt.Sprintf("auth-service call successful. Endpoint: /api/register, Method: POST, Response time: %s",
-		response.ReceivedAt().String())
-	span.SetStatus(codes.Ok, msg)
-	log.Debug(msg)
-
-	return res, err
+	return buildRegisterUserResponse(resp), nil
 }
 
 func (r *AuthRepository) FindByEmail(ctx context.Context, email string) (*shared.GetUserResponse, error) {
 	log := logger.FromContext(ctx)
-	span := trace.SpanFromContext(ctx)
-	ctx = httptrace.WithClientTrace(ctx, otelhttptrace.NewClientTrace(ctx))
 
-	client, err := authservice.NewClientWithAuth(ctx, r.cfg)
+	conn, err := authservice.NewClient(ctx, r.cfg)
 	if err != nil {
-		r.createSpanError(ctx, err, spanErrNewClient)
+		log.Errorf("err while integration findByEmail: %+v", err)
+		return nil, fmt.Errorf("err while integration findByEmail: %w", err)
+	}
+	defer conn.Close()
+
+	client := pb.NewAuthHandlerClient(conn)
+
+	in := &pb.EmptyRequest{}
+	header := metadata.New(map[string]string{"email": email})
+	ctx = metadata.NewOutgoingContext(ctx, header)
+
+	resp, err := client.FindUserByEmail(ctx, in)
+	if err != nil {
 		return nil, err
 	}
 
-	request := client.R().SetContext(ctx)
-
-	response, err := request.
-		SetPathParam("email", email).
-		SetResult(&shared.GetUserResponse{}).
-		SetError(&shared.HTTPError{}).
-		Get("/api/users/{email}")
-	if err != nil {
-		r.createSpanError(ctx, err, spanErrRequest)
-		return nil, err
-	}
-
-	if response.IsError() {
-		err, ok := response.Error().(*shared.HTTPError)
-		r.createSpanError(ctx, err, spanErrResponseStatus)
-		if ok {
-			if strings.EqualFold(err.Message, shared.ErrUserNotFound.Error()) {
-				return nil, shared.ErrUserNotFound
-			}
-
-			return nil, err
-		}
-		return nil, fmt.Errorf(
-			"err while execute request auth-service with statusCode: %s. Endpoint: /api/users/{email}, Method: GET", response.Status())
-	}
-
-	res, ok := response.Result().(*shared.GetUserResponse)
-
-	if !ok {
-		errMsg := fmt.Errorf("%w. Endpoint: /api/users", shared.ErrExtractResponse)
-		r.createSpanError(ctx, err, spanErrExtractResponse)
-		return nil, errMsg
-	}
-
-	msg := fmt.Sprintf("auth-service call successful. Endpoint: /api/users, Method: GET, Response time: %s",
-		response.ReceivedAt().String())
-
-	log.Debug(msg)
-	span.SetStatus(codes.Ok, msg)
-
-	return res, nil
+	return &shared.GetUserResponse{
+		ID:       resp.GetId(),
+		Email:    resp.GetEmail(),
+		Username: resp.GetEmail(),
+		Enabled:  resp.GetEnabled(),
+	}, nil
 }
 
 func (r *AuthRepository) FindRolesByID(ctx context.Context, id string) (*shared.GetRolesResponse, error) {
 	log := logger.FromContext(ctx)
-	span := trace.SpanFromContext(ctx)
-	ctx = httptrace.WithClientTrace(ctx, otelhttptrace.NewClientTrace(ctx))
 
-	client, err := authservice.NewClientWithAuth(ctx, r.cfg)
+	conn, err := authservice.NewClient(ctx, r.cfg)
 	if err != nil {
-		r.createSpanError(ctx, err, spanErrNewClient)
+		log.Errorf("err while integration findRolesByID: %+v", err)
+		return nil, fmt.Errorf("err while integration findRolesByID: %w", err)
+	}
+	defer conn.Close()
+
+	client := pb.NewAuthHandlerClient(conn)
+
+	in := &pb.EmptyRequest{}
+	header := metadata.New(map[string]string{"id": id})
+	ctx = metadata.NewOutgoingContext(ctx, header)
+
+	resp, err := client.GetRoles(ctx, in)
+	if err != nil {
 		return nil, err
 	}
 
-	request := client.R().SetContext(ctx)
-
-	response, err := request.
-		SetPathParam("id", id).
-		SetResult(&shared.GetRolesResponse{}).
-		SetError(&shared.HTTPError{}).
-		Get("/api/users/roles/{id}")
-	if err != nil {
-		r.createSpanError(ctx, err, spanErrRequest)
-		return nil, err
-	}
-
-	if response.IsError() {
-		errMsg := fmt.Errorf(
-			"err while execute request auth-service with statusCode: %s. Endpoint: /api/users/roles/{id}, Method: GET", response.Status())
-		r.createSpanError(ctx, err, spanErrResponseStatus)
-		return nil, errMsg
-	}
-
-	res, ok := response.Result().(*shared.GetRolesResponse)
-
-	if !ok {
-		errMsg := fmt.Errorf("%w. Endpoint: /api/users/roles/{id}", shared.ErrExtractResponse)
-		r.createSpanError(ctx, err, spanErrExtractResponse)
-		return nil, errMsg
-	}
-
-	msg := fmt.Sprintf("auth-service call successful. Endpoint: /api/users/roles/{id}, Method: GET, Response time: %s",
-		response.ReceivedAt().String())
-
-	log.Debug(msg)
-	span.SetStatus(codes.Ok, msg)
-
-	return res, nil
+	return &shared.GetRolesResponse{
+		Roles: resp.GetRoles(),
+	}, nil
 }
 
 func (r *AuthRepository) IsActiveUser(ctx context.Context, id string) (*shared.IsActiveUser, error) {
 	log := logger.FromContext(ctx)
-	span := trace.SpanFromContext(ctx)
-	ctx = httptrace.WithClientTrace(ctx, otelhttptrace.NewClientTrace(ctx))
 
-	client, err := authservice.NewClientWithAuth(ctx, r.cfg)
+	conn, err := authservice.NewClient(ctx, r.cfg)
 	if err != nil {
-		r.createSpanError(ctx, err, spanErrNewClient)
+		log.Errorf("err while integration isActiveUser: %+v", err)
+		return nil, fmt.Errorf("err while integration isActiveUser: %w", err)
+	}
+	defer conn.Close()
+
+	client := pb.NewAuthHandlerClient(conn)
+
+	in := &pb.EmptyRequest{}
+	header := metadata.New(map[string]string{"id": id})
+	ctx = metadata.NewOutgoingContext(ctx, header)
+
+	resp, err := client.IsActiveUser(ctx, in)
+	if err != nil {
 		return nil, err
 	}
 
-	request := client.R().SetContext(ctx)
-
-	response, err := request.
-		SetPathParam("id", id).
-		SetResult(&shared.IsActiveUser{}).
-		SetError(&shared.HTTPError{}).
-		Get("/api/users/is-active/{id}")
-	if err != nil {
-		r.createSpanError(ctx, err, spanErrRequest)
-		return nil, err
-	}
-
-	if response.IsError() {
-		if response.StatusCode() == http.StatusNotFound {
-			span.RecordError(shared.ErrUserNotFound)
-			return nil, shared.ErrUserNotFound
-		}
-		errMsg := fmt.Errorf(
-			"err while execute request auth-service with statusCode: %s. Endpoint: /api/users/roles/{id}, Method: GET", response.Status())
-		r.createSpanError(ctx, err, spanErrResponseStatus)
-		return nil, errMsg
-	}
-
-	res, ok := response.Result().(*shared.IsActiveUser)
-
-	if !ok {
-		errMsg := fmt.Errorf("%w. Endpoint: /api/users/roles/{id}", shared.ErrExtractResponse)
-		r.createSpanError(ctx, err, spanErrExtractResponse)
-		return nil, errMsg
-	}
-
-	msg := fmt.Sprintf("auth-service call successful. Endpoint: /api/users/is-active/{id}, Method: GET, Response time: %s",
-		response.ReceivedAt().String())
-
-	log.Debugf(msg)
-	span.SetStatus(codes.Ok, msg)
-
-	return res, nil
-}
-
-func (r *AuthRepository) extractUserID(response *resty.Response) (*shared.RegisterUserResponse, error) {
-	if response == nil {
-		return nil, nil
-	}
-
-	location := response.Header().Get("Location")
-
-	u, err := url.Parse(location)
-	if err != nil {
-		return nil, fmt.Errorf("err whiling url parse extract location extractUserID: %w", err)
-	}
-
-	path := strings.Split(u.Path, "/")
-	userID := path[len(path)-1]
-
-	return &shared.RegisterUserResponse{
-		ID: userID,
+	return &shared.IsActiveUser{
+		Active: resp.GetActive(),
 	}, nil
 }
 
-func (r *AuthRepository) createSpanError(ctx context.Context, err error, msg string) {
-	span := trace.SpanFromContext(ctx)
-	span.SetStatus(codes.Error, msg)
-	span.RecordError(err)
+func buildRegisterUserResponse(resp *pb.RegisterResponse) *shared.RegisterUserResponse {
+	return &shared.RegisterUserResponse{
+		ID: resp.GetId(),
+	}
+}
+
+func buildRegisterRequest(pld *shared.Register) *pb.RegisterRequest {
+	return &pb.RegisterRequest{
+		FirstName: pld.Name,
+		Username:  pld.Username,
+		Password:  pld.Password,
+		Authority: pb.Roles(pb.Roles_value[pld.Authority]),
+	}
 }

@@ -62,3 +62,13 @@ k8s_del_app:
 
 k8s_del_infra:
 	@skaffold -f $(SKAFFOLD_INFRA_PATH) delete
+
+.PHONY: k8s_del_secret
+
+k8s_del_secret:
+	./infra/script/delete-secrets.sh
+
+.PHONY: test
+
+test:	
+	go list -f '{{.Dir}}/...' -m | xargs -L1 go test -timeout 120s -race -coverprofile=coverage.out -tags=integration

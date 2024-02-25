@@ -3,73 +3,84 @@ package service_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
-	"github.com/ilyakaznacheev/cleanenv"
-	"github.com/lucasd-coder/fast-feet/pkg/logger"
-	"github.com/lucasd-coder/fast-feet/user-manger-service/config"
 	model "github.com/lucasd-coder/fast-feet/user-manger-service/internal/domain/user"
 	"github.com/lucasd-coder/fast-feet/user-manger-service/internal/domain/user/service"
 	"github.com/lucasd-coder/fast-feet/user-manger-service/internal/mocks"
-	"github.com/lucasd-coder/fast-feet/user-manger-service/internal/shared"
+	"github.com/lucasd-coder/fast-feet/user-manger-service/internal/provider/validator"
 	pb "github.com/lucasd-coder/fast-feet/user-manger-service/pkg/pb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
 	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func TestSave_InvalidUUID(t *testing.T) {
-	req := &pb.UserRequest{
-		UserId: "userID invalid",
-	}
+const (
+	email           = "maria2@gmail.com"
+	msgArg          = "suite.svc.Save() = %v, wantErr %v"
+	msgUserNotFound = "user not found"
+)
 
-	ctx := context.Background()
-
-	SetUpLog(ctx)
-
-	userRepoMock := new(mocks.UserRepository_internal_domain_user)
-
-	service := service.UserService{UserRepository: userRepoMock}
-
-	_, err := service.Save(ctx, req)
-
-	st, _ := status.FromError(err)
-
-	assert.NotNil(t, err)
-	assert.Equal(t, codes.InvalidArgument, st.Code())
+type UserServiceSuite struct {
+	suite.Suite
+	svc  service.UserService
+	ctx  context.Context
+	repo *mocks.UserRepository_internal_domain_user
 }
 
-func TestSave_InvalidUserRequest(t *testing.T) {
-	req := &pb.UserRequest{
-		UserId: "34dd2b26-7692-48dc-b37d-9445941ed016ee22262f-6d5f-4044-a7d9-e44a196b808c",
-		Name:   "maria$%%&%%$#@",
-		Email:  "maria@##%%%",
-	}
+func (suite *UserServiceSuite) SetupTest() {
+	val := validator.NewValidation()
+	repo := new(mocks.UserRepository_internal_domain_user)
 
-	ctx := context.Background()
-
-	SetUpLog(ctx)
-
-	userRepoMock := new(mocks.UserRepository_internal_domain_user)
-
-	service := service.UserService{UserRepository: userRepoMock}
-
-	_, err := service.Save(ctx, req)
-
-	st, _ := status.FromError(err)
-
-	assert.NotNil(t, err)
-	assert.Equal(t, codes.InvalidArgument, st.Code())
+	suite.repo = repo
+	suite.svc = *service.NewUserService(repo, val)
+	suite.ctx = context.Background()
 }
 
-func TestSave_AlreadyExistUser(t *testing.T) {
+func (suite *UserServiceSuite) TestSaveValidation() {
+	tests := []struct {
+		name    string
+		args    *pb.UserRequest
+		wantErr bool
+	}{
+		{
+			name: "test validation invalid field userID",
+			args: &pb.UserRequest{
+				UserId: "userID invalid",
+			},
+			wantErr: true,
+		},
+		{
+			name: "test validation invalid special characters",
+			args: &pb.UserRequest{
+				UserId: "34dd2b26-7692-48dc-b37d-9445941ed016ee22262f-6d5f-4044-a7d9-e44a196b808c",
+				Name:   "maria$%%&%%$#@",
+				Email:  "maria@##%%%",
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		suite.T().Run(tt.name, func(t *testing.T) {
+			_, err := suite.svc.Save(suite.ctx, tt.args)
+			if err != nil {
+				st, ok := status.FromError(err)
+				suite.True(ok, msgArg, err, tt.wantErr)
+				suite.Equal(st.Code(), codes.InvalidArgument, msgArg, err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func (suite *UserServiceSuite) TestSaveAlreadyExistUser() {
 	req := &pb.UserRequest{
 		UserId: "9a263868-61bc-4e57-b9f8-c6a0a15d2154",
-		Name:   "maria",
-		Email:  "maria2@gmail.com",
+		Name:   "maria2",
+		Email:  email,
 		Cpf:    "880.910.510-93",
 	}
 
@@ -80,28 +91,19 @@ func TestSave_AlreadyExistUser(t *testing.T) {
 		CPF:    req.GetCpf(),
 	}
 
-	ctx := context.Background()
+	suite.repo.On("FindByUserID", suite.ctx, user.UserID).Return(user, nil)
 
-	SetUpLog(ctx)
-
-	userRepoMock := new(mocks.UserRepository_internal_domain_user)
-
-	userRepoMock.On("FindByUserID", ctx, user.UserID).Return(user, nil)
-
-	service := service.UserService{UserRepository: userRepoMock}
-
-	_, err := service.Save(ctx, req)
+	_, err := suite.svc.Save(suite.ctx, req)
 
 	st, _ := status.FromError(err)
-
 	msg := fmt.Sprintf("already exist user with userID: %s", user.UserID)
 
-	assert.NotNil(t, err)
-	assert.Equal(t, codes.AlreadyExists, st.Code())
-	assert.Equal(t, msg, st.Message())
+	assert.NotNil(suite.T(), err)
+	assert.Equal(suite.T(), codes.AlreadyExists, st.Code())
+	assert.Equal(suite.T(), msg, st.Message())
 }
 
-func TestSave_MongoErrClientDisconnected(t *testing.T) {
+func (suite *UserServiceSuite) TestSaveMongoErrClientDisconnected() {
 	req := &pb.UserRequest{
 		UserId: "e06a7169-7df4-4ada-aac3-b673c9713e91",
 		Name:   "maria",
@@ -109,23 +111,15 @@ func TestSave_MongoErrClientDisconnected(t *testing.T) {
 		Cpf:    "79020873008",
 	}
 
-	ctx := context.Background()
+	suite.repo.On("FindByUserID", suite.ctx, req.UserId).Return(nil, mongo.ErrClientDisconnected)
 
-	SetUpLog(ctx)
+	_, err := suite.svc.Save(suite.ctx, req)
 
-	userRepoMock := new(mocks.UserRepository_internal_domain_user)
-
-	userRepoMock.On("FindByUserID", ctx, req.UserId).Return(nil, mongo.ErrClientDisconnected)
-
-	service := service.UserService{UserRepository: userRepoMock}
-
-	_, err := service.Save(ctx, req)
-
-	assert.NotNil(t, err)
-	assert.Equal(t, err, mongo.ErrClientDisconnected)
+	assert.NotNil(suite.T(), err)
+	assert.Equal(suite.T(), err, mongo.ErrClientDisconnected)
 }
 
-func TestSave_CreatedSuccessfully(t *testing.T) {
+func (suite *UserServiceSuite) TestSaveCreatedSuccessfully() {
 	req := &pb.UserRequest{
 		UserId: "07c837a1-9489-49f3-a038-51a9aff29abe",
 		Name:   "maria",
@@ -140,79 +134,70 @@ func TestSave_CreatedSuccessfully(t *testing.T) {
 		CPF:    req.GetCpf(),
 	}
 
-	ctx := context.Background()
+	suite.repo.On("FindByUserID", suite.ctx, req.GetUserId()).Return(nil, nil)
+	suite.repo.On("Save", suite.ctx, mock.Anything).Return(user, nil)
 
-	SetUpLog(ctx)
-
-	userRepoMock := new(mocks.UserRepository_internal_domain_user)
-
-	userRepoMock.On("FindByUserID", ctx, req.GetUserId()).Return(nil, nil)
-	userRepoMock.On("Save", ctx, mock.Anything).Return(user, nil)
-
-	service := service.UserService{UserRepository: userRepoMock}
-
-	resp, err := service.Save(ctx, req)
-
-	assert.Nil(t, err)
-	assert.Equal(t, user.UserID, req.GetUserId())
-	assert.Equal(t, user.Email, resp.GetEmail())
-	assert.Equal(t, user.Attributes, resp.GetAttributes())
+	resp, err := suite.svc.Save(suite.ctx, req)
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), user.UserID, req.GetUserId())
+	assert.Equal(suite.T(), user.Email, resp.GetEmail())
+	assert.Equal(suite.T(), user.Attributes, resp.GetAttributes())
 }
 
-func TestFindByCpf_InvalidCpf(t *testing.T) {
-	req := &pb.UserByCpfRequest{
-		Cpf: "invalid cpf",
+func (suite *UserServiceSuite) TestFindByCpfValidation() {
+	tests := []struct {
+		name    string
+		args    *pb.UserByCpfRequest
+		wantErr bool
+	}{
+		{
+			name: "test validation invalid cpf",
+			args: &pb.UserByCpfRequest{
+				Cpf: "invalid cpf",
+			},
+			wantErr: true,
+		},
+		{
+			name: "test validation badly formatted CPF",
+			args: &pb.UserByCpfRequest{
+				Cpf: "56304325",
+			},
+			wantErr: true,
+		},
 	}
 
-	ctx := context.Background()
-
-	SetUpLog(ctx)
-
-	userRepoMock := new(mocks.UserRepository_internal_domain_user)
-
-	service := service.UserService{UserRepository: userRepoMock}
-
-	_, err := service.FindByCpf(ctx, req)
-
-	st, _ := status.FromError(err)
-
-	assert.NotNil(t, err)
-	assert.Equal(t, codes.InvalidArgument, st.Code())
+	for _, tt := range tests {
+		suite.T().Run(tt.name, func(t *testing.T) {
+			_, err := suite.svc.FindByCpf(suite.ctx, tt.args)
+			if err != nil {
+				st, ok := status.FromError(err)
+				suite.True(ok, msgArg, err, tt.wantErr)
+				suite.Equal(st.Code(), codes.InvalidArgument, msgArg, err, tt.wantErr)
+			}
+		})
+	}
 }
 
-func TestFindByCpf_UserNotFond(t *testing.T) {
+func (suite *UserServiceSuite) TestFindByCpfUserNotFond() {
 	req := &pb.UserByCpfRequest{
 		Cpf: "563.043.250-88",
 	}
 
-	ctx := context.Background()
+	suite.repo.On("FindByCpf", suite.ctx, req.Cpf).Return(nil, mongo.ErrNoDocuments)
 
-	SetUpLog(ctx)
-
-	userRepoMock := new(mocks.UserRepository_internal_domain_user)
-	userRepoMock.On("FindByCpf", ctx, req.Cpf).Return(nil, mongo.ErrNoDocuments)
-
-	service := service.UserService{UserRepository: userRepoMock}
-
-	_, err := service.FindByCpf(ctx, req)
+	_, err := suite.svc.FindByCpf(suite.ctx, req)
 
 	st, _ := status.FromError(err)
 
-	msg := "user not found"
-
-	assert.NotNil(t, err)
-	assert.Equal(t, codes.NotFound, st.Code())
-	assert.Equal(t, msg, st.Message())
+	assert.NotNil(suite.T(), err)
+	assert.Equal(suite.T(), codes.NotFound, st.Code())
+	assert.Equal(suite.T(), msgUserNotFound, st.Message())
 }
 
-func TestFindByCpf_GetUserSuccessfully(t *testing.T) {
+func (suite *UserServiceSuite) TestFindByCpfGetUserSuccessfully() {
 	req := &pb.UserByCpfRequest{
 		Cpf: "440.072.470-05",
 	}
-
-	ctx := context.Background()
-
-	SetUpLog(ctx)
 
 	userID := "ee22262f-6d5f-4044-a7d9-e44a196b808c"
 
@@ -223,73 +208,69 @@ func TestFindByCpf_GetUserSuccessfully(t *testing.T) {
 		CPF:    req.GetCpf(),
 	}
 
-	userRepoMock := new(mocks.UserRepository_internal_domain_user)
-	userRepoMock.On("FindByCpf", ctx, req.Cpf).Return(user, nil)
+	suite.repo.On("FindByCpf", suite.ctx, req.Cpf).Return(user, nil)
 
-	service := service.UserService{UserRepository: userRepoMock}
-
-	resp, err := service.FindByCpf(ctx, req)
-
-	assert.Nil(t, err)
-	assert.Equal(t, user.UserID, resp.GetUserId())
-	assert.Equal(t, user.Email, resp.GetEmail())
-	assert.Equal(t, user.Attributes, resp.GetAttributes())
+	resp, err := suite.svc.FindByCpf(suite.ctx, req)
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), user.UserID, resp.GetUserId())
+	assert.Equal(suite.T(), user.Email, resp.GetEmail())
+	assert.Equal(suite.T(), user.Attributes, resp.GetAttributes())
 }
 
-func TestFindByEmail_InvalidEmail(t *testing.T) {
-	req := &pb.UserByEmailRequest{
-		Email: "invalid email",
+func (suite *UserServiceSuite) TestFindByEmailValidation() {
+	tests := []struct {
+		name    string
+		args    *pb.UserByEmailRequest
+		wantErr bool
+	}{
+		{
+			name: "test validation invalid email",
+			args: &pb.UserByEmailRequest{
+				Email: "invalid email",
+			},
+			wantErr: true,
+		},
+		{
+			name: "test validation email not blank",
+			args: &pb.UserByEmailRequest{
+				Email: "",
+			},
+			wantErr: true,
+		},
 	}
 
-	ctx := context.Background()
-
-	SetUpLog(ctx)
-
-	userRepoMock := new(mocks.UserRepository_internal_domain_user)
-
-	service := service.UserService{UserRepository: userRepoMock}
-
-	_, err := service.FindByEmail(ctx, req)
-
-	st, _ := status.FromError(err)
-
-	assert.NotNil(t, err)
-	assert.Equal(t, codes.InvalidArgument, st.Code())
-}
-
-func TestFindByEmail_UserNotFond(t *testing.T) {
-	req := &pb.UserByEmailRequest{
-		Email: "maria@gmail.com",
+	for _, tt := range tests {
+		suite.T().Run(tt.name, func(t *testing.T) {
+			_, err := suite.svc.FindByEmail(suite.ctx, tt.args)
+			if err != nil {
+				st, ok := status.FromError(err)
+				suite.True(ok, "suite.svc.FindByEmail() = %v, wantErr %v", err, tt.wantErr)
+				suite.Equal(st.Code(), codes.InvalidArgument, msgArg, err, tt.wantErr)
+			}
+		})
 	}
-
-	ctx := context.Background()
-
-	SetUpLog(ctx)
-
-	userRepoMock := new(mocks.UserRepository_internal_domain_user)
-	userRepoMock.On("FindByEmail", ctx, req.Email).Return(nil, mongo.ErrNoDocuments)
-
-	service := service.UserService{UserRepository: userRepoMock}
-
-	_, err := service.FindByEmail(ctx, req)
-
-	st, _ := status.FromError(err)
-
-	msg := "user not found"
-
-	assert.NotNil(t, err)
-	assert.Equal(t, codes.NotFound, st.Code())
-	assert.Equal(t, msg, st.Message())
 }
 
-func TestFindByEmail_GetUserSuccessfully(t *testing.T) {
+func (suite *UserServiceSuite) TestFindByEmailUserNotFond() {
 	req := &pb.UserByEmailRequest{
 		Email: "maria@gmail.com",
 	}
 
-	ctx := context.Background()
+	suite.repo.On("FindByEmail", suite.ctx, req.Email).Return(nil, mongo.ErrNoDocuments)
 
-	SetUpLog(ctx)
+	_, err := suite.svc.FindByEmail(suite.ctx, req)
+
+	st, _ := status.FromError(err)
+
+	assert.NotNil(suite.T(), err)
+	assert.Equal(suite.T(), codes.NotFound, st.Code())
+	assert.Equal(suite.T(), msgUserNotFound, st.Message())
+}
+
+func (suite *UserServiceSuite) TestFindByEmailGetUserSuccessfully() {
+	req := &pb.UserByEmailRequest{
+		Email: "maria@gmail.com",
+	}
 
 	userID := "ee22262f-6d5f-4044-a7d9-e44a196b808c"
 
@@ -300,66 +281,15 @@ func TestFindByEmail_GetUserSuccessfully(t *testing.T) {
 		CPF:    "440.072.470-05",
 	}
 
-	userRepoMock := new(mocks.UserRepository_internal_domain_user)
-	userRepoMock.On("FindByEmail", ctx, req.GetEmail()).Return(user, nil)
+	suite.repo.On("FindByEmail", suite.ctx, req.GetEmail()).Return(user, nil)
 
-	service := service.UserService{UserRepository: userRepoMock}
-
-	resp, err := service.FindByEmail(ctx, req)
-
-	assert.Nil(t, err)
-	assert.Equal(t, user.UserID, resp.GetUserId())
-	assert.Equal(t, user.Email, resp.GetEmail())
-	assert.Equal(t, user.Attributes, resp.GetAttributes())
+	resp, err := suite.svc.FindByEmail(suite.ctx, req)
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), user.UserID, resp.GetUserId())
+	assert.Equal(suite.T(), user.Email, resp.GetEmail())
+	assert.Equal(suite.T(), user.Attributes, resp.GetAttributes())
 }
 
-func SetUpLog(ctx context.Context) {
-	cfg := SetUpConfig()
-	optLog := shared.NewOptLogger(cfg)
-	log := logger.NewLog(optLog).GetLogger()
-	log.WithContext(ctx)
-}
-
-func SetUpConfig() *config.Config {
-	err := setEnvValues()
-	if err != nil {
-		panic(err)
-	}
-	var cfg config.Config
-	cfg.MongoDB.URL = "localhost:20071"
-	cfg.MongoDB.MongoDatabase = "test"
-	cfg.MongoCollections.User.Collection = "test-user"
-
-	err = cleanenv.ReadEnv(&cfg)
-	if err != nil {
-		panic(err)
-	}
-
-	config.ExportConfig(&cfg)
-
-	return &cfg
-}
-
-func setEnvValues() error {
-	err := os.Setenv("APP_NAME", "user-manger-service")
-	if err != nil {
-		return fmt.Errorf("Error setting APP_NAME, err = %w", err)
-	}
-
-	err = os.Setenv("APP_VERSION", "1.0.0")
-	if err != nil {
-		return fmt.Errorf("Error setting APP_VERSION, err = %w", err)
-	}
-
-	err = os.Setenv("LOG_LEVEL", "debug")
-	if err != nil {
-		return fmt.Errorf("Error setting LOG_LEVEL, err = %w", err)
-	}
-
-	err = os.Setenv("GRPC_PORT", "50051")
-	if err != nil {
-		return fmt.Errorf("Error setting GRPC_PORT, err = %w", err)
-	}
-
-	return nil
+func TestUserServiceSuite(t *testing.T) {
+	suite.Run(t, new(UserServiceSuite))
 }

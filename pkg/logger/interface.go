@@ -3,31 +3,19 @@ package logger
 type Fields map[string]interface{}
 
 type Logger interface {
-	Debugf(format string, args ...interface{})
+	Info(msg string, args ...any)
 
-	Debug(args ...interface{})
+	Debug(msg string, args ...any)
 
-	Infof(format string, args ...interface{})
+	Error(msg string, args ...any)
 
-	Info(args ...interface{})
+	Warn(msg string, args ...any)
 
-	Warnf(format string, args ...interface{})
+	Debugf(format string, args ...any)
 
-	Warn(args ...interface{})
+	Infof(format string, args ...any)
 
-	Errorf(format string, args ...interface{})
+	Warnf(format string, args ...any)
 
-	Error(args ...interface{})
-
-	Fatalf(format string, args ...interface{})
-
-	Fatal(args ...interface{})
-
-	Panicf(format string, args ...interface{})
-
-	Panic(args ...interface{})
-
-	WithFields(keyValues map[string]interface{}) Logger
-
-	WithField(key string, value interface{}) Logger
+	Errorf(format string, args ...any)
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/lucasd-coder/fast-feet/business-service/config"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 type options struct {
@@ -26,7 +27,7 @@ func NewClient(cfg *config.Config) *resty.Client {
 	client.EnableTrace().
 		SetBaseURL(opt.url).
 		SetRetryCount(cfg.ViaCepMaxRetries).
-		SetTransport(opt.transport).
+		SetTransport(otelhttp.NewTransport(opt.transport)).
 		SetDebug(opt.debug).
 		SetTimeout(opt.requestTimeout).
 		SetRetryCount(opt.maxRetries).

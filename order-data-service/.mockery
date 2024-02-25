@@ -1,1 +1,1 @@
-./internal/test=[Execute]
+./internal/domain/order=[OrderRepository]
