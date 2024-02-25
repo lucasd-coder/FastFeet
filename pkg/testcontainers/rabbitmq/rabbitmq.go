@@ -11,23 +11,23 @@ import (
 
 func RunContainer(ctx context.Context, queueName, exchangeName string) (*rabbitmq.RabbitMQContainer, error) {
 	return rabbitmq.RunContainer(ctx,
-		testcontainers.WithImage("rabbitmq:3.12.11-management-alpine"),
+		testcontainers.WithImage("rabbitmq:3.13.0-management-alpine"),
 		rabbitmq.WithAdminUsername("admin"),
 		rabbitmq.WithAdminPassword("password"),
-		testcontainers.WithStartupCommand(VirtualHost{
+		testcontainers.WithAfterReadyCommand(VirtualHost{
 			Name:    "fastfeet",
 			Tracing: true,
 		}),
-		testcontainers.WithStartupCommand(Queue{
+		testcontainers.WithAfterReadyCommand(Queue{
 			Name:  queueName,
 			VHost: "fastfeet",
 		}),
-		testcontainers.WithStartupCommand(Exchange{
+		testcontainers.WithAfterReadyCommand(Exchange{
 			Name:  exchangeName,
 			Type:  "direct",
 			VHost: "fastfeet",
 		}),
-		testcontainers.WithStartupCommand(NewBindingWithVHost("fastfeet", exchangeName, queueName)),
+		testcontainers.WithAfterReadyCommand(NewBindingWithVHost("fastfeet", exchangeName, queueName)),
 	)
 }
 
