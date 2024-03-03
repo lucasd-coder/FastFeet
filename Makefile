@@ -70,5 +70,19 @@ k8s_del_secret:
 
 .PHONY: test
 
-test:	
-	go list -f '{{.Dir}}/...' -m | xargs -L1 go test -timeout 120s -race -coverprofile=coverage.out -tags=integration
+test:
+	go test -timeout 120s -race -tags=integration -coverprofile=coverage.out -v $(shell go list -f '{{.Dir}}/...' -m | xargs)
+
+.PHONY: coverage
+
+coverage:
+	make test
+	go tool cover -html=coverage.out
+
+.PHONY: lint
+
+lint:	
+	GO111MODULE=on golangci-lint run ./... \
+		--config .golangci.yaml
+
+
