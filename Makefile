@@ -79,4 +79,10 @@ coverage:
 	make test
 	go tool cover -html=coverage.out
 
+.PHONY: lint
+
+lint:	
+	GO111MODULE=on golangci-lint run ./... \
+		--config .golangci.yaml
+
 

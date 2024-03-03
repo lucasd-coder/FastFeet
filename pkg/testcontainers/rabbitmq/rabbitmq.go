@@ -9,6 +9,10 @@ import (
 	"github.com/testcontainers/testcontainers-go/modules/rabbitmq"
 )
 
+const (
+	arg = "arguments="
+)
+
 func RunContainer(ctx context.Context, queueName, exchangeName string) (*rabbitmq.RabbitMQContainer, error) {
 	return rabbitmq.RunContainer(ctx,
 		testcontainers.WithImage("rabbitmq:3.13.0-management-alpine"),
@@ -69,7 +73,7 @@ func (e Exchange) AsCommand() []string {
 			return cmd
 		}
 
-		cmd = append(cmd, "arguments="+string(bytes))
+		cmd = append(cmd, arg+string(bytes))
 	}
 
 	return cmd
@@ -108,7 +112,7 @@ func (q Queue) AsCommand() []string {
 			return cmd
 		}
 
-		cmd = append(cmd, "arguments="+string(bytes))
+		cmd = append(cmd, arg+string(bytes))
 	}
 
 	return cmd
@@ -164,7 +168,7 @@ func (b Binding) AsCommand() []string {
 			return cmd
 		}
 
-		cmd = append(cmd, "arguments="+string(bytes))
+		cmd = append(cmd, arg+string(bytes))
 	}
 
 	return cmd

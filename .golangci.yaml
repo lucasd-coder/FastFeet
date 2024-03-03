@@ -56,7 +56,6 @@ linters:
     - staticcheck
     - unused
     - revive
-    - wsl
     - stylecheck
     - cyclop
     - prealloc
