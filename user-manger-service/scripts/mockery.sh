@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -e
-export VERSION=v2.20.2
+export VERSION=v2.42.2
 
 
 while IFS="=" read -r package interfaces || [ -n "$package" ]

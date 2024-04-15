@@ -55,7 +55,7 @@ func (s *ServiceImpl) CreateOrder(ctx context.Context, pld Payload) (*pb.OrderRe
 	return resp, nil
 }
 
-func (s *ServiceImpl) newOrderRequest(pld Payload, address *shared.ViaCepAddressResponse) *pb.OrderRequest {
+func (s *ServiceImpl) newOrderRequest(pld Payload, address *shared.AddressResponse) *pb.OrderRequest {
 	return &pb.OrderRequest{
 		DeliverymanId: pld.Data.DeliverymanID,
 		Product:       &pb.Product{Name: pld.Data.Product.Name},

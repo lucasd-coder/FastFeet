@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/google/wire"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/provider/cep"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/shared"
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"google.golang.org/grpc/codes"
@@ -21,14 +22,14 @@ type ServiceImpl struct {
 	validate         shared.Validator
 	orderRepository  Repository
 	authRepository   shared.AuthRepository
-	viaCepRepository ViaCepRepository
+	viaCepRepository cep.Repository
 }
 
 func NewService(
 	val shared.Validator,
 	orderRepo Repository,
 	authRepo shared.AuthRepository,
-	viaCepRepo ViaCepRepository,
+	viaCepRepo cep.Repository,
 ) *ServiceImpl {
 	return &ServiceImpl{
 		validate:         val,

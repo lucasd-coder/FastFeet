@@ -1,13 +1,14 @@
-package repository
+package cep
 
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/http/httptrace"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/lucasd-coder/fast-feet/business-service/config"
 	cacheProvider "github.com/lucasd-coder/fast-feet/business-service/internal/provider/cache"
-	"github.com/lucasd-coder/fast-feet/business-service/internal/provider/viacepservice"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/shared"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/shared/codec"
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
@@ -18,24 +19,18 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const (
-	spanErrRequest         = "Request Error"
-	spanErrResponseStatus  = "Response Status Error"
-	spanErrExtractResponse = "Error Extract Response"
-)
-
 type ViaCepRepository struct {
 	cfg             *config.Config
-	cacheRepository shared.CacheRepository[shared.ViaCepAddressResponse]
+	cacheRepository shared.CacheRepository[shared.AddressResponse]
 }
 
 func NewViaCepRepository(cfg *config.Config,
-	client *redis.Client) *ViaCepRepository {
-	cacheRepository := cacheProvider.NewCacheRepository[shared.ViaCepAddressResponse](client)
+	redisCient *redis.Client) *ViaCepRepository {
+	cacheRepository := cacheProvider.NewCacheRepository[shared.AddressResponse](redisCient)
 	return &ViaCepRepository{cfg, cacheRepository}
 }
 
-func (r *ViaCepRepository) GetAddress(ctx context.Context, cep string) (*shared.ViaCepAddressResponse, error) {
+func (r *ViaCepRepository) GetAddress(ctx context.Context, cep string) (*shared.AddressResponse, error) {
 	log := logger.FromContext(ctx)
 	span := trace.SpanFromContext(ctx)
 	ctx = httptrace.WithClientTrace(ctx, otelhttptrace.NewClientTrace(ctx))
@@ -55,17 +50,17 @@ func (r *ViaCepRepository) GetAddress(ctx context.Context, cep string) (*shared.
 	return address, nil
 }
 
-func (r *ViaCepRepository) getAddress(ctx context.Context, cep string) (*shared.ViaCepAddressResponse, error) {
+func (r *ViaCepRepository) getAddress(ctx context.Context, cep string) (*shared.AddressResponse, error) {
 	log := logger.FromContext(ctx)
 	ctx = httptrace.WithClientTrace(ctx, otelhttptrace.NewClientTrace(ctx))
 
-	client := viacepservice.NewClient(r.cfg)
+	client := r.newClient()
 
 	request := client.R().SetContext(ctx).SetLogger(log)
 
 	response, err := request.
 		SetPathParam("cep", cep).
-		SetResult(&shared.ViaCepAddressResponse{}).
+		SetResult(&shared.AddressResponse{}).
 		SetError(&shared.HTTPError{}).
 		Get("/ws/{cep}/json/")
 	if err != nil {
@@ -79,27 +74,27 @@ func (r *ViaCepRepository) getAddress(ctx context.Context, cep string) (*shared.
 			"err while execute request api-viacep with statusCode: %s. Endpoint: /ws/{cep}/json, Method: GET", response.Status())
 	}
 
-	res, ok := response.Result().(*shared.ViaCepAddressResponse)
+	res, ok := response.Result().(*shared.AddressResponse)
 	if !ok {
 		r.createSpanError(ctx, err, spanErrExtractResponse)
 		return nil, fmt.Errorf("%w. Endpoint: /ws/{cep}/json", shared.ErrExtractResponse)
 	}
 
-	log.Debugf("api-viacep call successful. Endpoint: /api/users, Method: GET, Response time: %s",
+	log.Debugf("api-viacep call successful. Endpoint: /ws/{cep}/json, Method: GET, Response time: %s",
 		response.ReceivedAt().String())
 
 	return res, nil
 }
 
-func (r *ViaCepRepository) getCachedToAddress(ctx context.Context, cep string) (*shared.ViaCepAddressResponse, error) {
+func (r *ViaCepRepository) getCachedToAddress(ctx context.Context, cep string) (*shared.AddressResponse, error) {
 	resultCache, err := r.cacheRepository.Get(ctx, cep)
 	if err != nil {
 		return nil, err
 	}
 
-	enc := codec.New[shared.ViaCepAddressResponse]()
+	enc := codec.New[shared.AddressResponse]()
 
-	var address *shared.ViaCepAddressResponse
+	var address *shared.AddressResponse
 
 	if err := enc.Decode([]byte(resultCache), address); err != nil {
 		return nil, err
@@ -108,7 +103,7 @@ func (r *ViaCepRepository) getCachedToAddress(ctx context.Context, cep string) (
 	return address, nil
 }
 
-func (r *ViaCepRepository) setCacheAndReturn(ctx context.Context, cep string) (*shared.ViaCepAddressResponse, error) {
+func (r *ViaCepRepository) setCacheAndReturn(ctx context.Context, cep string) (*shared.AddressResponse, error) {
 	log := logger.FromContext(ctx)
 
 	address, err := r.getAddress(ctx, cep)
@@ -128,4 +123,30 @@ func (r *ViaCepRepository) createSpanError(ctx context.Context, err error, msg s
 	span := trace.SpanFromContext(ctx)
 	span.SetStatus(codes.Error, msg)
 	span.RecordError(err)
+}
+
+func (r *ViaCepRepository) newOptions() *options {
+	transport := &http.Transport{
+		MaxIdleConns:          r.cfg.ViaCepMaxConn,
+		IdleConnTimeout:       r.cfg.ViaCepConnTimeout,
+		MaxConnsPerHost:       r.cfg.ViaCepMaxRoutes,
+		ResponseHeaderTimeout: r.cfg.ViaCepReadTimeout,
+	}
+
+	return &options{
+		transport:        transport,
+		requestTimeout:   r.cfg.ViaCepRequestTimeout,
+		url:              r.cfg.ViaCepURL,
+		debug:            *r.cfg.ViaCepDebug,
+		maxRetries:       r.cfg.ViaCepMaxRetries,
+		retryWaitTime:    r.cfg.ViaCepRetryWaitTime,
+		retryMaxWaitTime: r.cfg.ViaCepRetryMaxWaitTime,
+	}
+}
+
+func (r *ViaCepRepository) newClient() *resty.Client {
+	if client == nil {
+		client = NewClient(r.newOptions())
+	}
+	return client
 }

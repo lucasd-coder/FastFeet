@@ -14,12 +14,15 @@ import (
 	"github.com/lucasd-coder/fast-feet/business-service/internal/domain/user"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/domain/user/handler"
 	repository2 "github.com/lucasd-coder/fast-feet/business-service/internal/provider/authservice/repository"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/provider/cep"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/provider/managerservice/repository"
 	repository3 "github.com/lucasd-coder/fast-feet/business-service/internal/provider/orderdataservice/repository"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/provider/validator"
-	repository4 "github.com/lucasd-coder/fast-feet/business-service/internal/provider/viacepservice/repository"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/shared"
-	"github.com/lucasd-coder/fast-feet/business-service/pkg/cache"
+)
+
+import (
+	_ "net/http/pprof"
 )
 
 // Injectors from wire.go:
@@ -39,9 +42,8 @@ func InitializeOrderHandler() *handler2.Handler {
 	configConfig := config.GetConfig()
 	orderDataRepository := repository3.NewOrderDataRepository(configConfig)
 	authRepository := repository2.NewAuthRepository(configConfig)
-	client := cache.GetClient()
-	viaCepRepository := repository4.NewViaCepRepository(configConfig, client)
-	serviceImpl := order.NewService(validation, orderDataRepository, authRepository, viaCepRepository)
+	cepRepository := cep.NewRepository(configConfig)
+	serviceImpl := order.NewService(validation, orderDataRepository, authRepository, cepRepository)
 	handlerHandler := handler2.NewHandler(serviceImpl, configConfig)
 	return handlerHandler
 }
@@ -53,7 +55,5 @@ var initializeValidator = wire.NewSet(wire.Struct(new(validator.Validation)), wi
 var initializeUserRepository = wire.NewSet(wire.Bind(new(user.Repository), new(*repository.UserRepository)), repository.NewUserRepository)
 
 var initializeAuthRepository = wire.NewSet(wire.Bind(new(shared.AuthRepository), new(*repository2.AuthRepository)), repository2.NewAuthRepository)
-
-var initializeViaCepRepository = wire.NewSet(wire.Bind(new(order.ViaCepRepository), new(*repository4.ViaCepRepository)), cache.GetClient, repository4.NewViaCepRepository)
 
 var initializeOrderDataRepository = wire.NewSet(wire.Bind(new(order.Repository), new(*repository3.OrderDataRepository)), repository3.NewOrderDataRepository)

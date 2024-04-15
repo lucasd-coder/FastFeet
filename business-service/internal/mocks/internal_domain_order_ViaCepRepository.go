@@ -16,19 +16,19 @@ type ViaCepRepository_internal_domain_order struct {
 }
 
 // GetAddress provides a mock function with given fields: ctx, cep
-func (_m *ViaCepRepository_internal_domain_order) GetAddress(ctx context.Context, cep string) (*shared.ViaCepAddressResponse, error) {
+func (_m *ViaCepRepository_internal_domain_order) GetAddress(ctx context.Context, cep string) (*shared.AddressResponse, error) {
 	ret := _m.Called(ctx, cep)
 
-	var r0 *shared.ViaCepAddressResponse
+	var r0 *shared.AddressResponse
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (*shared.ViaCepAddressResponse, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*shared.AddressResponse, error)); ok {
 		return rf(ctx, cep)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) *shared.ViaCepAddressResponse); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) *shared.AddressResponse); ok {
 		r0 = rf(ctx, cep)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*shared.ViaCepAddressResponse)
+			r0 = ret.Get(0).(*shared.AddressResponse)
 		}
 	}
 

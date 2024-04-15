@@ -110,7 +110,7 @@ func (suite *CreateOrderHandlerSuite) TestCreateOrder() {
 		Roles: []string{"admin"},
 	}, nil)
 
-	suite.repoViaCep.On("GetAddress", suite.ctx, postalCode).Return(&shared.ViaCepAddressResponse{
+	suite.repoViaCep.On("GetAddress", suite.ctx, postalCode).Return(&shared.AddressResponse{
 		Address:      "rua das marias",
 		PostalCode:   "01001000",
 		Neighborhood: "parque dos Camargo",

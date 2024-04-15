@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"runtime"
 	"sync"
 	"time"
 
@@ -72,20 +71,21 @@ func (s *Subscription) Start(ctx context.Context) {
 		}
 	}()
 
-	var wg sync.WaitGroup
-	sem := make(chan struct{}, s.opt.MaxConcurrentMessages)
-
-	s.start(ctx, client, &wg, sem)
-	wg.Wait()
-	close(sem)
-}
-
-func (s *Subscription) start(ctx context.Context, client *pubsub.Subscription, wg *sync.WaitGroup, sem chan struct{}) {
-	log := logger.FromContext(ctx)
-
 	msgChan := make(chan *pubsub.Message)
 
-	s.startReceivers(ctx, client, msgChan)
+	go s.startReceivers(ctx, client, msgChan)
+
+	var wg sync.WaitGroup
+	wg.Add(s.opt.MaxConcurrentMessages)
+	for i := 0; i < s.opt.MaxConcurrentMessages; i++ {
+		go s.startProcess(ctx, &wg, msgChan)
+	}
+	wg.Wait()
+	close(msgChan)
+}
+
+func (s *Subscription) startProcess(ctx context.Context, wg *sync.WaitGroup, msgChan chan *pubsub.Message) {
+	log := logger.FromContext(ctx)
 
 	for {
 		select {
@@ -93,11 +93,8 @@ func (s *Subscription) start(ctx context.Context, client *pubsub.Subscription, w
 			log.Infof("context cancelled, stopping Subscription... for queueURL: %s", s.opt.QueueURL)
 			return
 		case msg := <-msgChan:
-			sem <- struct{}{}
-			wg.Add(1)
 			go func(ctx context.Context, currentMsg *pubsub.Message) {
 				defer func() {
-					<-sem
 					wg.Done()
 					currentMsg.Ack()
 				}()
@@ -109,7 +106,6 @@ func (s *Subscription) start(ctx context.Context, client *pubsub.Subscription, w
 					}
 					return
 				}
-				runtime.Goexit()
 			}(ctx, msg)
 		}
 	}

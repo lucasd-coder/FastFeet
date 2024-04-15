@@ -20,7 +20,7 @@ type (
 
 	Log struct {
 		Level        string `env-required:"true" yaml:"log-level"   env:"LOG_LEVEL"`
-		ReportCaller bool   `yaml:"report-caller" default:"false"`
+		ReportCaller *bool  `yaml:"report-caller" default:"false"`
 	}
 
 	GRPC struct {
@@ -47,7 +47,7 @@ type (
 		KeyCloakPassword       string        `env-required:"true" yaml:"password" env:"KEYCLOAK_PASSWORD"`
 		KeyCloakRealm          string        `env-required:"true" yaml:"realm" env:"KEYCLOAK_REALM"`
 		KeyCloakRequestTimeout time.Duration `env-required:"true" yaml:"request-timeout"`
-		KeyCloakDebug          bool          `yaml:"debug" env-default:"true"`
+		KeyCloakDebug          *bool         `yaml:"debug" env-default:"true"`
 	}
 
 	OpenTelemetry struct {

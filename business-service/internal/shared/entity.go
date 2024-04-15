@@ -39,7 +39,7 @@ type IsActiveUser struct {
 	Active bool `json:"active,omitempty"`
 }
 
-type ViaCepAddressResponse struct {
+type AddressResponse struct {
 	Address      string `json:"logradouro,omitempty"`
 	PostalCode   string `json:"cep,omitempty"`
 	Neighborhood string `json:"bairro,omitempty"`
@@ -47,7 +47,7 @@ type ViaCepAddressResponse struct {
 	State        string `json:"uf,omitempty"`
 }
 
-func (v *ViaCepAddressResponse) GetPostalCode() string {
+func (v *AddressResponse) GetPostalCode() string {
 	if v != nil {
 		return v.PostalCode
 	}

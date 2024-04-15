@@ -43,6 +43,19 @@ integration:
       max-retry: 3
       retry-wait-time: 5s
       retry-max-wait-time: 20s
+      enabled: false
+    brasilaberto:
+      url: https://api.brasilaberto.com
+      max-conn: 20
+      max-routes: 20
+      read-timeout: 10s
+      conn-timeout: 10s
+      debug: true
+      request-timeout: 60s
+      max-retry: 3
+      retry-wait-time: 5s
+      retry-max-wait-time: 20s
+      enabled: true
 
   rabbit-mq:
     queue:

@@ -130,7 +130,7 @@ func (suite *CreateOrderSuite) TestCreateOrderWhenReturnViaCepRepositoryResponse
 		Return(getRolesResp, nil)
 
 	suite.repoViaCep.On("GetAddress", suite.ctx,
-		pld.Data.Address.PostalCode).Return(&shared.ViaCepAddressResponse{}, shared.ErrExtractResponse)
+		pld.Data.Address.PostalCode).Return(&shared.AddressResponse{}, shared.ErrExtractResponse)
 
 	_, err := suite.svc.CreateOrder(suite.ctx, pld)
 	suite.Error(err)
@@ -153,7 +153,7 @@ func (suite *CreateOrderSuite) TestCreateOrderWhenAddressInvalid() {
 	suite.repoAuth.On("FindRolesByID", suite.ctx, pld.Data.UserID).
 		Return(getRolesResp, nil)
 
-	suite.repoViaCep.On("GetAddress", suite.ctx, pld.Data.Address.PostalCode).Return(&shared.ViaCepAddressResponse{}, nil)
+	suite.repoViaCep.On("GetAddress", suite.ctx, pld.Data.Address.PostalCode).Return(&shared.AddressResponse{}, nil)
 
 	resp, err := suite.svc.CreateOrder(suite.ctx, pld)
 	suite.NoError(err)
@@ -176,7 +176,7 @@ func (suite *CreateOrderSuite) TestCreateOrder() {
 	suite.repoAuth.On("FindRolesByID", suite.ctx, pld.Data.UserID).
 		Return(getRolesResp, nil)
 
-	getAddress := &shared.ViaCepAddressResponse{
+	getAddress := &shared.AddressResponse{
 		Address:      "rua das marias",
 		PostalCode:   "12345667",
 		Neighborhood: "Copacabana",

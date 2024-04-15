@@ -10,13 +10,12 @@ import (
 	orderHandler "github.com/lucasd-coder/fast-feet/business-service/internal/domain/order/handler"
 	user "github.com/lucasd-coder/fast-feet/business-service/internal/domain/user"
 	userHandler "github.com/lucasd-coder/fast-feet/business-service/internal/domain/user/handler"
-	"github.com/lucasd-coder/fast-feet/business-service/pkg/cache"
 
 	authservice "github.com/lucasd-coder/fast-feet/business-service/internal/provider/authservice/repository"
+	"github.com/lucasd-coder/fast-feet/business-service/internal/provider/cep"
 	managerservice "github.com/lucasd-coder/fast-feet/business-service/internal/provider/managerservice/repository"
 	orderdataservice "github.com/lucasd-coder/fast-feet/business-service/internal/provider/orderdataservice/repository"
 	val "github.com/lucasd-coder/fast-feet/business-service/internal/provider/validator"
-	viacepservice "github.com/lucasd-coder/fast-feet/business-service/internal/provider/viacepservice/repository"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/shared"
 )
 
@@ -35,12 +34,6 @@ var initializeAuthRepository = wire.NewSet(
 	authservice.NewAuthRepository,
 )
 
-var initializeViaCepRepository = wire.NewSet(
-	wire.Bind(new(order.ViaCepRepository), new(*viacepservice.ViaCepRepository)),
-	cache.GetClient,
-	viacepservice.NewViaCepRepository,
-)
-
 var initializeOrderDataRepository = wire.NewSet(
 	wire.Bind(new(order.Repository), new(*orderdataservice.OrderDataRepository)),
 	orderdataservice.NewOrderDataRepository,
@@ -53,7 +46,6 @@ func InitializeUserHandler() *userHandler.Handler {
 }
 
 func InitializeOrderHandler() *orderHandler.Handler {
-	wire.Build(initializeAuthRepository, initializeViaCepRepository, initializeOrderDataRepository,
-		initializeValidator, order.InitializeService, config.GetConfig, orderHandler.NewHandler)
+	wire.Build(initializeAuthRepository, config.GetConfig, cep.NewRepository, initializeOrderDataRepository, initializeValidator, order.InitializeService, orderHandler.NewHandler)
 	return nil
 }
