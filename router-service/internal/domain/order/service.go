@@ -5,7 +5,6 @@ import (
 
 	"github.com/google/wire"
 	"github.com/lucasd-coder/fast-feet/router-service/config"
-	"github.com/lucasd-coder/fast-feet/router-service/internal/provider/publish"
 	"github.com/lucasd-coder/fast-feet/router-service/internal/provider/validator"
 	"github.com/lucasd-coder/fast-feet/router-service/internal/shared"
 )
@@ -24,7 +23,7 @@ type ServiceImpl struct {
 
 func NewService(
 	validate *validator.Validation,
-	publish *publish.Published,
+	publish shared.Publish,
 	cfg *config.Config,
 	businessRepo shared.BusinessRepository,
 ) *ServiceImpl {

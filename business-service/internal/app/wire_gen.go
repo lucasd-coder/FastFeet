@@ -19,6 +19,7 @@ import (
 	repository3 "github.com/lucasd-coder/fast-feet/business-service/internal/provider/orderdataservice/repository"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/provider/validator"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/shared"
+	"github.com/lucasd-coder/fast-feet/business-service/pkg/cache"
 )
 
 import (
@@ -30,30 +31,69 @@ import (
 func InitializeUserHandler() *handler.Handler {
 	configConfig := config.GetConfig()
 	userRepository := repository.NewUserRepository(configConfig)
-	authRepository := repository2.NewAuthRepository(configConfig)
-	validation := &validator.Validation{}
-	serviceImpl := user.NewService(userRepository, authRepository, validation)
+	authRepository := InitializeAuthRepository()
+	validator := InitializeValidator()
+	serviceImpl := user.NewService(userRepository, authRepository, validator)
 	handlerHandler := handler.NewHandler(serviceImpl, configConfig)
 	return handlerHandler
 }
 
-func InitializeOrderHandler() *handler2.Handler {
+func InitializeBrasilAbertoRepository() *cep.BrasilAbertoRepository {
+	configConfig := config.GetConfig()
+	client := cache.GetClient()
+	brasilAbertoRepository := cep.NewBrasilAbertoRepository(configConfig, client)
+	return brasilAbertoRepository
+}
+
+func InitializeViaCepRepository() *cep.ViaCepRepository {
+	configConfig := config.GetConfig()
+	client := cache.GetClient()
+	viaCepRepository := cep.NewViaCepRepository(configConfig, client)
+	return viaCepRepository
+}
+
+func InitializeValidator() shared.Validator {
 	validation := &validator.Validation{}
+	return validation
+}
+
+func InitializeAuthRepository() shared.AuthRepository {
+	configConfig := config.GetConfig()
+	authRepository := repository2.NewAuthRepository(configConfig)
+	return authRepository
+}
+
+func InitializeOrderDataRepository() order.Repository {
 	configConfig := config.GetConfig()
 	orderDataRepository := repository3.NewOrderDataRepository(configConfig)
-	authRepository := repository2.NewAuthRepository(configConfig)
-	cepRepository := cep.NewRepository(configConfig)
-	serviceImpl := order.NewService(validation, orderDataRepository, authRepository, cepRepository)
+	return orderDataRepository
+}
+
+func InitializeOrderHandler() *handler2.Handler {
+	sharedValidator := InitializeValidator()
+	orderRepository := InitializeOrderDataRepository()
+	authRepository := InitializeAuthRepository()
+	cepRepository := newCepRepository()
+	serviceImpl := order.NewService(sharedValidator, orderRepository, authRepository, cepRepository)
+	configConfig := config.GetConfig()
 	handlerHandler := handler2.NewHandler(serviceImpl, configConfig)
 	return handlerHandler
 }
 
 // wire.go:
 
-var initializeValidator = wire.NewSet(wire.Struct(new(validator.Validation)), wire.Bind(new(shared.Validator), new(*validator.Validation)))
+var (
+	initializeUserRepository = wire.NewSet(wire.Bind(new(user.Repository), new(*repository.UserRepository)), repository.NewUserRepository)
+)
 
-var initializeUserRepository = wire.NewSet(wire.Bind(new(user.Repository), new(*repository.UserRepository)), repository.NewUserRepository)
+func newCepRepository() cep.Repository {
+	cfg := config.GetConfig()
+	if *cfg.ViaCepEnabled {
+		return InitializeViaCepRepository()
+	}
+	if *cfg.BrasilAbertoEnabled {
+		return InitializeBrasilAbertoRepository()
+	}
 
-var initializeAuthRepository = wire.NewSet(wire.Bind(new(shared.AuthRepository), new(*repository2.AuthRepository)), repository2.NewAuthRepository)
-
-var initializeOrderDataRepository = wire.NewSet(wire.Bind(new(order.Repository), new(*repository3.OrderDataRepository)), repository3.NewOrderDataRepository)
+	return nil
+}

@@ -20,7 +20,7 @@ wire-check:
 	wire check ./internal/app
 
 run-application:
-	GO_PROFILE=dev GO111MODULE=on go run -race ./cmd/app/main.go
+	KEYCLOAK_URL=http://localhost:8080/auth GO_PROFILE=dev GO111MODULE=on go run -race ./cmd/app/main.go
 
 test:
 	GO111MODULE=on go test -race -tags=integration -coverprofile coverage.out ./...

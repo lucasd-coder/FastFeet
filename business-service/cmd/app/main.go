@@ -7,6 +7,9 @@ import (
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/lucasd-coder/fast-feet/business-service/config"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/app"
+
+	// revive
+	_ "go.uber.org/automaxprocs"
 )
 
 var cfg config.Config

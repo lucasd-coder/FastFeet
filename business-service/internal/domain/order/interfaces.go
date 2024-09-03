@@ -3,10 +3,15 @@ package order
 import (
 	"context"
 
+	"github.com/lucasd-coder/fast-feet/business-service/internal/shared"
 	"github.com/lucasd-coder/fast-feet/business-service/pkg/pb"
 )
 
 type (
+	CepRepository interface {
+		GetAddress(ctx context.Context, cep string) (*shared.AddressResponse, error)
+	}
+
 	Repository interface {
 		Save(ctx context.Context, req *pb.OrderRequest) (*pb.OrderResponse, error)
 		GetAllOrder(ctx context.Context,

@@ -1585,7 +1585,7 @@
     } ],
     "disableableCredentialTypes" : [ "password" ],
     "requiredActions" : [ ],
-    "realmRoles" : [ "admin", "user", "view-profile" ],
+    "realmRoles" : [ "admin", "user", "confidential", "view-profile", "realm-admin", "manage-realm", "query-users", "manage-clients", "manage-users","manage-account" ],
     "notBefore" : 0,
     "groups" : [ ]
   }, {

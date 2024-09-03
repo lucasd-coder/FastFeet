@@ -9,6 +9,8 @@ import (
 	"github.com/lucasd-coder/fast-feet/business-service/internal/shared/ciphers"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/shared/codec"
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func (h *Handler) CreateUser(ctx context.Context, m []byte) error {
@@ -26,8 +28,12 @@ func (h *Handler) CreateUser(ctx context.Context, m []byte) error {
 		return fmt.Errorf("err Decode: %w", err)
 	}
 
-	slog.With("payload",
-		slog.String("name", pld.Data.Name)).
+	span := trace.SpanFromContext(ctx)
+	span.SetAttributes(attribute.String("eventDate", pld.EventDate))
+	span.SetAttributes(attribute.String("userName", pld.Data.Name))
+
+	log.With(slog.Group("payload",
+		"name", pld.Data.Name)).
 		Info("received payload")
 
 	user, err := h.service.Save(ctx, &pld)
@@ -35,7 +41,7 @@ func (h *Handler) CreateUser(ctx context.Context, m []byte) error {
 		return err
 	}
 
-	log.Infof("payload successfully processed for id: %s", user.Id)
+	log.Infof("payload successfully processed for id: %s", user.GetId())
 
 	return nil
 }

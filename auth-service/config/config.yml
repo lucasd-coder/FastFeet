@@ -3,7 +3,7 @@ app:
   version: 1.0.0
 
 logger:
-  log_level: ${LOG_LEVEL}
+  log-level: ${LOG_LEVEL}
   report-caller: false
 
 grpc:

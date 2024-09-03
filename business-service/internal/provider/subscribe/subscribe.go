@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"runtime"
 	"sync"
 	"time"
 
@@ -19,31 +20,38 @@ import (
 	"gocloud.dev/pubsub"
 )
 
-var (
-	mutex sync.Mutex
-)
-
 type Subscription struct {
+	mux     sync.RWMutex
 	handler func(ctx context.Context, m []byte) error
 	opt     *queueoptions.Options
 	metr    monitor.Metrics
+	client  *pubsub.Subscription
 }
 
 func New(
+	ctx context.Context,
 	handler func(ctx context.Context, m []byte) error,
 	opt *queueoptions.Options,
-	metr monitor.Metrics) *Subscription {
-	return &Subscription{
-		handler,
-		opt,
-		metr,
+	metr monitor.Metrics) (*Subscription, error) {
+	client, err := NewClient(ctx, opt)
+	if err != nil {
+		logger.FromContext(ctx).Errorf("error creating subscription client: %v, for queueURL",
+			err, opt.QueueURL)
+		return nil, err
 	}
+
+	return &Subscription{
+		handler: handler,
+		opt:     opt,
+		metr:    metr,
+		client:  client,
+	}, nil
 }
 
 func (s *Subscription) Start(ctx context.Context) {
-	mutex.Lock()
+	s.mux.RLock()
 	tracer := s.initializeTracer()
-	mutex.Unlock()
+	s.mux.RUnlock()
 	logDefault := logger.FromContext(ctx)
 
 	logDefault.Infof("Subscription has been started.... for queueURL: %s", s.opt.QueueURL)
@@ -58,14 +66,8 @@ func (s *Subscription) Start(ctx context.Context) {
 	)
 	defer span.End()
 
-	client, err := NewClient(ctx, s.opt)
-	if err != nil {
-		span.RecordError(err)
-		logDefault.Errorf("error creating subscription client: %v, for queueURL", err, s.opt.QueueURL)
-	}
-
 	defer func() {
-		if err := client.Shutdown(ctx); err != nil {
+		if err := s.client.Shutdown(ctx); err != nil {
 			span.RecordError(err)
 			log.Fatalf("error client for queueURL: %s, shutdown: %v", s.opt.QueueURL, err)
 		}
@@ -73,7 +75,7 @@ func (s *Subscription) Start(ctx context.Context) {
 
 	msgChan := make(chan *pubsub.Message)
 
-	go s.startReceivers(ctx, client, msgChan)
+	go s.startReceivers(ctx, msgChan)
 
 	var wg sync.WaitGroup
 	wg.Add(s.opt.MaxConcurrentMessages)
@@ -85,28 +87,23 @@ func (s *Subscription) Start(ctx context.Context) {
 }
 
 func (s *Subscription) startProcess(ctx context.Context, wg *sync.WaitGroup, msgChan chan *pubsub.Message) {
-	log := logger.FromContext(ctx)
-
+	defer wg.Done()
 	for {
 		select {
 		case <-ctx.Done():
-			log.Infof("context cancelled, stopping Subscription... for queueURL: %s", s.opt.QueueURL)
+			logger.FromContext(ctx).Infof("context cancelled, stopping Subscription... for queueURL: %s", s.opt.QueueURL)
+			runtime.Goexit()
 			return
 		case msg := <-msgChan:
-			go func(ctx context.Context, currentMsg *pubsub.Message) {
-				defer func() {
-					wg.Done()
-					currentMsg.Ack()
-				}()
-
-				if err := s.processMessage(ctx, currentMsg.Body); err != nil {
-					log.Errorf("error processing message for queueURL: %s, err: %v", s.opt.QueueURL, err)
-					if currentMsg.Nackable() {
-						defer currentMsg.Nack()
-					}
-					return
+			if err := s.processMessage(ctx, msg.Body); err != nil {
+				logger.FromContext(ctx).Errorf("error processing message for queueURL: %s, err: %v", s.opt.QueueURL, err)
+				if msg.Nackable() {
+					defer msg.Nack()
 				}
-			}(ctx, msg)
+				return
+			} else {
+				msg.Ack()
+			}
 		}
 	}
 }
@@ -143,16 +140,15 @@ func (s *Subscription) processMessage(ctx context.Context, messages []byte) erro
 
 	var err error
 	for i := 0; i < s.opt.MaxRetries; i++ {
-		ctx, iSpan := tracer.Start(ctx, fmt.Sprintf(" ProcessingMessage MaxRetries-%d", i))
 		err = s.handler(ctx, messages)
 		if err == nil {
-			iSpan.SetStatus(codes.Ok, "Successfully Processing Message")
+			span.SetStatus(codes.Ok, "Successfully Processing Message")
 			s.createMetrics(monitor.OK, name, start)
 			break
 		}
 		log.Errorf("error while handling message: %v", err)
-		iSpan.SetStatus(codes.Error, "Error Processing Message")
-		iSpan.RecordError(err)
+		span.SetStatus(codes.Error, "Error Processing Message")
+		span.RecordError(err)
 
 		if i == s.opt.MaxRetries-1 {
 			log.Errorf("max retries exceeded, not processing message anymore: %v", err)
@@ -164,59 +160,50 @@ func (s *Subscription) processMessage(ctx context.Context, messages []byte) erro
 		backOffTime := time.Duration(1+i) * s.opt.WaitingTime
 		log.Infof("waiting %v before retrying", backOffTime)
 		time.Sleep(backOffTime)
-		iSpan.End()
+		span.End()
 	}
 	return err
 }
 
-func (s *Subscription) startReceivers(ctx context.Context, client *pubsub.Subscription, m chan *pubsub.Message) {
-	mutex.Lock()
-	defer mutex.Unlock()
+func (s *Subscription) startReceivers(ctx context.Context, m chan *pubsub.Message) {
 	for i := 0; i < s.opt.NumberOfMessageReceivers; i++ {
-		go s.receiveMessage(ctx, client, m)
+		go s.receiveMessage(ctx, m)
 	}
 }
 
-func (s *Subscription) receiveMessage(ctx context.Context, client *pubsub.Subscription, m chan *pubsub.Message) {
-	if client != nil {
-		log := logger.FromContext(ctx)
-		start := time.Now()
-		name := fmt.Sprintf("%s_receive", utils.ExtractQueueName(s.opt.QueueURL))
+func (s *Subscription) receiveMessage(ctx context.Context, m chan *pubsub.Message) {
+	if s.client == nil {
+		return
+	}
 
-		log.Infof("start receive mensagens for queueURL: %s", s.opt.QueueURL)
+	log := logger.FromContext(ctx)
+	start := time.Now()
+	name := fmt.Sprintf("%s_receive", utils.ExtractQueueName(s.opt.QueueURL))
 
-		retry := s.opt.MaxReceiveMessage
-		span := trace.SpanFromContext(ctx)
-		for {
-			select {
-			case <-ctx.Done():
-				log.Infof("context cancelled, stopping receive... for queueURL %s", s.opt.QueueURL)
-				return
-			default:
-				childCtx, cancel := context.WithCancel(ctx)
-				defer cancel()
+	log.Infof("start receive mensagens for queueURL: %s", s.opt.QueueURL)
 
-				msg, err := client.Receive(childCtx)
-				if err != nil {
-					span.RecordError(err)
-					s.createMetrics(monitor.ERROR, name, start)
-					log.Errorf("error receiving message for queueURL: %s, err: %v", s.opt.QueueURL, err)
-					time.Sleep(retry)
-					client, err = NewClient(ctx, s.opt)
-					if err != nil {
-						span.RecordError(err)
-						log.Errorf("error creating subscription client: %v, for queueURL", err, s.opt.QueueURL)
-					}
-					continue
-				}
+	span := trace.SpanFromContext(ctx)
+	for {
+		select {
+		case <-ctx.Done():
+			log.Infof("context cancelled, stopping receive... for queueURL %s", s.opt.QueueURL)
+			return
+		default:
+			childCtx, cancel := context.WithCancel(ctx)
+			defer cancel()
 
-				if msg != nil && len(msg.Body) > 0 {
-					s.createMetrics(monitor.OK, name, start)
-					m <- msg
-				}
-				s.applyBackPressure()
-				span.End()
+			msg, err := s.client.Receive(childCtx)
+			if err != nil {
+				s.handleReceiveError(ctx, name, start, err)
+				continue
 			}
+
+			if msg != nil && len(msg.Body) > 0 {
+				s.createMetrics(monitor.OK, name, start)
+				m <- msg
+			}
+			s.applyBackPressure()
+			span.End()
 		}
 	}
 }
@@ -234,4 +221,28 @@ func (s *Subscription) initializeTracer() trace.Tracer {
 	tracer := otel.GetTracerProvider().Tracer(traceName)
 
 	return tracer
+}
+
+func (s *Subscription) handleReceiveError(ctx context.Context, name string, start time.Time, err error) {
+	log := logger.FromContext(ctx)
+	span := trace.SpanFromContext(ctx)
+
+	span.RecordError(err)
+	s.createMetrics(monitor.ERROR, name, start)
+	log.Errorf("error receiving message for queueURL: %s, err: %v", s.opt.QueueURL, err)
+	time.Sleep(s.opt.MaxReceiveMessage)
+
+	client, err := NewClient(ctx, s.opt)
+	if err != nil {
+		span.RecordError(err)
+		log.Errorf("error creating subscription client: %v, for queueURL", err, s.opt.QueueURL)
+		return
+	}
+	s.updateClient(client)
+}
+
+func (s *Subscription) updateClient(client *pubsub.Subscription) {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	s.client = client
 }

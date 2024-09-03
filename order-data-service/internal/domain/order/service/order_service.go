@@ -28,7 +28,7 @@ func NewOrderService(
 func (s *OrderService) Save(ctx context.Context, req *pb.OrderRequest) (*pb.OrderResponse, error) {
 	log := logger.FromContext(ctx)
 
-	slog.With("payload", req).Info("received request")
+	logger.FromContext(ctx).With(slog.Any("payload", req)).Info("received request")
 
 	pld := order.CreateOrder{
 		DeliverymanID: req.GetDeliverymanId(),
@@ -69,7 +69,7 @@ func (s *OrderService) newAddress(req *pb.OrderRequest) order.Address {
 func (s *OrderService) GetAllOrder(ctx context.Context, req *pb.GetAllOrderRequest) (*pb.GetAllOrderResponse, error) {
 	log := logger.FromContext(ctx)
 
-	slog.With("payload", req).Info("received request")
+	logger.FromContext(ctx).With(slog.Any("payload", req)).Info("received request")
 
 	pld := &order.GetAllOrderRequest{
 		ID:            req.GetId(),

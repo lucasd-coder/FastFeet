@@ -24,7 +24,7 @@ func (g *OrderHandler) GetAllOrder(ctx context.Context, req *pb.GetAllOrderReque
 	*pb.GetAllOrderResponse, error) {
 	log := logger.FromContext(ctx)
 
-	slog.With("payload", req).Info("received request")
+	logger.FromContext(ctx).With(slog.Any("payload", req)).Info("received request")
 
 	pld := g.newGetAllOrderRequest(req)
 

@@ -10,16 +10,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Nerzal/gocloak/v13"
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/lucasd-coder/fast-feet/auth-service/config"
 	"github.com/lucasd-coder/fast-feet/auth-service/internal/domain/auth"
 	"github.com/lucasd-coder/fast-feet/auth-service/internal/domain/auth/handler"
 	"github.com/lucasd-coder/fast-feet/auth-service/internal/provider/kecloak"
 	"github.com/lucasd-coder/fast-feet/auth-service/internal/provider/validator"
+	"github.com/lucasd-coder/fast-feet/auth-service/internal/shared"
 	"github.com/lucasd-coder/fast-feet/auth-service/pkg/pb"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	testcontainers "github.com/lucasd-coder/fast-feet/pkg/testcontainers/keycloak"
-	keycloak "github.com/stillya/testcontainers-keycloak"
+	"github.com/lucasd-coder/fast-feet/pkg/testcontainers/keycloak/container"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -36,7 +37,7 @@ type AuthHandlerSuite struct {
 	cfg               config.Config
 	authHandler       *handler.AuthHandler
 	ctx               context.Context
-	keycloakContainer *keycloak.KeycloakContainer
+	keycloakContainer *container.KeycloakContainer
 	conn              *grpc.ClientConn
 }
 
@@ -71,27 +72,10 @@ func (suite *AuthHandlerSuite) SetupSuite() {
 	suite.cfg.KeyCloakBaseURL = authServerURL
 	config.ExportConfig(&suite.cfg)
 
-	client := kecloak.NewClient(suite.ctx, &suite.cfg)
-
-	token, err := client.LoginAdmin(suite.ctx, "admin", "admin", "master")
-	if err != nil {
-		suite.T().Fatalf("get token %v", err)
-	}
-
-	createRoles := []gocloak.Role{
-		{
-			Name: gocloak.StringP("user"),
-		},
-	}
-
-	for _, role := range createRoles {
-		roleName, err := client.CreateRealmRole(suite.ctx, token.AccessToken, suite.cfg.KeyCloakRealm, role)
-		if err != nil {
-			suite.T().Fatalf("CreateRealmRole %v", err)
-		}
-
-		slog.Info("CreateRealmRole", "roleName", roleName)
-	}
+	optlogger := shared.NewOptLogger(&suite.cfg)
+	logger := logger.NewLogger(optlogger)
+	logDefault := logger.GetLog()
+	slog.SetDefault(logDefault)
 }
 
 func (suite *AuthHandlerSuite) TearDownSuite() {

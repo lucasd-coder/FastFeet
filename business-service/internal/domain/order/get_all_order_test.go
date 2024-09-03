@@ -3,13 +3,19 @@ package order_test
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"os"
+	"path/filepath"
 	"testing"
 
+	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/lucasd-coder/fast-feet/business-service/config"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/domain/order"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/mocks"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/provider/validator"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/shared"
 	"github.com/lucasd-coder/fast-feet/business-service/pkg/pb"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
@@ -18,12 +24,38 @@ import (
 
 type GetAllOrderSuite struct {
 	suite.Suite
+	cfg            config.Config
 	svc            order.Service
 	repoAuth       *mocks.AuthRepository_internal_shared
 	repoOrder      *mocks.Repository_internal_domain_order
 	repoViaCep     *mocks.ViaCepRepository_internal_domain_order
 	ctx            context.Context
 	getAllOrderReq order.GetAllOrderRequest
+}
+
+func (suite *GetAllOrderSuite) SetupSuite() {
+	baseDir, err := os.Getwd()
+	if err != nil {
+		suite.T().Errorf("os.Getwd() error = %v", err)
+		return
+	}
+
+	os.Setenv("REDIS_HOST_PASSWORD", "123456")
+	os.Setenv("RABBIT_SERVER_URL", "amqp://localhost:5672/fastfeet")
+
+	staticDir := filepath.Join(baseDir, "..", "..", "..", "/config/config-test.yml")
+
+	slog.Info("config lod", "dir", staticDir)
+	err = cleanenv.ReadConfig(staticDir, &suite.cfg)
+	if err != nil {
+		suite.T().Errorf("cleanenv.ReadConfig() error = %v", err)
+		return
+	}
+	config.ExportConfig(&suite.cfg)
+	optlogger := shared.NewOptLogger(&suite.cfg)
+	logger := logger.NewLogger(optlogger)
+	logDefault := logger.GetLog()
+	slog.SetDefault(logDefault)
 }
 
 func (suite *GetAllOrderSuite) SetupTest() {
@@ -140,6 +172,12 @@ func (suite *GetAllOrderSuite) TestGetAllOrder() {
 	suite.NoError(err)
 	suite.NotEmpty(getAll.GetOrders())
 	suite.Equal(getAll.GetTotal(), int32(1))
+}
+
+func (suite *GetAllOrderSuite) TearDownTest() {
+	suite.repoOrder.AssertExpectations(suite.T())
+	suite.repoAuth.AssertExpectations(suite.T())
+	suite.repoViaCep.AssertExpectations(suite.T())
 }
 
 func TestGetAllOrderSuite(t *testing.T) {

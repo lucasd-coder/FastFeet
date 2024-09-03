@@ -35,7 +35,7 @@ func NewUserService(userRepo model.UserRepository,
 }
 
 func (service *UserService) Save(ctx context.Context, req *pb.UserRequest) (*pb.UserResponse, error) {
-	slog.With("payload", req).
+	logger.FromContext(ctx).With(slog.Any("payload", req)).
 		Info("received request")
 
 	pld := model.User{

@@ -8,11 +8,9 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/lucasd-coder/fast-feet/business-service/config"
-	cacheProvider "github.com/lucasd-coder/fast-feet/business-service/internal/provider/cache"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/shared"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/shared/codec"
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
-	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -22,12 +20,6 @@ import (
 type ViaCepRepository struct {
 	cfg             *config.Config
 	cacheRepository shared.CacheRepository[shared.AddressResponse]
-}
-
-func NewViaCepRepository(cfg *config.Config,
-	redisCient *redis.Client) *ViaCepRepository {
-	cacheRepository := cacheProvider.NewCacheRepository[shared.AddressResponse](redisCient)
-	return &ViaCepRepository{cfg, cacheRepository}
 }
 
 func (r *ViaCepRepository) GetAddress(ctx context.Context, cep string) (*shared.AddressResponse, error) {

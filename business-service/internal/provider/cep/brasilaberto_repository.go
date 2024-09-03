@@ -7,10 +7,8 @@ import (
 	"net/http/httptrace"
 
 	"github.com/go-resty/resty/v2"
-	cacheProvider "github.com/lucasd-coder/fast-feet/business-service/internal/provider/cache"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/shared/codec"
 	"github.com/lucasd-coder/fast-feet/pkg/logger"
-	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -50,12 +48,6 @@ func (a *AddressResponse) toAddress() *shared.AddressResponse {
 		City:         a.Result.City,
 		State:        a.Result.State,
 	}
-}
-
-func NewBrasilAbertoRepository(cfg *config.Config,
-	redisClient *redis.Client) *BrasilAbertoRepository {
-	cacheRepository := cacheProvider.NewCacheRepository[shared.AddressResponse](redisClient)
-	return &BrasilAbertoRepository{cfg, cacheRepository}
 }
 
 func (r *BrasilAbertoRepository) GetAddress(ctx context.Context, cep string) (*shared.AddressResponse, error) {

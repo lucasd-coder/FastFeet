@@ -3,12 +3,19 @@ package service_test
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"os"
+	"path/filepath"
 	"testing"
 
+	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
+	"github.com/lucasd-coder/fast-feet/user-manger-service/config"
 	model "github.com/lucasd-coder/fast-feet/user-manger-service/internal/domain/user"
 	"github.com/lucasd-coder/fast-feet/user-manger-service/internal/domain/user/service"
 	"github.com/lucasd-coder/fast-feet/user-manger-service/internal/mocks"
 	"github.com/lucasd-coder/fast-feet/user-manger-service/internal/provider/validator"
+	"github.com/lucasd-coder/fast-feet/user-manger-service/internal/shared"
 	pb "github.com/lucasd-coder/fast-feet/user-manger-service/pkg/pb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -26,9 +33,32 @@ const (
 
 type UserServiceSuite struct {
 	suite.Suite
+	cfg  config.Config
 	svc  service.UserService
 	ctx  context.Context
 	repo *mocks.UserRepository_internal_domain_user
+}
+
+func (suite *UserServiceSuite) SetupSuite() {
+	baseDir, err := os.Getwd()
+	if err != nil {
+		suite.T().Errorf("os.Getwd() error = %v", err)
+		return
+	}
+
+	staticDir := filepath.Join(baseDir, "..", "..", "..", "..", "/config/config-test.yml")
+
+	slog.Info("config lod", "dir", staticDir)
+	err = cleanenv.ReadConfig(staticDir, &suite.cfg)
+	if err != nil {
+		suite.T().Errorf("cleanenv.ReadConfig() error = %v", err)
+		return
+	}
+	config.ExportConfig(&suite.cfg)
+	optlogger := shared.NewOptLogger(&suite.cfg)
+	logger := logger.NewLogger(optlogger)
+	logDefault := logger.GetLog()
+	slog.SetDefault(logDefault)
 }
 
 func (suite *UserServiceSuite) SetupTest() {

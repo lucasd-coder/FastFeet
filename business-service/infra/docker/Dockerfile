@@ -16,7 +16,7 @@ RUN go mod download
  
 COPY . .
  
-RUN CGO_ENABLED=0 GOOS=linux go build -pgo="./infra/profile/default.pgo" -o /app -ldflags="-s -w -a" ./cmd/app
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app -ldflags="-s -w -a" ./cmd/app
  
 FROM alpine:3.18.4
 

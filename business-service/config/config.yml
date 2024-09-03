@@ -61,16 +61,16 @@ integration:
     queue:
       user-events:
         url: rabbit://business-service-user-events
-        max-retry: 5
+        max-retry: 3
         poll-delay-in-milliseconds: 100ms
-        max-concurrent-messages: 10
-        number-of-message-receivers: 2
+        max-concurrent-messages: 30
+        number-of-message-receivers: 1
       order-events:
         url: rabbit://business-service-order-events
-        max-retry: 5
+        max-retry: 3
         poll-delay-in-milliseconds: 100ms
-        max-concurrent-messages: 10
-        number-of-message-receivers: 2
+        max-concurrent-messages: 30
+        number-of-message-receivers: 1
   
   redis:
     url: ${REDIS_URL}

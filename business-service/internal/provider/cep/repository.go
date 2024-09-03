@@ -3,9 +3,10 @@ package cep
 import (
 	"context"
 
-	"github.com/google/wire"
 	"github.com/lucasd-coder/fast-feet/business-service/config"
+	cacheProvider "github.com/lucasd-coder/fast-feet/business-service/internal/provider/cache"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/shared"
+	"github.com/redis/go-redis/v9"
 )
 
 const (
@@ -18,12 +19,14 @@ type Repository interface {
 	GetAddress(ctx context.Context, cep string) (*shared.AddressResponse, error)
 }
 
-func NewRepository(cfg *config.Config) Repository {
-	if *cfg.BrasilAbertoEnabled {
-		wire.Build(wire.InterfaceValue(new(Repository), NewBrasilAbertoRepository))
-	}
-	if *cfg.ViaCepEnabled {
-		wire.Build(wire.InterfaceValue(new(Repository), NewViaCepRepository))
-	}
-	return nil
+func NewBrasilAbertoRepository(cfg *config.Config,
+	redisClient *redis.Client) *BrasilAbertoRepository {
+	cacheRepository := cacheProvider.NewCacheRepository[shared.AddressResponse](redisClient)
+	return &BrasilAbertoRepository{cfg, cacheRepository}
+}
+
+func NewViaCepRepository(cfg *config.Config,
+	redisCient *redis.Client) *ViaCepRepository {
+	cacheRepository := cacheProvider.NewCacheRepository[shared.AddressResponse](redisCient)
+	return &ViaCepRepository{cfg, cacheRepository}
 }

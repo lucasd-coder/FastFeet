@@ -6,6 +6,7 @@ import (
 
 	"github.com/lucasd-coder/fast-feet/business-service/internal/domain/user"
 	"github.com/lucasd-coder/fast-feet/business-service/pkg/pb"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 )
 
 type UserHandler struct {
@@ -20,8 +21,7 @@ func NewUserHandler(h Handler) *UserHandler {
 }
 
 func (h *UserHandler) FindByEmail(ctx context.Context, req *pb.UserByEmailRequest) (*pb.UserResponse, error) {
-	slog.With("payload", req).
-		Info("received request")
+	logger.FromContext(ctx).With(slog.Any("payload", req)).Info("received request")
 
 	pld := user.FindByEmailRequest{
 		Email: req.GetEmail(),
