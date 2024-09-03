@@ -24,9 +24,11 @@ require (
 	google.golang.org/protobuf v1.34.2
 )
 
-require github.com/klauspost/compress v1.17.9 // indirect
-
 require (
+	cloud.google.com/go v0.115.1 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
+	github.com/klauspost/compress v1.17.9 // indirect
+	google.golang.org/genproto v0.0.0-20240823204242-4ba0660f739c // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/alicebob/gopher-json v0.0.0-20230218143504-906a9b012302 // indirect
 	github.com/alicebob/miniredis/v2 v2.33.0

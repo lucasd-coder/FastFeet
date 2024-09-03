@@ -3,12 +3,15 @@ package container
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"path/filepath"
 
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
+//nolint:gosec
 const (
 	defaultKeycloakImage         = "quay.io/keycloak/keycloak:24.0"
 	defaultRealmImport           = "/opt/keycloak/data/import/"
@@ -52,19 +55,11 @@ func (k *KeycloakContainer) GetAuthServerURL(ctx context.Context) (string, error
 	if err != nil {
 		return "", err
 	}
-	if k.enableTLS {
-		port, err := k.MappedPort(ctx, keycloakHttpsPort)
-		if err != nil {
-			return "", err
-		}
-		return fmt.Sprintf("https://%s:%s%s", host, port.Port(), k.contextPath), nil
-	} else {
-		port, err := k.MappedPort(ctx, keycloakPort)
-		if err != nil {
-			return "", err
-		}
-		return fmt.Sprintf("http://%s:%s%s", host, port.Port(), k.contextPath), nil
+	port, err := k.MappedPort(ctx, keycloakPort)
+	if err != nil {
+		return "", err
 	}
+	return fmt.Sprintf("http://%s:%s%s", host, port.Port(), k.contextPath), nil
 }
 
 // RunContainer starts a new KeycloakContainer with the given options.
@@ -84,7 +79,9 @@ func RunContainer(ctx context.Context, opts ...testcontainers.ContainerCustomize
 	}
 
 	for _, opt := range opts {
-		opt.Customize(&genericContainerReq)
+		if err := opt.Customize(&genericContainerReq); err != nil {
+			logger.FromContext(ctx).Error("Fail opt.Customize", slog.Any("Error", err))
+		}
 	}
 
 	if genericContainerReq.WaitingFor == nil {

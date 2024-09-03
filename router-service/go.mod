@@ -29,7 +29,7 @@ require github.com/klauspost/compress v1.17.9 // indirect
 
 require (
 	cloud.google.com/go v0.115.1 // indirect
-	cloud.google.com/go/iam v1.1.13 // indirect
+	cloud.google.com/go/iam v1.2.0 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
@@ -73,7 +73,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/api v0.195.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto v0.0.0-20240823204242-4ba0660f739c // indirect
+	google.golang.org/genproto v0.0.0-20240827150818-7e3bb234dfed // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240827150818-7e3bb234dfed // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240827150818-7e3bb234dfed // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

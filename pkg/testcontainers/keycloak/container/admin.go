@@ -79,6 +79,8 @@ type AdminClient struct {
 }
 
 // NewAdminClient creates a new Keycloak admin client.
+//
+//nolint:gosec
 func NewAdminClient(ctx *context.Context, serverURL, username, password string) (*AdminClient, error) {
 	adminClient := &AdminClient{
 		ServerURL: serverURL,
