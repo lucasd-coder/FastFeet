@@ -43,21 +43,34 @@ integration:
       max-retry: 3
       retry-wait-time: 5s
       retry-max-wait-time: 20s
+      enabled: false    
+    brasilaberto:
+      url: ${BRASIL_ABERTO_URL}
+      max-conn: 20
+      max-routes: 20
+      read-timeout: 10s
+      conn-timeout: 10s
+      debug: true
+      request-timeout: 60s
+      max-retry: 3
+      retry-wait-time: 5s
+      retry-max-wait-time: 20s
+      enabled: true
 
   rabbit-mq:
     queue:
       user-events:
         url: rabbit://business-service-user-events
-        max-retry: 5
+        max-retry: 3
         poll-delay-in-milliseconds: 100ms
-        max-concurrent-messages: 10
-        number-of-message-receivers: 2
+        max-concurrent-messages: 30
+        number-of-message-receivers: 1
       order-events:
         url: rabbit://business-service-order-events
-        max-retry: 5
+        max-retry: 3
         poll-delay-in-milliseconds: 100ms
-        max-concurrent-messages: 10
-        number-of-message-receivers: 2
+        max-concurrent-messages: 30
+        number-of-message-receivers: 1
   
   redis:
     url: ${REDIS_URL}

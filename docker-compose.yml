@@ -96,10 +96,9 @@ services:
   router-service:
     container_name: router-service
     build:
-      context: ./router-service
       dockerfile: ./router-service/Dockerfile
-    # ports:
-    #   - ${SERVER_PORT}:${SERVER_PORT}
+    ports:
+      - ${SERVER_PORT}:${SERVER_PORT}
     volumes:
       - ./router-service:/go/src
     env_file:

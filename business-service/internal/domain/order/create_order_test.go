@@ -3,15 +3,21 @@ package order_test
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
 	noProviderVal "github.com/go-playground/validator/v10"
+	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/lucasd-coder/fast-feet/business-service/config"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/domain/order"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/mocks"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/provider/validator"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/shared"
 	"github.com/lucasd-coder/fast-feet/business-service/pkg/pb"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
@@ -20,6 +26,7 @@ import (
 
 type CreateOrderSuite struct {
 	suite.Suite
+	cfg        config.Config
 	svc        order.Service
 	repoAuth   *mocks.AuthRepository_internal_shared
 	repoOrder  *mocks.Repository_internal_domain_order
@@ -27,6 +34,31 @@ type CreateOrderSuite struct {
 	ctx        context.Context
 	valErrs    noProviderVal.ValidationErrors
 	pld        order.Payload
+}
+
+func (suite *CreateOrderSuite) SetupSuite() {
+	baseDir, err := os.Getwd()
+	if err != nil {
+		suite.T().Errorf("os.Getwd() error = %v", err)
+		return
+	}
+
+	os.Setenv("REDIS_HOST_PASSWORD", "123456")
+	os.Setenv("RABBIT_SERVER_URL", "amqp://localhost:5672/fastfeet")
+
+	staticDir := filepath.Join(baseDir, "..", "..", "..", "/config/config-test.yml")
+
+	slog.Info("config lod", "dir", staticDir)
+	err = cleanenv.ReadConfig(staticDir, &suite.cfg)
+	if err != nil {
+		suite.T().Errorf("cleanenv.ReadConfig() error = %v", err)
+		return
+	}
+	config.ExportConfig(&suite.cfg)
+	optlogger := shared.NewOptLogger(&suite.cfg)
+	logger := logger.NewLogger(optlogger)
+	logDefault := logger.GetLog()
+	slog.SetDefault(logDefault)
 }
 
 func (suite *CreateOrderSuite) SetupTest() {
@@ -130,7 +162,7 @@ func (suite *CreateOrderSuite) TestCreateOrderWhenReturnViaCepRepositoryResponse
 		Return(getRolesResp, nil)
 
 	suite.repoViaCep.On("GetAddress", suite.ctx,
-		pld.Data.Address.PostalCode).Return(&shared.ViaCepAddressResponse{}, shared.ErrExtractResponse)
+		pld.Data.Address.PostalCode).Return(&shared.AddressResponse{}, shared.ErrExtractResponse)
 
 	_, err := suite.svc.CreateOrder(suite.ctx, pld)
 	suite.Error(err)
@@ -153,7 +185,7 @@ func (suite *CreateOrderSuite) TestCreateOrderWhenAddressInvalid() {
 	suite.repoAuth.On("FindRolesByID", suite.ctx, pld.Data.UserID).
 		Return(getRolesResp, nil)
 
-	suite.repoViaCep.On("GetAddress", suite.ctx, pld.Data.Address.PostalCode).Return(&shared.ViaCepAddressResponse{}, nil)
+	suite.repoViaCep.On("GetAddress", suite.ctx, pld.Data.Address.PostalCode).Return(&shared.AddressResponse{}, nil)
 
 	resp, err := suite.svc.CreateOrder(suite.ctx, pld)
 	suite.NoError(err)
@@ -176,7 +208,7 @@ func (suite *CreateOrderSuite) TestCreateOrder() {
 	suite.repoAuth.On("FindRolesByID", suite.ctx, pld.Data.UserID).
 		Return(getRolesResp, nil)
 
-	getAddress := &shared.ViaCepAddressResponse{
+	getAddress := &shared.AddressResponse{
 		Address:      "rua das marias",
 		PostalCode:   "12345667",
 		Neighborhood: "Copacabana",
@@ -197,6 +229,12 @@ func (suite *CreateOrderSuite) TestCreateOrder() {
 	resp, err := suite.svc.CreateOrder(suite.ctx, pld)
 	suite.NoError(err)
 	suite.Equal(respOrderRepo, resp)
+}
+
+func (suite *CreateOrderSuite) TearDownTest() {
+	suite.repoOrder.AssertExpectations(suite.T())
+	suite.repoAuth.AssertExpectations(suite.T())
+	suite.repoViaCep.AssertExpectations(suite.T())
 }
 
 func TestCreateOrderSuite(t *testing.T) {

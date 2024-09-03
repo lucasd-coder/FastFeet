@@ -1,1 +1,1 @@
-./internal/domain/user=[UserService, Publish]
+./internal/shared=[BusinessRepository, Publish, Validator]

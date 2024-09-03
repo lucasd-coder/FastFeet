@@ -19,6 +19,7 @@ import (
 	"github.com/lucasd-coder/fast-feet/business-service/internal/shared/ciphers"
 	"github.com/lucasd-coder/fast-feet/business-service/internal/shared/codec"
 	"github.com/lucasd-coder/fast-feet/business-service/pkg/pb"
+	"github.com/lucasd-coder/fast-feet/pkg/logger"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 )
@@ -52,6 +53,10 @@ func (suite *CreateUserHandlerSuite) SetupSuite() {
 		return
 	}
 	config.ExportConfig(&suite.cfg)
+	optlogger := shared.NewOptLogger(&suite.cfg)
+	logger := logger.NewLogger(optlogger)
+	logDefault := logger.GetLog()
+	slog.SetDefault(logDefault)
 }
 
 func (suite *CreateUserHandlerSuite) SetupTest() {

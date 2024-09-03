@@ -76,7 +76,7 @@ func Run(cfg *config.Config) {
 	reg := prometheus.NewRegistry()
 	grpcServer := newGrpcServer(ctx, logger, reg)
 	registerServices(grpcServer)
-	slog.Info(fmt.Sprintf("Started listening... address[:%s]", cfg.GRPC.Port))
+	logDefault.Info(fmt.Sprintf("Started listening... address[:%s]", cfg.GRPC.Port))
 
 	go func() {
 		if err := grpcServer.Serve(lis); err != nil {

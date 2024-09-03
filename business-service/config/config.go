@@ -21,7 +21,7 @@ type (
 
 	Log struct {
 		Level        string `env-required:"true" yaml:"log-level"   env:"LOG_LEVEL"`
-		ReportCaller bool   `yaml:"report-caller" default:"false"`
+		ReportCaller *bool  `yaml:"report-caller" default:"false"`
 	}
 
 	GRPC struct {
@@ -79,7 +79,8 @@ type (
 	}
 
 	HTTPClint struct {
-		ViaCep `env-required:"true" yaml:"viacep"`
+		ViaCep       `env-required:"true" yaml:"viacep"`
+		BrasilAberto `env-required:"true" yaml:"brasilaberto"`
 	}
 
 	QueueUserEvents struct {
@@ -108,13 +109,27 @@ type (
 		ViaCepMaxRoutes        int           `env-required:"true" yaml:"max-routes"`
 		ViaCepReadTimeout      time.Duration `yaml:"read-timeout" env-default:"60s"`
 		ViaCepConnTimeout      time.Duration `yaml:"conn-timeout" env-default:"60s"`
-		ViaCepDebug            bool          `yaml:"debug" env-default:"true"`
+		ViaCepDebug            *bool         `yaml:"debug" env-default:"true"`
 		ViaCepRequestTimeout   time.Duration `env-required:"true" yaml:"request-timeout"`
 		ViaCepMaxRetries       int           `env-required:"true" yaml:"max-retry"`
 		ViaCepRetryWaitTime    time.Duration `env-required:"true" yaml:"retry-wait-time"`
 		ViaCepRetryMaxWaitTime time.Duration `env-required:"true" yaml:"retry-max-wait-time"`
+		ViaCepEnabled          *bool         `yaml:"enabled" env-required:"true"`
 	}
 
+	BrasilAberto struct {
+		BrasilAbertoURL              string        `env-required:"true" yaml:"url" env:"BRASIL_ABERTO_URL"`
+		BrasilAbertoMaxConn          int           `env-required:"true" yaml:"max-conn"`
+		BrasilAbertoMaxRoutes        int           `env-required:"true" yaml:"max-routes"`
+		BrasilAbertoReadTimeout      time.Duration `yaml:"read-timeout" env-default:"60s"`
+		BrasilAbertoConnTimeout      time.Duration `yaml:"conn-timeout" env-default:"60s"`
+		BrasilAbertoDebug            *bool         `yaml:"debug" env-default:"true"`
+		BrasilAbertoRequestTimeout   time.Duration `env-required:"true" yaml:"request-timeout"`
+		BrasilAbertoMaxRetries       int           `env-required:"true" yaml:"max-retry"`
+		BrasilAbertoRetryWaitTime    time.Duration `env-required:"true" yaml:"retry-wait-time"`
+		BrasilAbertoRetryMaxWaitTime time.Duration `env-required:"true" yaml:"retry-max-wait-time"`
+		BrasilAbertoEnabled          *bool         `env-required:"true" yaml:"enabled"`
+	}
 	Redis struct {
 		RedisURL      string        `env-required:"true" yaml:"url" env:"REDIS_URL"`
 		RedisDB       int           `env-required:"true" yaml:"db" env:"REDIS_DB"`

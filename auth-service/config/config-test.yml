@@ -7,7 +7,7 @@ logger:
   report-caller: false
 
 grpc:
-  port: 50055
+  port: "50055"
 
 http:
   port: 8090

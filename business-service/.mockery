@@ -1,3 +1,4 @@
 ./internal/domain/user=[Repository]
-./internal/domain/order=[ViaCepRepository, Repository]
+./internal/domain/order=[Repository]
+./internal/provider/cep=[Repository]
 ./internal/shared=[Validator, AuthRepository]

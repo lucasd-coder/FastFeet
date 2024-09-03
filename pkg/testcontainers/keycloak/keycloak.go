@@ -6,29 +6,37 @@ import (
 	"os"
 	"path/filepath"
 
-	keycloak "github.com/stillya/testcontainers-keycloak"
+	// keycloak "github.com/stillya/testcontainers-keycloak"
+
+	"github.com/lucasd-coder/fast-feet/pkg/testcontainers/keycloak/container"
 	"github.com/testcontainers/testcontainers-go"
 )
 
-func RunContainer(ctx context.Context) (*keycloak.KeycloakContainer, error) {
+func RunContainer(ctx context.Context) (*container.KeycloakContainer, error) {
 	testDataPath, err := FindTestDataDir()
 	if err != nil {
 		return nil, err
 	}
 
 	fullPath := filepath.Join(testDataPath, "realm-export.json")
-	return keycloak.RunContainer(ctx,
+	return container.RunContainer(ctx,
 		WithCustomOption(),
-		keycloak.WithContextPath("/auth"),
-		keycloak.WithRealmImportFile(fullPath),
-		keycloak.WithAdminUsername("admin"),
-		keycloak.WithAdminPassword("admin"),
+		container.WithContextPath("/auth"),
+		container.WithRealmImportFile(fullPath),
+		container.WithAdminUsername("admin"),
+		container.WithAdminPassword("admin"),
+		testcontainers.WithEnv(map[string]string{
+			"KEYCLOAK_LOGLEVEL": "DEBUG",
+			"KEYCLOAK_USER":     "admin",
+			"KEYCLOAK_PASSWORD": "admin",
+		}),
 	)
 }
 
 func WithCustomOption() testcontainers.CustomizeRequestOption {
-	return func(req *testcontainers.GenericContainerRequest) {
+	return func(req *testcontainers.GenericContainerRequest) error {
 		req.Image = "quay.io/keycloak/keycloak:22.0.1-2"
+		return nil
 	}
 }
 

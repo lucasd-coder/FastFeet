@@ -7,7 +7,7 @@ logger:
   report-caller: false
 
 grpc:
-  port: 50055
+  port: "50055"
 
 http:
   port: 8090
@@ -16,10 +16,10 @@ http:
 integration:
   http:
     keycloak:
-      base-url: "http://local.projectcontour.io/auth"      
-      username: ${KEYCLOAK_USERNAME}
-      password: ${KEYCLOAK_PASSWORD}    
-      realm: ${KEYCLOAK_REALM}
+      base-url: "http://localhost:8080/auth"      
+      username: admin
+      password: admin   
+      realm: fastfeet
       request-timeout: 60s
       debug: true
   

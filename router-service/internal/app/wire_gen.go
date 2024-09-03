@@ -25,12 +25,6 @@ func InitializeValidator() *validator.Validation {
 	return validation
 }
 
-func InitializeOrderEventsPublish() *publish.Published {
-	options := extractOptionOrderEvents()
-	published := publish.NewPublished(options)
-	return published
-}
-
 func InitializeUserEventsPublish() *publish.Published {
 	options := extractOptionUserEvents()
 	published := publish.NewPublished(options)
@@ -49,7 +43,8 @@ func InitializeUserController() *controller.UserController {
 
 func InitializeOrderController() *controller.OrderController {
 	validation := InitializeValidator()
-	published := InitializeOrderEventsPublish()
+	options := extractOptionOrderEvents()
+	published := publish.NewPublished(options)
 	configConfig := config.GetConfig()
 	businessRepository := repository.NewBusinessRepository(configConfig)
 	serviceImpl := order.NewService(validation, published, configConfig, businessRepository)
@@ -76,5 +71,7 @@ func extractOptionUserEvents() *shared.Options {
 		WaitingTime: cfg.TopicUserEvents.WaitingTime,
 	}
 }
+
+var initializeOrderEventsPublish = wire.NewSet(wire.Bind(new(shared.Publish), new(*publish.Published)), extractOptionOrderEvents, publish.NewPublished)
 
 var initializeBusinessRepository = wire.NewSet(wire.Bind(new(shared.BusinessRepository), new(*repository.BusinessRepository)), repository.NewBusinessRepository)

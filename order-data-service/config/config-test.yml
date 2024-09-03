@@ -1,0 +1,28 @@
+app:
+  name: order-data-service
+  version: 1.0.0
+
+logger:
+  log_level: info
+
+grpc:
+  port: 50054
+
+http:
+  port: 8091
+  timeout: 20s
+
+mongodb:
+  url: mongodb://admin:admin123@localhost:27017/fast-feet?connect=direct&authSource=admin
+  connTimeout: 10s
+  database: fast-feet
+  collections:
+    order:
+      collection: "orders"
+      max-time: "2s"
+
+integration:
+  otlp:
+      url: localhost:4317
+      protocol: grpc
+      timeout: 20s

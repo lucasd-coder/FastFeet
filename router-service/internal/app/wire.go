@@ -39,10 +39,11 @@ func InitializeValidator() *val.Validation {
 	return nil
 }
 
-func InitializeOrderEventsPublish() *publish.Published {
-	wire.Build(extractOptionOrderEvents, publish.NewPublished)
-	return nil
-}
+var initializeOrderEventsPublish = wire.NewSet(
+	wire.Bind(new(shared.Publish), new(*publish.Published)),
+	extractOptionOrderEvents,
+	publish.NewPublished,
+)
 
 func InitializeUserEventsPublish() *publish.Published {
 	wire.Build(extractOptionUserEvents, publish.NewPublished)
@@ -61,6 +62,6 @@ func InitializeUserController() *controller.UserController {
 }
 
 func InitializeOrderController() *controller.OrderController {
-	wire.Build(InitializeValidator, InitializeOrderEventsPublish, config.GetConfig, initializeBusinessRepository, order.InitializeService, controller.NewOrderController)
+	wire.Build(InitializeValidator, initializeOrderEventsPublish, config.GetConfig, initializeBusinessRepository, order.InitializeService, controller.NewOrderController)
 	return nil
 }

@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
+	"sync"
 	"syscall"
 
 	// revive
@@ -51,10 +52,8 @@ func Run(cfg *config.Config) {
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
 	cache.SetUpRedis(ctx, cfg)
 	optOtel := shared.NewOptOtel(cfg)
 	tp, err := monitor.RegisterOtel(ctx, &optOtel)
@@ -75,24 +74,36 @@ func Run(cfg *config.Config) {
 	registerServices(grpcServer)
 
 	logDefault.Info(fmt.Sprintf("Started listening... address[:%s]", cfg.GRPC.Port))
+	var wg sync.WaitGroup
 
 	go func() {
+		defer wg.Done()
 		if err := grpcServer.Serve(lis); err != nil {
 			log.Fatalf("Could not serve: %v", err)
 		}
 	}()
 
-	go newHTTPServer(ctx, cfg, reg)
+	go func() {
+		defer wg.Done()
+		newHTTPServer(ctx, cfg, reg)
+	}()
 
-	go subscribeUserEvents(ctx, cfg, reg)
+	go func() {
+		defer wg.Done()
+		subscribeUserEvents(ctx, cfg, reg)
+	}()
 
-	go subscribeOrderEvents(ctx, cfg, reg)
+	go func() {
+		defer wg.Done()
+		subscribeOrderEvents(ctx, cfg, reg)
+	}()
 
 	stopChan := make(chan os.Signal, 1)
 
 	signal.Notify(stopChan, syscall.SIGTERM, syscall.SIGINT)
 	<-stopChan
 
+	wg.Wait()
 	grpcServer.GracefulStop()
 }
 
@@ -176,9 +187,13 @@ func subscribeUserEvents(ctx context.Context, cfg *config.Config, reg *prometheu
 		return
 	}
 
-	subscribeUserEvents := subscribe.New(func(ctx context.Context, m []byte) error {
+	subscribeUserEvents, err := subscribe.New(ctx, func(ctx context.Context, m []byte) error {
 		return userHandler.CreateUser(ctx, m)
 	}, optsQueueUserEvents, metric)
+	if err != nil {
+		logger.FromContext(ctx).Error(err.Error())
+		return
+	}
 
 	subscribeUserEvents.Start(ctx)
 }
@@ -195,9 +210,13 @@ func subscribeOrderEvents(ctx context.Context, cfg *config.Config, reg *promethe
 		return
 	}
 
-	subscribeOrderEvents := subscribe.New(func(ctx context.Context, m []byte) error {
+	subscribeOrderEvents, err := subscribe.New(ctx, func(ctx context.Context, m []byte) error {
 		return orderHandler.CreateOrderHandler(ctx, m)
 	}, optsQueueOrderEvents, metric)
+	if err != nil {
+		logger.FromContext(ctx).Error(err.Error())
+		return
+	}
 
 	subscribeOrderEvents.Start(ctx)
 }

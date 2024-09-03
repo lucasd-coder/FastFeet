@@ -37,7 +37,10 @@ func (r *Repository) Register(ctx context.Context, pld *auth.Register) (string, 
 		return "", err
 	}
 
-	roles := rolesIdentity(auth.GetRolesFromString(pld.Roles))
+	roles, err := r.rolesIdentity(ctx, auth.GetRolesFromString(pld.Roles))
+	if err != nil {
+		return "", err
+	}
 	user := gocloak.User{
 		Username:  gocloak.StringP(pld.Username),
 		FirstName: gocloak.StringP(pld.FirstName),
@@ -66,7 +69,7 @@ func (r *Repository) Register(ctx context.Context, pld *auth.Register) (string, 
 	return id, nil
 }
 
-func rolesIdentity(r auth.RolesEnum) *[]string {
+func (repo *Repository) rolesIdentity(ctx context.Context, r auth.RolesEnum) (*[]string, error) {
 	roles := []string{}
 	switch r {
 	case auth.Admin:
@@ -76,7 +79,12 @@ func rolesIdentity(r auth.RolesEnum) *[]string {
 	default:
 		roles = append(roles, auth.Unknown.String())
 	}
-	return &roles
+	for _, role := range roles {
+		if err := repo.ensureRoleExists(ctx, role); err != nil {
+			return nil, err
+		}
+	}
+	return &roles, nil
 }
 
 func (r *Repository) FindUserByEmail(ctx context.Context, pld *auth.FindUserByEmail) (*auth.UserRepresentation, error) {
@@ -144,7 +152,7 @@ func (r *Repository) addRealmRoleToUser(ctx context.Context, userID string, role
 		return err
 	}
 
-	maxRoles := 2
+	maxRoles := 100
 	params := gocloak.GetRoleParams{
 		Max: gocloak.IntP(maxRoles),
 	}
@@ -247,4 +255,29 @@ func extractRoles(resp []*gocloak.Role) ([]string, error) {
 	}
 
 	return result, nil
+}
+
+func (r *Repository) ensureRoleExists(ctx context.Context, roleName string) error {
+	client := NewClient(ctx, r.Config)
+
+	token, err := client.LoginAdmin(ctx, r.Config.KeyCloakUsername, r.Config.KeyCloakPassword, r.Config.KeyCloakRealm)
+	if err != nil {
+		return err
+	}
+
+	roles, err := client.GetRealmRoles(ctx, token.AccessToken, r.Config.KeyCloakRealm, gocloak.GetRoleParams{})
+	if err != nil {
+		return err
+	}
+
+	for _, role := range roles {
+		if strings.EqualFold(roleName, *role.Name) {
+			return nil
+		}
+	}
+
+	_, err = client.CreateRealmRole(ctx, token.AccessToken, r.Config.KeyCloakRealm, gocloak.Role{
+		Name: gocloak.StringP(roleName),
+	})
+	return err
 }

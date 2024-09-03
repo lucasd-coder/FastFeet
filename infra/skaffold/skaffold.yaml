@@ -9,23 +9,23 @@ build:
     - image: lucasd-coder/user-manger-service
       context: user-manger-service
       docker:
-        dockerfile: user-manger-service/infra/docker/Dockerfile
+        dockerfile: infra/docker/Dockerfile
     - image: lucasd-coder/order-data-service
       context: order-data-service
       docker:
-        dockerfile: order-data-service/infra/docker/Dockerfile
+        dockerfile: infra/docker/Dockerfile
     - image: lucasd-coder/router-service
       context: router-service
       docker:
-        dockerfile: router-service/infra/docker/Dockerfile
+        dockerfile: infra/docker/Dockerfile
     - image: lucasd-coder/auth-service
       context: auth-service
       docker:
-        dockerfile: auth-service/infra/docker/Dockerfile
+        dockerfile: infra/docker/Dockerfile
     - image: lucasd-coder/business-service
       context: business-service
       docker:
-        dockerfile: business-service/infra/docker/Dockerfile    
+        dockerfile: infra/docker/Dockerfile    
    
 manifests:
   rawYaml:

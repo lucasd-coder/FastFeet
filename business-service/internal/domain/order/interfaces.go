@@ -8,8 +8,8 @@ import (
 )
 
 type (
-	ViaCepRepository interface {
-		GetAddress(ctx context.Context, cep string) (*shared.ViaCepAddressResponse, error)
+	CepRepository interface {
+		GetAddress(ctx context.Context, cep string) (*shared.AddressResponse, error)
 	}
 
 	Repository interface {

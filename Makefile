@@ -85,4 +85,11 @@ lint:
 	GO111MODULE=on golangci-lint run ./... \
 		--config .golangci.yaml
 
+.PHONY: pre-pull-request
+
+pre-pull-request:
+	make test
+	@sleep 5
+	make lint
+
 
